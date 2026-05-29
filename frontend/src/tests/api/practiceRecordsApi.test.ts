@@ -112,4 +112,27 @@ describe("practice records API service", () => {
     expect(records[0].topic).toBe("Pentatonic speed run");
     expect(records[0].durationMinutes).toBe(45);
   });
+
+  it("loads filtered practice records with topic and date range query params", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        records: []
+      })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getPracticeRecords({
+      apiBaseUrl: "http://localhost:8000",
+      userId: 77,
+      limit: 20,
+      topic: "jazz",
+      dateFrom: "2026-05-01",
+      dateTo: "2026-05-31"
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/practice-records?user_id=77&limit=20&topic=jazz&date_from=2026-05-01&date_to=2026-05-31"
+    );
+  });
 });

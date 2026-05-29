@@ -131,6 +131,60 @@ def test_list_practice_records_returns_recent_records_for_user() -> None:
     assert payload["records"][0]["topic"] == "Pentatonic speed run"
 
 
+def test_list_practice_records_filters_by_topic_and_date_range() -> None:
+    session = create_test_session()
+    session.add_all(
+        [
+            PracticeRecord(
+                user_id=77,
+                practice_date=date(2026, 5, 27),
+                duration_minutes=20,
+                bpm=118,
+                topic="Jazz warmup",
+            ),
+            PracticeRecord(
+                user_id=77,
+                practice_date=date(2026, 5, 28),
+                duration_minutes=45,
+                bpm=128,
+                topic="II-V-I jazz voice leading",
+            ),
+            PracticeRecord(
+                user_id=77,
+                practice_date=date(2026, 5, 29),
+                duration_minutes=30,
+                bpm=150,
+                topic="Pentatonic speed run",
+            ),
+        ]
+    )
+    session.commit()
+
+    def override_session() -> Generator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+
+    try:
+        client = TestClient(app)
+        response = client.get(
+            "/practice-records",
+            params={
+                "user_id": 77,
+                "topic": "jazz",
+                "date_from": "2026-05-28",
+                "date_to": "2026-05-29",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert [record["topic"] for record in payload["records"]] == ["II-V-I jazz voice leading"]
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
