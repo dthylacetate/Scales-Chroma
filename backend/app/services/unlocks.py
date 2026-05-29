@@ -9,6 +9,12 @@ from app.models.unlocked_effect import UnlockedEffect
 
 PENTATONIC_THRESHOLD_MINUTES = 600
 PENTATONIC_KEYWORDS = ("pentatonic", "五声音阶")
+JAZZ_II_V_I_THRESHOLD_MINUTES = 300
+JAZZ_II_V_I_KEYWORDS = ("ii-v-i", "251", "jazz voice leading")
+METAL_SWEEP_THRESHOLD_MINUTES = 300
+METAL_SWEEP_KEYWORDS = ("sweep", "sweep picking", "metal burst")
+NEO_SOUL_MAJ7_THRESHOLD_MINUTES = 240
+NEO_SOUL_MAJ7_KEYWORDS = ("maj7", "neo soul")
 
 
 @dataclass(frozen=True)
@@ -17,36 +23,63 @@ class UnlockRule:
     trigger_condition: str
 
 
+@dataclass(frozen=True)
+class UnlockTrack:
+    threshold_minutes: int
+    keywords: tuple[str, ...]
+    rules: tuple[UnlockRule, ...]
+
+
 PENTATONIC_UNLOCKS: tuple[UnlockRule, ...] = (
     UnlockRule("particle_trail", "五声音阶累计练习达到 10 小时"),
     UnlockRule("neon_glow", "五声音阶累计练习达到 10 小时"),
     UnlockRule("dynamic_ripple", "五声音阶累计练习达到 10 小时"),
 )
 
+JAZZ_II_V_I_UNLOCKS: tuple[UnlockRule, ...] = (
+    UnlockRule("harmonic_lattice", "II-V-I / Jazz 累计练习达到 5 小时"),
+)
+
+METAL_SWEEP_UNLOCKS: tuple[UnlockRule, ...] = (
+    UnlockRule("fracture_burst", "Metal / Sweep Picking 累计练习达到 5 小时"),
+)
+
+NEO_SOUL_MAJ7_UNLOCKS: tuple[UnlockRule, ...] = (
+    UnlockRule("velvet_glow", "Maj7 / Neo Soul 累计练习达到 4 小时"),
+)
+
+UNLOCK_TRACKS: tuple[UnlockTrack, ...] = (
+    UnlockTrack(PENTATONIC_THRESHOLD_MINUTES, PENTATONIC_KEYWORDS, PENTATONIC_UNLOCKS),
+    UnlockTrack(JAZZ_II_V_I_THRESHOLD_MINUTES, JAZZ_II_V_I_KEYWORDS, JAZZ_II_V_I_UNLOCKS),
+    UnlockTrack(METAL_SWEEP_THRESHOLD_MINUTES, METAL_SWEEP_KEYWORDS, METAL_SWEEP_UNLOCKS),
+    UnlockTrack(NEO_SOUL_MAJ7_THRESHOLD_MINUTES, NEO_SOUL_MAJ7_KEYWORDS, NEO_SOUL_MAJ7_UNLOCKS),
+)
+
 
 def apply_practice_unlocks(session: Session, user_id: int) -> list[UnlockedEffect]:
     unlocked_effects: list[UnlockedEffect] = []
 
-    if _total_pentatonic_minutes(session=session, user_id=user_id) >= PENTATONIC_THRESHOLD_MINUTES:
-        unlocked_effects.extend(
-            _unlock_missing_effects(
-                session=session,
-                user_id=user_id,
-                rules=PENTATONIC_UNLOCKS,
+    for track in UNLOCK_TRACKS:
+        if _total_minutes_for_keywords(session=session, user_id=user_id, keywords=track.keywords) >= track.threshold_minutes:
+            unlocked_effects.extend(
+                _unlock_missing_effects(
+                    session=session,
+                    user_id=user_id,
+                    rules=track.rules,
+                )
             )
-        )
 
     return unlocked_effects
 
 
-def _total_pentatonic_minutes(session: Session, user_id: int) -> int:
+def _total_minutes_for_keywords(session: Session, user_id: int, keywords: tuple[str, ...]) -> int:
     records = session.scalars(select(PracticeRecord).where(PracticeRecord.user_id == user_id)).all()
-    return sum(record.duration_minutes for record in records if _is_pentatonic_topic(record.topic))
+    return sum(record.duration_minutes for record in records if _topic_matches(record.topic, keywords))
 
 
-def _is_pentatonic_topic(topic: str) -> bool:
-    normalized_topic = topic.lower()
-    return any(keyword in normalized_topic for keyword in PENTATONIC_KEYWORDS)
+def _topic_matches(topic: str, keywords: tuple[str, ...]) -> bool:
+    normalized_topic = topic.casefold()
+    return any(keyword.casefold() in normalized_topic for keyword in keywords)
 
 
 def _unlock_missing_effects(

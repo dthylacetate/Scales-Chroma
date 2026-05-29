@@ -12,20 +12,21 @@ def render_visual_parameters(
     elements: list[TheoryElement],
     unlocked_effects: list[str] | None = None,
 ) -> VisualParameters:
-    unlocks = unlocked_effects or []
+    unlocks = set(unlocked_effects or [])
     dominant_element, tension = _dominant_tension_element(elements)
 
     color = map_color(dominant_element)
-    particles = configure_particles(tension.level, unlocks)
-    geometry = generate_geometry(dominant_element)
-    animation = select_animation_state(dominant_element)
+    particles = configure_particles(tension.level, list(unlocks))
+    geometry_shape = _geometry_with_unlocks(generate_geometry(dominant_element).shape, unlocks)
+    animation_state = _animation_with_unlocks(select_animation_state(dominant_element).state, unlocks)
+    glow = _glow_with_unlocks(_glow_for_element(dominant_element, tension.level), unlocks)
 
     return VisualParameters(
         color=color.hex,
-        glow=_glow_for_element(dominant_element, tension.level),
+        glow=glow,
         particles={"density": particles.density, "trail": particles.trail},
-        geometry=geometry.shape,
-        animation_state=animation.state,
+        geometry=geometry_shape,
+        animation_state=animation_state,
     )
 
 
@@ -44,3 +45,35 @@ def _glow_for_element(element: TheoryElement, tension_level: int) -> float:
 
 def _glow_from_tension(tension_level: int) -> float:
     return min(1.0, round(0.35 + tension_level * 0.05, 2))
+
+
+def _geometry_with_unlocks(base_geometry: str, unlocked_effects: set[str]) -> str:
+    if "fracture_burst" in unlocked_effects:
+        return "fracture"
+
+    if "harmonic_lattice" in unlocked_effects:
+        return "lattice"
+
+    return base_geometry
+
+
+def _animation_with_unlocks(base_animation: str, unlocked_effects: set[str]) -> str:
+    if "fracture_burst" in unlocked_effects:
+        return "explosive"
+
+    if "dynamic_ripple" in unlocked_effects and base_animation == "calm":
+        return "flowing"
+
+    return base_animation
+
+
+def _glow_with_unlocks(base_glow: float, unlocked_effects: set[str]) -> float:
+    glow_bonus = 0.0
+
+    if "neon_glow" in unlocked_effects:
+        glow_bonus += 0.1
+
+    if "velvet_glow" in unlocked_effects:
+        glow_bonus += 0.16
+
+    return min(1.0, round(base_glow + glow_bonus, 2))
