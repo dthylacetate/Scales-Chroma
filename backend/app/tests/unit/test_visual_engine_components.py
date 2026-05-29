@@ -80,3 +80,18 @@ def test_renderer_composes_visual_parameters_from_engine_components() -> None:
     assert visual.particles["trail"] is True
     assert visual.geometry == "fracture"
     assert visual.animation_state == "tense"
+
+
+def test_renderer_uses_highest_tension_element_in_a_composition() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="c-maj7", type="chord", name="Maj7"),
+            TheoryElement(id="c-dim7", type="chord", name="Dim7"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert visual.geometry == "fracture"
+    assert visual.animation_state == "tense"
+    assert visual.particles["density"] > 0.5
+    assert visual.glow > 0.7
