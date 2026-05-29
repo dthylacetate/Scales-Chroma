@@ -19,6 +19,8 @@ interface PracticeRecordResponse {
   exp_earned: number;
   total_exp?: number;
   level?: number;
+  current_streak?: number;
+  longest_streak?: number;
   unlocked_effects?: string[];
 }
 
@@ -33,6 +35,8 @@ export interface PracticeRecordResult {
   expEarned: number;
   totalExp: number;
   level: number;
+  currentStreak: number;
+  longestStreak: number;
   unlockedEffects: string[];
 }
 
@@ -79,6 +83,8 @@ function normalizePracticeRecordResponse(response: PracticeRecordResponse): Prac
     expEarned: response.exp_earned,
     totalExp: response.total_exp ?? response.exp_earned,
     level: response.level ?? 1,
+    currentStreak: response.current_streak ?? 1,
+    longestStreak: response.longest_streak ?? response.current_streak ?? 1,
     unlockedEffects: response.unlocked_effects ?? []
   };
 }

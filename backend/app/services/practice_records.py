@@ -25,6 +25,8 @@ class PracticeRecordResult:
     exp_earned: int
     total_exp: int
     level: int
+    current_streak: int
+    longest_streak: int
     unlocked_effects: list[str]
 
 
@@ -102,6 +104,8 @@ def create_practice_record(
         exp_earned=exp_earned,
         total_exp=user.total_exp,
         level=user.level,
+        current_streak=statistics.current_streak,
+        longest_streak=statistics.longest_streak,
         unlocked_effects=[effect.effect_name for effect in unlocked_effects],
     )
 

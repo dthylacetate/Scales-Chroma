@@ -348,6 +348,8 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
                 <div className="flex flex-wrap gap-2 text-xs text-[#ffe8a7]">
                   <span>Total {practiceResult.totalExp} EXP</span>
                   <span>Level {practiceResult.level}</span>
+                  <span>Streak {practiceResult.currentStreak} days</span>
+                  <span>Best {practiceResult.longestStreak} days</span>
                 </div>
                 {practiceResult.unlockedEffects.length > 0 ? (
                   <div className="mt-1 grid gap-1 border-t border-[#ffd166]/20 pt-2 text-xs text-[#b9fff7]">
