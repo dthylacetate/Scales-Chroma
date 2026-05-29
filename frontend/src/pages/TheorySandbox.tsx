@@ -1,9 +1,9 @@
-import { Activity, CalendarDays, GitBranch, Grip, Layers, Send, Sparkles, X } from "lucide-react";
+import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Send, Sparkles, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
 import { createPracticeRecord, type PracticeRecordResult } from "../services/practiceRecordsApi";
-import { getSkillTree, type SkillTree } from "../services/progressionApi";
+import { getSkillTree, getYearlyHeatmap, type SkillTree, type YearlyHeatmap } from "../services/progressionApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
@@ -40,6 +40,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [practiceError, setPracticeError] = useState<string | null>(null);
   const [practiceSubmitting, setPracticeSubmitting] = useState(false);
   const [skillTree, setSkillTree] = useState<SkillTree | null>(null);
+  const [heatmap, setHeatmap] = useState<YearlyHeatmap | null>(null);
   const [visualRefreshKey, setVisualRefreshKey] = useState(0);
   const activeElement = composition.at(-1) ?? selected;
   const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
@@ -121,6 +122,37 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
       cancelled = true;
     };
   }, [apiBaseUrl, userId, visualRefreshKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!apiBaseUrl || !userId) {
+      setHeatmap(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getYearlyHeatmap({
+      apiBaseUrl,
+      userId,
+      year: new Date(practiceDate).getFullYear()
+    })
+      .then((nextHeatmap) => {
+        if (!cancelled && Array.isArray(nextHeatmap.days)) {
+          setHeatmap(nextHeatmap);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setHeatmap(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseUrl, practiceDate, userId, visualRefreshKey]);
 
   return (
     <main className="min-h-screen bg-[#120f12] text-stone-100">
@@ -305,6 +337,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
           </form>
 
           {skillTree ? <SkillTreePanel skillTree={skillTree} /> : null}
+          {heatmap ? <HeatmapPanel heatmap={heatmap} /> : null}
         </aside>
       </section>
     </main>
@@ -459,6 +492,41 @@ function SkillTreePanel({ skillTree }: { skillTree: SkillTree }) {
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+function HeatmapPanel({ heatmap }: { heatmap: YearlyHeatmap }) {
+  const activeDays = heatmap.days.filter((day) => day.durationMinutes > 0 || day.exp > 0).slice(-7);
+
+  return (
+    <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">
+      <div className="flex items-center gap-2 pb-1">
+        <Flame aria-hidden="true" className="size-4 text-[#5bd0c7]" />
+        <h2 className="text-base font-semibold tracking-normal">Heatmap</h2>
+      </div>
+      <div className="grid grid-cols-7 gap-1" aria-label="年度练习热力图">
+        {activeDays.length > 0
+          ? activeDays.map((day) => (
+              <div
+                key={day.date}
+                className="aspect-square rounded-sm border border-[#5bd0c7]/20 bg-[#2b4f48]"
+                title={`${day.date}: ${day.durationMinutes} min, ${day.exp} EXP`}
+              />
+            ))
+          : Array.from({ length: 7 }, (_, index) => (
+              <div key={index} className="aspect-square rounded-sm border border-[#3f3144] bg-[#151217]" />
+            ))}
+      </div>
+      {activeDays.slice(-3).map((day) => (
+        <div
+          key={`${day.date}-readout`}
+          className="flex items-center justify-between rounded-md border border-[#3f3144] bg-[#201922] px-2 py-1.5 text-sm"
+        >
+          <span>{day.date}</span>
+          <span className="text-[#ffd166]">{day.exp} EXP</span>
+        </div>
+      ))}
     </section>
   );
 }
