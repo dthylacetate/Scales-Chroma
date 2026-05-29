@@ -154,4 +154,54 @@ describe("TheorySandbox", () => {
     });
     expect(sandboxRenderCount).toBeGreaterThan(1);
   });
+
+  it("loads and displays skill tree progression", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith("/skill-tree?user_id=77")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            user_id: 77,
+            branches: [
+              {
+                direction: "Jazz",
+                nodes: [
+                  {
+                    id: "ii-v-i",
+                    label: "II-V-I",
+                    level: 2,
+                    unlocked: true
+                  }
+                ]
+              }
+            ]
+          })
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          color: "#ffb45c",
+          glow: 0.86,
+          particles: {
+            density: 0.52,
+            trail: false
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        })
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Growth")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Jazz")).toBeInTheDocument();
+    expect(screen.getByText("II-V-I")).toBeInTheDocument();
+    expect(screen.getByText("Lv 2")).toBeInTheDocument();
+  });
 });
