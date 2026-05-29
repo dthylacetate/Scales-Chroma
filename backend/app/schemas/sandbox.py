@@ -14,4 +14,5 @@ class VisualParameters(BaseModel):
 
 
 class SandboxRenderRequest(BaseModel):
+    user_id: int | None = Field(default=None, gt=0)
     elements: list[TheoryElement] = Field(min_length=1)
