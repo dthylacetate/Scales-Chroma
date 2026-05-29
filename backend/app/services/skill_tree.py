@@ -47,14 +47,11 @@ SKILL_TREE_DEFINITION: dict[str, list[tuple[str, str, tuple[str, ...]]]] = {
 
 
 def get_skill_tree(session: Session, user_id: int) -> SkillTreeResult:
-    topics = [
-        record.topic.lower()
-        for record in session.scalars(select(PracticeRecord).where(PracticeRecord.user_id == user_id)).all()
-    ]
+    records = session.scalars(select(PracticeRecord).where(PracticeRecord.user_id == user_id)).all()
     branches = [
         SkillBranchResult(
             direction=direction,
-            nodes=[_node_from_topics(node_id, label, keywords, topics) for node_id, label, keywords in nodes],
+            nodes=[_node_from_records(node_id, label, keywords, records) for node_id, label, keywords in nodes],
         )
         for direction, nodes in SKILL_TREE_DEFINITION.items()
     ]
@@ -62,12 +59,23 @@ def get_skill_tree(session: Session, user_id: int) -> SkillTreeResult:
     return SkillTreeResult(user_id=user_id, branches=branches)
 
 
-def _node_from_topics(
+def _node_from_records(
     node_id: str,
     label: str,
     keywords: tuple[str, ...],
-    topics: list[str],
+    records: list[PracticeRecord],
 ) -> SkillNodeResult:
-    matched_count = sum(1 for topic in topics if any(keyword in topic for keyword in keywords))
-    level = min(5, matched_count)
+    matched_minutes = sum(
+        record.duration_minutes
+        for record in records
+        if any(keyword in record.topic.casefold() for keyword in keywords)
+    )
+    level = _level_from_minutes(matched_minutes)
     return SkillNodeResult(id=node_id, label=label, level=level, unlocked=level > 0)
+
+
+def _level_from_minutes(minutes: int) -> int:
+    if minutes <= 0:
+        return 0
+
+    return min(5, max(1, minutes // 60))
