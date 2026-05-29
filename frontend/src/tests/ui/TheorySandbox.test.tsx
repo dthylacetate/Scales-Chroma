@@ -161,6 +161,68 @@ describe("TheorySandbox", () => {
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/practice-records", expect.any(Object));
   });
 
+  it("filters practice history by topic and date range", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith("/practice-records?user_id=77&limit=5&topic=jazz&date_from=2026-05-01&date_to=2026-05-31")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            records: [
+              {
+                id: 24,
+                user_id: 77,
+                practice_date: "2026-05-28",
+                duration_minutes: 45,
+                bpm: 128,
+                topic: "II-V-I jazz voice leading",
+                notes: null,
+                created_at: "2026-05-28T12:00:00"
+              }
+            ]
+          })
+        });
+      }
+
+      if (url.endsWith("/practice-records?user_id=77&limit=5")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            records: []
+          })
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          color: "#ffb45c",
+          glow: 0.86,
+          particles: {
+            density: 0.52,
+            trail: false
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        })
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
+
+    fireEvent.change(screen.getByLabelText("历史主题"), { target: { value: "jazz" } });
+    fireEvent.change(screen.getByLabelText("开始日期"), { target: { value: "2026-05-01" } });
+    fireEvent.change(screen.getByLabelText("结束日期"), { target: { value: "2026-05-31" } });
+    fireEvent.click(screen.getByRole("button", { name: "筛选历史" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("II-V-I jazz voice leading")).toBeInTheDocument();
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/practice-records?user_id=77&limit=5&topic=jazz&date_from=2026-05-01&date_to=2026-05-31"
+    );
+  });
+
   it("refreshes sandbox visuals after practice unlocks a new effect", async () => {
     let sandboxRenderCount = 0;
     const fetchMock = vi.fn().mockImplementation((url: string) => {
