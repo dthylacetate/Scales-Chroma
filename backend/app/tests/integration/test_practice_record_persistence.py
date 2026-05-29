@@ -129,6 +129,80 @@ def test_create_practice_record_returns_newly_unlocked_visual_effects() -> None:
     assert sorted(result.unlocked_effects) == ["dynamic_ripple", "neon_glow", "particle_trail"]
 
 
+def test_create_practice_record_advances_streak_and_applies_bonus_exp() -> None:
+    session = create_test_session()
+    user = User(username="streak-player", email="streak@example.com", total_exp=0)
+    session.add(user)
+    session.flush()
+    session.add(ExpStatistics(user_id=user.id, total_exp=0, current_streak=2, longest_streak=2))
+    session.add(
+        PracticeRecord(
+            user_id=user.id,
+            practice_date=date(2026, 5, 28),
+            duration_minutes=20,
+            bpm=120,
+            topic="Dorian phrasing",
+        )
+    )
+    session.commit()
+
+    result = create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 5, 29),
+            duration_minutes=30,
+            bpm=120,
+            topic="Dorian phrasing",
+            notes=None,
+        ),
+    )
+
+    statistics = session.scalar(select(ExpStatistics).where(ExpStatistics.user_id == user.id))
+
+    assert result.exp_earned == 39
+    assert statistics is not None
+    assert statistics.current_streak == 3
+    assert statistics.longest_streak == 3
+
+
+def test_create_practice_record_resets_streak_after_a_gap() -> None:
+    session = create_test_session()
+    user = User(username="gap-player", email="gap@example.com", total_exp=0)
+    session.add(user)
+    session.flush()
+    session.add(ExpStatistics(user_id=user.id, total_exp=0, current_streak=8, longest_streak=8))
+    session.add(
+        PracticeRecord(
+            user_id=user.id,
+            practice_date=date(2026, 5, 20),
+            duration_minutes=20,
+            bpm=120,
+            topic="Dorian phrasing",
+        )
+    )
+    session.commit()
+
+    result = create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 5, 29),
+            duration_minutes=30,
+            bpm=120,
+            topic="Dorian phrasing",
+            notes=None,
+        ),
+    )
+
+    statistics = session.scalar(select(ExpStatistics).where(ExpStatistics.user_id == user.id))
+
+    assert result.exp_earned == 36
+    assert statistics is not None
+    assert statistics.current_streak == 1
+    assert statistics.longest_streak == 8
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
