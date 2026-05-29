@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getSkillTree, getYearlyHeatmap } from "../../services/progressionApi";
+import { getSkillTree, getUnlockedEffects, getYearlyHeatmap } from "../../services/progressionApi";
 
 describe("progression API service", () => {
   afterEach(() => {
@@ -69,6 +69,37 @@ describe("progression API service", () => {
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/skill-tree?user_id=77");
     expect(skillTree.userId).toBe(77);
     expect(skillTree.branches[0].nodes[0].level).toBe(2);
+  });
+
+  it("loads unlocked visual effects and normalizes fields", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        user_id: 77,
+        effects: [
+          {
+            id: 9,
+            effect_name: "particle_trail",
+            unlocked_at: "2026-05-29T12:00:00",
+            trigger_condition: "五声音阶累计练习达到 10 小时"
+          }
+        ]
+      })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const effects = await getUnlockedEffects({
+      apiBaseUrl: "http://localhost:8000",
+      userId: 77
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/unlocked-effects?user_id=77");
+    expect(effects[0]).toEqual({
+      id: 9,
+      effectName: "particle_trail",
+      unlockedAt: "2026-05-29T12:00:00",
+      triggerCondition: "五声音阶累计练习达到 10 小时"
+    });
   });
 
   it("throws readable errors when progression requests fail", async () => {

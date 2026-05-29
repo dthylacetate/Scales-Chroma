@@ -272,6 +272,50 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Lv 2")).toBeInTheDocument();
   });
 
+  it("loads and displays unlocked visual effects", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith("/unlocked-effects?user_id=77")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            user_id: 77,
+            effects: [
+              {
+                id: 9,
+                effect_name: "particle_trail",
+                unlocked_at: "2026-05-29T12:00:00",
+                trigger_condition: "五声音阶累计练习达到 10 小时"
+              }
+            ]
+          })
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          color: "#ffb45c",
+          glow: 0.86,
+          particles: {
+            density: 0.52,
+            trail: false
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        })
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Unlocked Effects")).toBeInTheDocument();
+    });
+    expect(screen.getByText("particle_trail")).toBeInTheDocument();
+    expect(screen.getByText("五声音阶累计练习达到 10 小时")).toBeInTheDocument();
+  });
+
   it("loads and displays yearly practice heatmap entries", async () => {
     const fetchMock = vi.fn().mockImplementation((url: string) => {
       if (url.endsWith("/heatmap/yearly?user_id=77&year=2026")) {
