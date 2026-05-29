@@ -9,6 +9,11 @@ interface GetSkillTreeInput {
   apiBaseUrl?: string;
 }
 
+interface GetUnlockedEffectsInput {
+  userId: number;
+  apiBaseUrl?: string;
+}
+
 interface HeatmapDayResponse {
   date: string;
   duration_minutes: number;
@@ -50,9 +55,28 @@ interface SkillTreeResponse {
   branches: SkillBranch[];
 }
 
+interface UnlockedEffectResponse {
+  id: number;
+  effect_name: string;
+  unlocked_at: string;
+  trigger_condition: string;
+}
+
+interface UnlockedEffectsResponse {
+  user_id: number;
+  effects: UnlockedEffectResponse[];
+}
+
 export interface SkillTree {
   userId: number;
   branches: SkillBranch[];
+}
+
+export interface UnlockedEffect {
+  id: number;
+  effectName: string;
+  unlockedAt: string;
+  triggerCondition: string;
 }
 
 export async function getYearlyHeatmap({
@@ -89,6 +113,27 @@ export async function getSkillTree({
     userId: payload.user_id,
     branches: payload.branches
   };
+}
+
+export async function getUnlockedEffects({
+  userId,
+  apiBaseUrl = ""
+}: GetUnlockedEffectsInput): Promise<UnlockedEffect[]> {
+  const response = await fetch(`${apiBaseUrl}/unlocked-effects?${new URLSearchParams({
+    user_id: String(userId)
+  })}`);
+
+  if (!response.ok) {
+    throw new Error(`Unlocked effects request failed with status ${response.status}`);
+  }
+
+  const payload = (await response.json()) as UnlockedEffectsResponse;
+  return payload.effects.map((effect) => ({
+    id: effect.id,
+    effectName: effect.effect_name,
+    unlockedAt: effect.unlocked_at,
+    triggerCondition: effect.trigger_condition
+  }));
 }
 
 function normalizeYearlyHeatmap(response: YearlyHeatmapResponse): YearlyHeatmap {

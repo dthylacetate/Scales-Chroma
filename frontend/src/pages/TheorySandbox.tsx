@@ -9,7 +9,14 @@ import {
   type PracticeRecordHistoryItem,
   type PracticeRecordResult
 } from "../services/practiceRecordsApi";
-import { getSkillTree, getYearlyHeatmap, type SkillTree, type YearlyHeatmap } from "../services/progressionApi";
+import {
+  getSkillTree,
+  getUnlockedEffects,
+  getYearlyHeatmap,
+  type SkillTree,
+  type UnlockedEffect,
+  type YearlyHeatmap
+} from "../services/progressionApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
@@ -56,6 +63,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [practiceSubmitting, setPracticeSubmitting] = useState(false);
   const [skillTree, setSkillTree] = useState<SkillTree | null>(null);
   const [heatmap, setHeatmap] = useState<YearlyHeatmap | null>(null);
+  const [unlockedEffects, setUnlockedEffects] = useState<UnlockedEffect[]>([]);
   const [savedCompositions, setSavedCompositions] = useState<SavedComposition[]>([]);
   const [compositionSaving, setCompositionSaving] = useState(false);
   const [compositionError, setCompositionError] = useState<string | null>(null);
@@ -176,6 +184,33 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     let cancelled = false;
 
     if (!apiBaseUrl || !userId) {
+      setUnlockedEffects([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getUnlockedEffects({ apiBaseUrl, userId })
+      .then((effects) => {
+        if (!cancelled) {
+          setUnlockedEffects(effects);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUnlockedEffects([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseUrl, userId, visualRefreshKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!apiBaseUrl || !userId) {
       setPracticeHistory([]);
       return () => {
         cancelled = true;
@@ -197,7 +232,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl, userId, visualRefreshKey]);
+  }, [apiBaseUrl, userId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -475,6 +510,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
             </section>
           ) : null}
 
+          {unlockedEffects.length > 0 ? <UnlockedEffectsPanel effects={unlockedEffects} /> : null}
           {skillTree ? <SkillTreePanel skillTree={skillTree} /> : null}
           {heatmap ? <HeatmapPanel heatmap={heatmap} /> : null}
         </aside>
@@ -677,6 +713,28 @@ function PracticeInput({ label, value, onChange, type, min }: PracticeInputProps
         onChange={(event) => onChange(event.target.value)}
       />
     </label>
+  );
+}
+
+function UnlockedEffectsPanel({ effects }: { effects: UnlockedEffect[] }) {
+  return (
+    <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">
+      <div className="flex items-center gap-2 pb-1">
+        <Sparkles aria-hidden="true" className="size-4 text-[#ffd166]" />
+        <h2 className="text-base font-semibold tracking-normal">Unlocked Effects</h2>
+      </div>
+      <div className="grid gap-1">
+        {effects.map((effect) => (
+          <div
+            key={effect.id}
+            className="rounded-md border border-[#3f3144] bg-[#201922] px-2 py-1.5 text-sm text-stone-100"
+          >
+            <div className="font-medium text-[#b9fff7]">{effect.effectName}</div>
+            <div className="text-xs text-stone-400">{effect.triggerCondition}</div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
