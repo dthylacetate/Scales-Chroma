@@ -1,7 +1,8 @@
-import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Send, Sparkles, X } from "lucide-react";
+import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Save, Send, Sparkles, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
+import { getSavedCompositions, saveComposition, type SavedComposition } from "../services/compositionsApi";
 import { createPracticeRecord, type PracticeRecordResult } from "../services/practiceRecordsApi";
 import { getSkillTree, getYearlyHeatmap, type SkillTree, type YearlyHeatmap } from "../services/progressionApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
@@ -49,6 +50,9 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [practiceSubmitting, setPracticeSubmitting] = useState(false);
   const [skillTree, setSkillTree] = useState<SkillTree | null>(null);
   const [heatmap, setHeatmap] = useState<YearlyHeatmap | null>(null);
+  const [savedCompositions, setSavedCompositions] = useState<SavedComposition[]>([]);
+  const [compositionSaving, setCompositionSaving] = useState(false);
+  const [compositionError, setCompositionError] = useState<string | null>(null);
   const [visualRefreshKey, setVisualRefreshKey] = useState(0);
   const activeElement = composition.at(-1) ?? selected;
   const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
@@ -161,6 +165,33 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
       cancelled = true;
     };
   }, [apiBaseUrl, practiceDate, userId, visualRefreshKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!apiBaseUrl || !userId) {
+      setSavedCompositions([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getSavedCompositions({ apiBaseUrl, userId })
+      .then((compositions) => {
+        if (!cancelled) {
+          setSavedCompositions(compositions);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSavedCompositions([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseUrl, userId]);
 
   return (
     <main className="min-h-screen bg-[#120f12] text-stone-100">
@@ -290,6 +321,35 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
           <Readout label="Animation" value={visual.animationState} />
           <Readout label="Glow" value={visual.glow.toFixed(2)} />
           <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
+
+          {apiBaseUrl && userId ? (
+            <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">
+              <button
+                className="flex h-10 items-center justify-center gap-2 rounded-md border border-[#5bd0c7]/40 bg-[#182528] px-3 text-sm font-semibold text-[#b9fff7] transition hover:border-[#5bd0c7] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={compositionSaving}
+                type="button"
+                onClick={saveCurrentComposition}
+              >
+                <Save aria-hidden="true" className="size-4" />
+                保存组合
+              </button>
+              {savedCompositions.length > 0 ? (
+                <div className="grid gap-1">
+                  {savedCompositions.map((savedComposition) => (
+                    <button
+                      key={savedComposition.id}
+                      className="rounded-md border border-[#3f3144] bg-[#201922] px-2 py-1.5 text-left text-sm text-stone-100 hover:border-[#ffd166]"
+                      type="button"
+                      onClick={() => loadSavedComposition(savedComposition)}
+                    >
+                      {savedComposition.name}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {compositionError ? <div className="text-sm text-[#ff8fa3]">{compositionError}</div> : null}
+            </section>
+          ) : null}
 
           <form
             aria-label="练习记录"
@@ -466,6 +526,45 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     } finally {
       setPracticeSubmitting(false);
     }
+  }
+
+  async function saveCurrentComposition(): Promise<void> {
+    if (!apiBaseUrl || !userId) {
+      return;
+    }
+
+    const elementsToSave = activeElements;
+    const name = elementsToSave.map((element) => element.name).join(" - ");
+
+    setCompositionSaving(true);
+    setCompositionError(null);
+
+    try {
+      const savedComposition = await saveComposition({
+        apiBaseUrl,
+        elements: elementsToSave,
+        name,
+        userId
+      });
+      setSavedCompositions((current) => [
+        savedComposition,
+        ...current.filter((compositionItem) => compositionItem.id !== savedComposition.id)
+      ]);
+    } catch {
+      setCompositionError("组合保存失败");
+    } finally {
+      setCompositionSaving(false);
+    }
+  }
+
+  function loadSavedComposition(savedComposition: SavedComposition): void {
+    if (savedComposition.elements.length === 0) {
+      return;
+    }
+
+    setInvalidHint(null);
+    setComposition(savedComposition.elements);
+    setSelected(savedComposition.elements.at(-1) ?? selected);
   }
 }
 

@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.compositions import router as compositions_router
 from app.api.practice_records import router as practice_records_router
 from app.api.progression import router as progression_router
 from app.api.sandbox import router as sandbox_router
@@ -34,6 +35,7 @@ app.add_middleware(
 app.include_router(practice_records_router)
 app.include_router(progression_router)
 app.include_router(sandbox_router)
+app.include_router(compositions_router)
 
 
 @app.get("/health")

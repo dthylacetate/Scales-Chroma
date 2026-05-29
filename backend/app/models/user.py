@@ -29,8 +29,13 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    saved_compositions: Mapped[list["SavedComposition"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 from app.models.exp_statistics import ExpStatistics  # noqa: E402
 from app.models.practice_record import PracticeRecord  # noqa: E402
+from app.models.saved_composition import SavedComposition  # noqa: E402
 from app.models.unlocked_effect import UnlockedEffect  # noqa: E402
