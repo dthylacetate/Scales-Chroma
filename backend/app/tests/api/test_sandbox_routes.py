@@ -118,6 +118,42 @@ def test_sandbox_render_returns_combo_bonus_metadata_for_valid_compositions() ->
     assert payload["beam_strength"] > 0.5
 
 
+def test_sandbox_render_returns_growth_aura_metadata_for_unlocked_style_tracks() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(
+            session,
+            username="growth-aura-player",
+            email="growth-aura@example.com",
+        )
+        session.add_all(
+            [
+                UnlockedEffect(user_id=1, effect_name="velvet_glow", trigger_condition="Maj7 / Neo Soul 累计练习达到 4 小时"),
+                UnlockedEffect(user_id=1, effect_name="silk_motion", trigger_condition="Maj7 / Neo Soul 累计练习达到 4 小时"),
+            ]
+        )
+        session.commit()
+        response = client.post(
+            "/sandbox/render",
+            headers=headers,
+            json={
+                "elements": [
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                ],
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "Velvet Tide" in payload["active_bonuses"]
+    assert payload["secondary_color"] == "#ff9fc9"
+    assert payload["glow"] > 0.9
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

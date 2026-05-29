@@ -160,11 +160,25 @@ const COMBO_BONUSES = [
     rippleStrength: 0.12,
     secondaryColor: "#8fdcff"
   }),
+  combo(["lydian", "major"], "Sunwake Atlas", {
+    glow: 0.1,
+    softOrb: 0.14,
+    beamStrength: 0.14,
+    energy: 0.08,
+    secondaryColor: "#bfe6ff"
+  }),
   combo(["dorian", "min7"], "Midnight Current", {
     wave: 0.22,
     rippleStrength: 0.2,
     complexity: 0.12,
     secondaryColor: "#9af0dd"
+  }),
+  combo(["dorian", "ii-v-i"], "Blue Hour Run", {
+    wave: 0.18,
+    lattice: 0.14,
+    rippleStrength: 0.18,
+    beamStrength: 0.1,
+    secondaryColor: "#7fe0c8"
   }),
   combo(["phrygian", "dominant7"], "Desert Voltage", {
     fracture: 0.22,
@@ -180,6 +194,13 @@ const COMBO_BONUSES = [
     glow: 0.1,
     backgroundColor: "#05060d"
   }),
+  combo(["melodic minor", "dominant7"], "Chrome Meridian", {
+    wave: 0.16,
+    fracture: 0.12,
+    complexity: 0.16,
+    energy: 0.12,
+    secondaryColor: "#73f0d5"
+  }),
   combo(["ii-v-i", "maj7"], "Cadence Aurora", {
     lattice: 0.2,
     rippleStrength: 0.16,
@@ -192,11 +213,38 @@ const COMBO_BONUSES = [
     energy: 0.12,
     beamStrength: 0.12
   }),
+  combo(["ionian", "i-v-vi-iv"], "Daybreak Parade", {
+    softOrb: 0.18,
+    glow: 0.12,
+    beamStrength: 0.14,
+    rippleStrength: 0.08,
+    secondaryColor: "#ffe5a8"
+  }),
   combo(["pentatonic", "mixolydian"], "Roadhouse Neon", {
     lattice: 0.18,
     beamStrength: 0.2,
     contrast: 0.12,
     energy: 0.12
+  }),
+  combo(["minor", "pentatonic"], "Midnight Run", {
+    wave: 0.16,
+    contrast: 0.12,
+    rippleStrength: 0.18,
+    backgroundColor: "#08111e"
+  }),
+  combo(["mixolydian", "dominant7"], "Brass Overdrive", {
+    lattice: 0.16,
+    fracture: 0.12,
+    beamStrength: 0.18,
+    energy: 0.14,
+    secondaryColor: "#ffc145"
+  }),
+  combo(["aug", "lydian"], "Prism Flare", {
+    fracture: 0.16,
+    softOrb: 0.14,
+    glow: 0.12,
+    beamStrength: 0.18,
+    secondaryColor: "#ff9be8"
   })
 ];
 

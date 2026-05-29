@@ -96,6 +96,7 @@ export class RealtimeCanvasRenderer {
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
+    this.drawBonusMotifs(visual, centerX, centerY, radius, time);
     this.drawParticles(visual, centerX, centerY, radius, time);
     this.drawGrain(visual, width, height, time);
   }
@@ -425,6 +426,90 @@ export class RealtimeCanvasRenderer {
     this.context.restore();
   }
 
+  private drawBonusMotifs(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    if (visual.activeBonuses.length === 0) {
+      return;
+    }
+
+    const activeText = visual.activeBonuses.join(" ");
+
+    if (containsAny(activeText, ["Velvet", "Silk"])) {
+      this.context.save();
+      this.context.lineWidth = Math.max(1.2, 1.2 + visual.glow * 2.2);
+      this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.24 + visual.glow * 0.16);
+      this.context.shadowBlur = 12 + visual.glow * 20;
+      this.context.shadowColor = visual.secondaryColor;
+      for (let index = 0; index < 2; index += 1) {
+        const ellipseRadius = radius * (1 + index * 0.16);
+        const yOffset = Math.sin(time * 1.1 + index) * radius * 0.04;
+        this.context.beginPath();
+        this.context.arc(centerX, centerY + yOffset, ellipseRadius, Math.PI * 0.15, Math.PI * 0.85);
+        this.context.stroke();
+      }
+      this.context.restore();
+    }
+
+    if (containsAny(activeText, ["Fracture", "Voltage", "Shrapnel"])) {
+      this.context.save();
+      this.context.translate(centerX, centerY);
+      this.context.lineWidth = Math.max(1.4, 1.4 + visual.contrast * 2.4);
+      this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.3 + visual.contrast * 0.16);
+      for (let index = 0; index < 7; index += 1) {
+        const angle = time * (0.8 + visual.motionSpeed * 0.7) + index * ((Math.PI * 2) / 7);
+        this.context.beginPath();
+        this.context.moveTo(Math.cos(angle) * radius * 0.9, Math.sin(angle) * radius * 0.9);
+        this.context.lineTo(Math.cos(angle + 0.08) * radius * 1.18, Math.sin(angle + 0.08) * radius * 1.18);
+        this.context.lineTo(Math.cos(angle - 0.06) * radius * 1.28, Math.sin(angle - 0.06) * radius * 1.28);
+        this.context.stroke();
+      }
+      this.context.restore();
+    }
+
+    if (containsAny(activeText, ["Lattice", "Aurora", "Skyline", "Prism"])) {
+      this.context.save();
+      this.context.translate(centerX, centerY);
+      this.context.rotate(-time * (0.1 + visual.motionSpeed * 0.18));
+      this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 2.2);
+      this.context.strokeStyle = alphaHex(visual.color, 0.2 + visual.beamStrength * 0.16);
+      const span = radius * 1.28;
+      for (let index = 0; index < 4; index += 1) {
+        const offset = -span / 2 + (span * index) / 3;
+        this.context.beginPath();
+        this.context.moveTo(-span / 2, offset);
+        this.context.lineTo(span / 2, offset);
+        this.context.moveTo(offset, -span / 2);
+        this.context.lineTo(offset, span / 2);
+        this.context.stroke();
+      }
+      this.context.restore();
+    }
+
+    if (containsAny(activeText, ["Current", "Run", "Phase", "Tide"])) {
+      this.context.save();
+      this.context.lineWidth = Math.max(1.2, 1 + visual.rippleStrength * 2.8);
+      this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.2 + visual.rippleStrength * 0.14);
+      for (let index = 0; index < 3; index += 1) {
+        const arcRadius = radius * (0.82 + index * 0.16);
+        this.context.beginPath();
+        this.context.arc(
+          centerX + Math.cos(time * 0.8 + index) * radius * 0.08,
+          centerY + Math.sin(time * 0.7 + index) * radius * 0.08,
+          arcRadius,
+          time * 0.4 + index * 0.7,
+          time * 0.4 + index * 0.7 + Math.PI * 0.8
+        );
+        this.context.stroke();
+      }
+      this.context.restore();
+    }
+  }
+
   private drawGrain(visual: VisualParameters, width: number, height: number, time: number): void {
     const speckleCount = Math.max(8, Math.round(8 + visual.grain * 28));
 
@@ -464,4 +549,8 @@ function rgbToHex(red: number, green: number, blue: number): string {
   return `#${red.toString(16).padStart(2, "0")}${green.toString(16).padStart(2, "0")}${blue
     .toString(16)
     .padStart(2, "0")}`;
+}
+
+function containsAny(source: string, needles: string[]): boolean {
+  return needles.some((needle) => source.includes(needle));
 }

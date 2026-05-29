@@ -63,10 +63,24 @@ describe("TheorySandbox", () => {
     const fetchMock = createAuthenticatedFetchMock({
       visualResponse: {
         color: "#62d2a2",
+        secondary_color: "#9af0dd",
+        background_color: "#081018",
         glow: 0.8,
+        energy: 0.7,
+        complexity: 0.62,
+        motion_speed: 0.64,
+        ring_count: 4,
+        ripple_strength: 0.72,
+        beam_strength: 0.48,
+        grain: 0.22,
+        signature: "Blue Hour Run",
+        active_bonuses: ["Blue Hour Run"],
         particles: {
           density: 0.78,
-          trail: true
+          trail: true,
+          size: 2.3,
+          speed: 1.25,
+          spread: 0.56
         },
         geometry: "wave",
         animation_state: "flowing"
@@ -81,6 +95,7 @@ describe("TheorySandbox", () => {
     });
 
     expect(screen.getByText("On")).toBeInTheDocument();
+    expect(screen.getAllByText("Blue Hour Run").length).toBeGreaterThan(1);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://api.test/sandbox/render",
       expect.objectContaining({
@@ -305,8 +320,48 @@ describe("TheorySandbox", () => {
     await waitFor(() => {
       expect(screen.getByText("Unlocked Effects")).toBeInTheDocument();
     });
-    expect(screen.getByText("particle_trail")).toBeInTheDocument();
+    expect(screen.getByText("粒子拖尾")).toBeInTheDocument();
+    expect(screen.getByText("拖尾粒子会延长动作残影，让速度感更明显。")).toBeInTheDocument();
     expect(screen.getByText("五声音阶累计练习达到 10 小时")).toBeInTheDocument();
+  });
+
+  it("shows readable bonus notes when the backend returns a signature bonus", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createAuthenticatedFetchMock({
+        visualResponse: {
+          color: "#ffe56d",
+          secondary_color: "#8fdcff",
+          background_color: "#0f1117",
+          glow: 0.92,
+          energy: 0.78,
+          complexity: 0.58,
+          motion_speed: 0.62,
+          ring_count: 5,
+          ripple_strength: 0.74,
+          beam_strength: 0.62,
+          grain: 0.18,
+          signature: "Celestial Bloom",
+          active_bonuses: ["Celestial Bloom"],
+          particles: {
+            density: 0.72,
+            trail: false,
+            size: 2.4,
+            speed: 1.2,
+            spread: 0.58
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        }
+      })
+    );
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Celestial Bloom").length).toBeGreaterThan(1);
+    });
+    expect(screen.getByText("Lydian 与 Maj7 叠出更明亮、更抬升的和声光晕。")).toBeInTheDocument();
   });
 
   it("loads and displays yearly practice heatmap entries", async () => {
@@ -448,20 +503,48 @@ describe("TheorySandbox", () => {
 interface TheorySandboxFetchOptions {
   visualResponse?: {
     color: string;
+    secondary_color?: string;
+    background_color?: string;
     glow: number;
+    energy?: number;
+    complexity?: number;
+    motion_speed?: number;
+    ring_count?: number;
+    ripple_strength?: number;
+    beam_strength?: number;
+    grain?: number;
+    signature?: string;
+    active_bonuses?: string[];
     particles: {
       density: number;
       trail: boolean;
+      size?: number;
+      speed?: number;
+      spread?: number;
     };
     geometry: string;
     animation_state: string;
   };
   visualResponses?: Array<{
     color: string;
+    secondary_color?: string;
+    background_color?: string;
     glow: number;
+    energy?: number;
+    complexity?: number;
+    motion_speed?: number;
+    ring_count?: number;
+    ripple_strength?: number;
+    beam_strength?: number;
+    grain?: number;
+    signature?: string;
+    active_bonuses?: string[];
     particles: {
       density: number;
       trail: boolean;
+      size?: number;
+      speed?: number;
+      spread?: number;
     };
     geometry: string;
     animation_state: string;
@@ -496,10 +579,24 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
         options.visualResponses?.[Math.min(renderIndex++, options.visualResponses.length - 1)] ??
         options.visualResponse ?? {
           color: "#ffb45c",
+          secondary_color: "#ff89b5",
+          background_color: "#160e0d",
           glow: 0.86,
+          energy: 0.64,
+          complexity: 0.34,
+          motion_speed: 0.48,
+          ring_count: 3,
+          ripple_strength: 0.34,
+          beam_strength: 0.3,
+          grain: 0.14,
+          signature: "Maj7",
+          active_bonuses: [],
           particles: {
             density: 0.52,
-            trail: false
+            trail: false,
+            size: 2.1,
+            speed: 1.1,
+            spread: 0.46
           },
           geometry: "soft-orb",
           animation_state: "flowing"
@@ -609,10 +706,24 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
     return Promise.resolve(
       okJson({
         color: "#ffb45c",
+        secondary_color: "#ff89b5",
+        background_color: "#160e0d",
         glow: 0.86,
+        energy: 0.64,
+        complexity: 0.34,
+        motion_speed: 0.48,
+        ring_count: 3,
+        ripple_strength: 0.34,
+        beam_strength: 0.3,
+        grain: 0.14,
+        signature: "Maj7",
+        active_bonuses: [],
         particles: {
           density: 0.52,
-          trail: false
+          trail: false,
+          size: 2.1,
+          speed: 1.1,
+          spread: 0.46
         },
         geometry: "soft-orb",
         animation_state: "flowing"

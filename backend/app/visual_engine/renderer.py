@@ -35,6 +35,32 @@ class AggregateVisualState:
     active_bonuses: list[str]
 
 
+COMBO_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
+    ({"lydian", "maj7"}, "Celestial Bloom", {"glow": 0.12, "orb": 0.18, "beam_strength": 0.16, "ripple_strength": 0.12, "signature": "Celestial Bloom", "secondary_color": "#8fdcff"}),
+    ({"lydian", "major"}, "Sunwake Atlas", {"glow": 0.1, "orb": 0.14, "beam_strength": 0.14, "energy": 0.08, "signature": "Sunwake Atlas", "secondary_color": "#bfe6ff"}),
+    ({"dorian", "min7"}, "Midnight Current", {"wave": 0.22, "ripple_strength": 0.2, "complexity": 0.12, "signature": "Midnight Current", "secondary_color": "#9af0dd"}),
+    ({"dorian", "ii-v-i"}, "Blue Hour Run", {"wave": 0.18, "lattice": 0.14, "ripple_strength": 0.18, "beam_strength": 0.1, "signature": "Blue Hour Run", "secondary_color": "#7fe0c8"}),
+    ({"phrygian", "dominant7"}, "Desert Voltage", {"fracture": 0.22, "contrast": 0.14, "beam_strength": 0.18, "energy": 0.1, "signature": "Desert Voltage", "secondary_color": "#ff9b35"}),
+    ({"harmonic minor", "dim7"}, "Occult Fracture", {"fracture": 0.24, "grain": 0.18, "complexity": 0.14, "glow": 0.1, "signature": "Occult Fracture", "background_color": "#05060d"}),
+    ({"melodic minor", "dominant7"}, "Chrome Meridian", {"wave": 0.16, "fracture": 0.12, "complexity": 0.16, "energy": 0.12, "signature": "Chrome Meridian", "secondary_color": "#73f0d5"}),
+    ({"ii-v-i", "maj7"}, "Cadence Aurora", {"lattice": 0.2, "ripple_strength": 0.16, "beam_strength": 0.18, "signature": "Cadence Aurora", "secondary_color": "#c2b8ff"}),
+    ({"i-v-vi-iv", "major"}, "Anthem Lift", {"orb": 0.22, "glow": 0.1, "energy": 0.12, "beam_strength": 0.12, "signature": "Anthem Lift"}),
+    ({"ionian", "i-v-vi-iv"}, "Daybreak Parade", {"orb": 0.18, "glow": 0.12, "beam_strength": 0.14, "ripple_strength": 0.08, "signature": "Daybreak Parade", "secondary_color": "#ffe5a8"}),
+    ({"pentatonic", "mixolydian"}, "Roadhouse Neon", {"lattice": 0.18, "beam_strength": 0.2, "contrast": 0.12, "energy": 0.12, "signature": "Roadhouse Neon"}),
+    ({"minor", "pentatonic"}, "Midnight Run", {"wave": 0.16, "contrast": 0.12, "ripple_strength": 0.18, "signature": "Midnight Run", "background_color": "#08111e"}),
+    ({"mixolydian", "dominant7"}, "Brass Overdrive", {"lattice": 0.16, "fracture": 0.12, "beam_strength": 0.18, "energy": 0.14, "signature": "Brass Overdrive", "secondary_color": "#ffc145"}),
+    ({"aug", "lydian"}, "Prism Flare", {"fracture": 0.16, "orb": 0.14, "glow": 0.12, "beam_strength": 0.18, "signature": "Prism Flare", "secondary_color": "#ff9be8"}),
+)
+
+STYLE_AURA_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
+    ({"particle_trail", "neon_glow", "dynamic_ripple"}, "Neon Trail", {"lattice": 0.22, "beam_strength": 0.18, "ripple_strength": 0.18, "contrast": 0.1, "background_color": "#061420", "secondary_color": "#59fff5"}),
+    ({"harmonic_lattice", "cadence_bloom"}, "Jazz Skyline", {"lattice": 0.26, "wave": 0.12, "beam_strength": 0.16, "ripple_strength": 0.14, "complexity": 0.12, "background_color": "#07121a", "secondary_color": "#b8c8ff"}),
+    ({"fracture_burst", "ember_strobe"}, "Metal Shrapnel", {"fracture": 0.24, "beam_strength": 0.2, "grain": 0.18, "energy": 0.1, "background_color": "#120407", "secondary_color": "#ff7b3d"}),
+    ({"velvet_glow", "silk_motion"}, "Velvet Tide", {"orb": 0.18, "wave": 0.16, "glow": 0.14, "ripple_strength": 0.12, "background_color": "#170b13", "secondary_color": "#ff9fc9"}),
+    ({"prismatic_motion", "phase_rings"}, "Fusion Prism", {"wave": 0.18, "lattice": 0.2, "complexity": 0.16, "ripple_strength": 0.18, "beam_strength": 0.12, "background_color": "#08131e", "secondary_color": "#8db8ff"}),
+)
+
+
 def render_visual_parameters(
     elements: list[TheoryElement],
     unlocked_effects: list[str] | None = None,
@@ -201,17 +227,7 @@ def _element_weight(element: TheoryElement, index: int, total: int) -> float:
 def _apply_combo_bonuses(elements: list[TheoryElement], state: AggregateVisualState) -> None:
     element_names = {element.name.casefold() for element in elements}
 
-    combo_rules = (
-        ({"lydian", "maj7"}, "Celestial Bloom", {"glow": 0.12, "orb": 0.18, "beam_strength": 0.16, "ripple_strength": 0.12, "signature": "Celestial Bloom", "secondary_color": "#8fdcff"}),
-        ({"dorian", "min7"}, "Midnight Current", {"wave": 0.22, "ripple_strength": 0.2, "complexity": 0.12, "signature": "Midnight Current", "secondary_color": "#9af0dd"}),
-        ({"phrygian", "dominant7"}, "Desert Voltage", {"fracture": 0.22, "contrast": 0.14, "beam_strength": 0.18, "energy": 0.1, "signature": "Desert Voltage", "secondary_color": "#ff9b35"}),
-        ({"harmonic minor", "dim7"}, "Occult Fracture", {"fracture": 0.24, "grain": 0.18, "complexity": 0.14, "glow": 0.1, "signature": "Occult Fracture", "background_color": "#05060d"}),
-        ({"ii-v-i", "maj7"}, "Cadence Aurora", {"lattice": 0.2, "ripple_strength": 0.16, "beam_strength": 0.18, "signature": "Cadence Aurora", "secondary_color": "#c2b8ff"}),
-        ({"i-v-vi-iv", "major"}, "Anthem Lift", {"orb": 0.22, "glow": 0.1, "energy": 0.12, "beam_strength": 0.12, "signature": "Anthem Lift"}),
-        ({"pentatonic", "mixolydian"}, "Roadhouse Neon", {"lattice": 0.18, "beam_strength": 0.2, "contrast": 0.12, "energy": 0.12, "signature": "Roadhouse Neon"}),
-    )
-
-    for required, label, bonus in combo_rules:
+    for required, label, bonus in COMBO_RULES:
         if required <= element_names:
             state.active_bonuses.append(label)
             _apply_state_bonus(state, bonus)
@@ -286,6 +302,19 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.ripple_strength = max(0.92, min(1.0, state.ripple_strength + 0.22))
         state.beam_strength = min(1.0, state.beam_strength + 0.14)
         state.glow = min(1.0, state.glow + 0.08)
+
+    _apply_style_auras(state, unlocked_effects)
+
+
+def _apply_style_auras(state: AggregateVisualState, unlocked_effects: set[str]) -> None:
+    has_signature_bonus = bool(state.active_bonuses)
+
+    for required, label, bonus in STYLE_AURA_RULES:
+        if required <= unlocked_effects:
+            state.active_bonuses.append(label)
+            _apply_state_bonus(state, bonus)
+            if not has_signature_bonus:
+                state.signature = label
 
 
 def _resolve_geometry_shape(state: AggregateVisualState) -> str:

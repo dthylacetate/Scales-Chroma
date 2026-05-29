@@ -41,6 +41,42 @@ const THEORY_LIBRARY: TheoryElement[] = [
   { id: "i-v-vi-iv", type: "progression", name: "I-V-vi-IV" }
 ];
 
+const VISUAL_BONUS_COPY: Record<string, string> = {
+  "Celestial Bloom": "Lydian 与 Maj7 叠出更明亮、更抬升的和声光晕。",
+  "Sunwake Atlas": "大调明亮感被进一步推向开阔、日照式的舞台展开。",
+  "Midnight Current": "Dorian 与 Min7 形成夜色流动感，波纹更深更宽。",
+  "Blue Hour Run": "Dorian 与 II-V-I 让舞台同时拥有流线与和声晶格。",
+  "Desert Voltage": "Phrygian 与 Dominant7 把紧张感拉向炽热、偏危险的边缘。",
+  "Occult Fracture": "Harmonic Minor 与 Dim7 触发神秘、碎裂、阴影更重的舞台。",
+  "Chrome Meridian": "Melodic Minor 与 Dominant7 带来更现代、更锋利的流体断层。",
+  "Cadence Aurora": "II-V-I 与 Maj7 会抬高和声晶格与尾音扩散感。",
+  "Anthem Lift": "常见流行进行与大调会让舞台更外放、更有抬升感。",
+  "Daybreak Parade": "Ionian 与 I-V-vi-IV 形成更直接的日光式推进。",
+  "Roadhouse Neon": "五声音阶与 Mixolydian 更偏街头霓虹和推进律动。",
+  "Midnight Run": "Minor 与 Pentatonic 会得到更冷、更贴地的夜跑节奏。",
+  "Brass Overdrive": "Mixolydian 与 Dominant7 会把晶格、铜色张力和驱动感推高。",
+  "Prism Flare": "Aug 与 Lydian 会制造更闪、更炸裂的棱镜爆光。",
+  "Neon Trail": "五声音阶成长路线会把粒子拖尾和霓虹对比拉高。",
+  "Jazz Skyline": "Jazz 成长路线会让舞台更像层层展开的和声天际线。",
+  "Metal Shrapnel": "Metal 成长路线会把碎裂、噪点和爆裂光束推到前台。",
+  "Velvet Tide": "Neo Soul 成长路线会让舞台更柔、更丝滑、更贴近丝绒灯光。",
+  "Fusion Prism": "Fusion 成长路线会让波相、晶格和色彩相位同时活跃。"
+};
+
+const EFFECT_COPY: Record<string, { title: string; description: string }> = {
+  particle_trail: { title: "粒子拖尾", description: "拖尾粒子会延长动作残影，让速度感更明显。" },
+  neon_glow: { title: "霓虹辉光", description: "整体对比和辅色亮度提升，舞台会更亮更跳。" },
+  dynamic_ripple: { title: "动态波纹", description: "波纹层数和运动感上升，舞台更有扩散律动。" },
+  harmonic_lattice: { title: "和声晶格", description: "Jazz 路线核心特效，舞台会长出更明显的网格骨架。" },
+  cadence_bloom: { title: "终止绽放", description: "和声终止感会变得更柔亮、更有尾韵。" },
+  fracture_burst: { title: "碎裂爆发", description: "Metal 路线核心特效，舞台会更锋利、更爆裂。" },
+  ember_strobe: { title: "余烬频闪", description: "高能碎片和暖色脉冲被进一步放大。" },
+  velvet_glow: { title: "丝绒辉光", description: "Neo Soul 路线核心特效，柔亮外层会更厚、更近人。" },
+  silk_motion: { title: "绸缎流动", description: "舞台运动会更顺滑，波面更像连续织物。" },
+  prismatic_motion: { title: "棱镜运动", description: "Fusion 路线会把色彩层次和相位流动拉开。" },
+  phase_rings: { title: "相位环", description: "多层环形结构会更明显，形成更复杂的空间节奏。" }
+};
+
 interface TheorySandboxProps {
   apiBaseUrl?: string;
   authToken?: string;
@@ -488,6 +524,14 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                   >
                     {bonus}
                   </span>
+                ))}
+              </div>
+              <div className="mt-3 grid gap-2">
+                {visual.activeBonuses.map((bonus) => (
+                  <div key={`${bonus}-note`} className="rounded-md border border-white/5 bg-white/5 px-2 py-1.5 text-xs text-stone-300">
+                    <span className="font-medium text-stone-100">{bonus}</span>
+                    <span className="ml-2">{VISUAL_BONUS_COPY[bonus] ?? "这个加成会进一步放大当前舞台的风格重心。"}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -945,7 +989,10 @@ function UnlockedEffectsPanel({ effects }: { effects: UnlockedEffect[] }) {
             key={effect.id}
             className="rounded-md border border-[#3f3144] bg-[#201922] px-2 py-1.5 text-sm text-stone-100"
           >
-            <div className="font-medium text-[#b9fff7]">{effect.effectName}</div>
+            <div className="font-medium text-[#b9fff7]">{EFFECT_COPY[effect.effectName]?.title ?? effect.effectName}</div>
+            {EFFECT_COPY[effect.effectName]?.description ? (
+              <div className="mt-1 text-xs text-stone-300">{EFFECT_COPY[effect.effectName].description}</div>
+            ) : null}
             <div className="text-xs text-stone-400">{effect.triggerCondition}</div>
           </div>
         ))}

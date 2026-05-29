@@ -50,4 +50,16 @@ describe("visual engine theory mapping", () => {
     expect(["tense", "explosive"]).toContain(visual.animationState);
     expect(visual.complexity).toBeGreaterThan(0.85);
   });
+
+  it("supports expanded combo signatures for melodic-minor dominant blends", () => {
+    const visual = mapTheoryToVisuals([
+      { id: "melodic-minor", type: "scale", name: "Melodic Minor" },
+      { id: "dominant7", type: "chord", name: "Dominant7" }
+    ]);
+
+    expect(visual.signature).toBe("Chrome Meridian");
+    expect(visual.activeBonuses).toContain("Chrome Meridian");
+    expect(visual.energy).toBeGreaterThan(0.85);
+    expect(visual.beamStrength).toBeGreaterThan(0.45);
+  });
 });

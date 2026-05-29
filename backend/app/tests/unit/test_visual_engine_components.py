@@ -111,6 +111,21 @@ def test_renderer_uses_combo_rules_to_amplify_stage_signature() -> None:
     assert visual.geometry == "soft-orb"
 
 
+def test_renderer_supports_expanded_combo_library_for_modern_tension_blends() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="melodic-minor", type="scale", name="Melodic Minor"),
+            TheoryElement(id="dominant7", type="chord", name="Dominant7"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert visual.signature == "Chrome Meridian"
+    assert "Chrome Meridian" in visual.active_bonuses
+    assert visual.energy > 0.8
+    assert visual.complexity > 0.7
+
+
 def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
     visual = render_visual_parameters(
         elements=[TheoryElement(id="c-maj7", type="chord", name="Maj7")],
@@ -119,7 +134,8 @@ def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
 
     assert visual.geometry == "fracture"
     assert visual.animation_state == "explosive"
-    assert visual.signature == "Fracture Burst"
+    assert visual.signature == "Metal Shrapnel"
+    assert "Metal Shrapnel" in visual.active_bonuses
     assert visual.beam_strength > 0.75
     assert visual.secondary_color == "#ff7b3d"
 
@@ -131,6 +147,19 @@ def test_renderer_applies_neo_soul_style_unlocks_to_visual_parameters() -> None:
     )
 
     assert visual.geometry == "soft-orb"
-    assert visual.signature == "Velvet Glow"
+    assert visual.signature == "Velvet Tide"
+    assert "Velvet Tide" in visual.active_bonuses
     assert visual.glow > 0.8
     assert visual.motion_speed > 0.45
+
+
+def test_renderer_applies_fusion_style_aura_to_visual_parameters() -> None:
+    visual = render_visual_parameters(
+        elements=[TheoryElement(id="c-min7", type="chord", name="Min7")],
+        unlocked_effects=["prismatic_motion", "phase_rings"],
+    )
+
+    assert "Fusion Prism" in visual.active_bonuses
+    assert visual.secondary_color == "#8db8ff"
+    assert visual.ripple_strength > 0.9
+    assert visual.beam_strength > 0.35
