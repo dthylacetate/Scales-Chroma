@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import date
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -8,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import get_session
 from app.main import app
 from app.models import Base
+from app.models.practice_record import PracticeRecord
 
 
 def test_create_practice_record_returns_exp_reward() -> None:
@@ -80,6 +82,53 @@ def test_create_practice_record_rejects_missing_required_fields() -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_list_practice_records_returns_recent_records_for_user() -> None:
+    session = create_test_session()
+    session.add_all(
+        [
+            PracticeRecord(
+                user_id=77,
+                practice_date=date(2026, 5, 28),
+                duration_minutes=20,
+                bpm=120,
+                topic="Dorian phrasing",
+            ),
+            PracticeRecord(
+                user_id=77,
+                practice_date=date(2026, 5, 29),
+                duration_minutes=45,
+                bpm=150,
+                topic="Pentatonic speed run",
+            ),
+            PracticeRecord(
+                user_id=88,
+                practice_date=date(2026, 5, 29),
+                duration_minutes=60,
+                bpm=180,
+                topic="Sweep picking",
+            ),
+        ]
+    )
+    session.commit()
+
+    def override_session() -> Generator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+
+    try:
+        client = TestClient(app)
+        response = client.get("/practice-records", params={"user_id": 77, "limit": 1})
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload["records"]) == 1
+    assert payload["records"][0]["topic"] == "Pentatonic speed run"
 
 
 def create_test_session() -> Session:

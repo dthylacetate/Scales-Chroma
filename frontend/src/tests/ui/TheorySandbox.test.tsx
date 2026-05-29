@@ -81,6 +81,26 @@ describe("TheorySandbox", () => {
 
   it("records a practice session and shows earned exp", async () => {
     const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith("/practice-records?user_id=77&limit=5")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            records: [
+              {
+                id: 3,
+                user_id: 77,
+                practice_date: "2026-05-28",
+                duration_minutes: 30,
+                bpm: 120,
+                topic: "Dorian phrasing",
+                notes: null,
+                created_at: "2026-05-28T12:00:00"
+              }
+            ]
+          })
+        });
+      }
+
       if (url.endsWith("/practice-records")) {
         return Promise.resolve({
           ok: true,
@@ -119,6 +139,10 @@ describe("TheorySandbox", () => {
 
     render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
 
+    await waitFor(() => {
+      expect(screen.getByText("Dorian phrasing")).toBeInTheDocument();
+    });
+
     fireEvent.change(screen.getByLabelText("练习日期"), { target: { value: "2026-05-29" } });
     fireEvent.change(screen.getByLabelText("练习时长"), { target: { value: "45" } });
     fireEvent.change(screen.getByLabelText("BPM"), { target: { value: "150" } });
@@ -133,6 +157,7 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Level 2")).toBeInTheDocument();
     expect(screen.getByText("Streak 3 days")).toBeInTheDocument();
     expect(screen.getByText("Best 7 days")).toBeInTheDocument();
+    expect(screen.getByText("Pentatonic speed run")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/practice-records", expect.any(Object));
   });
 

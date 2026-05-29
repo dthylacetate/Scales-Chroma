@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createPracticeRecord } from "../../services/practiceRecordsApi";
+import { createPracticeRecord, getPracticeRecords } from "../../services/practiceRecordsApi";
 
 describe("practice records API service", () => {
   afterEach(() => {
@@ -80,5 +80,36 @@ describe("practice records API service", () => {
         topic: "Dorian phrasing"
       })
     ).rejects.toThrow("Practice record request failed with status 422");
+  });
+
+  it("loads recent practice records for a user", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        records: [
+          {
+            id: 12,
+            user_id: 77,
+            practice_date: "2026-05-29",
+            duration_minutes: 45,
+            bpm: 150,
+            topic: "Pentatonic speed run",
+            notes: "Clean triplets",
+            created_at: "2026-05-29T12:00:00"
+          }
+        ]
+      })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const records = await getPracticeRecords({
+      apiBaseUrl: "http://localhost:8000",
+      userId: 77,
+      limit: 5
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/practice-records?user_id=77&limit=5");
+    expect(records[0].topic).toBe("Pentatonic speed run");
+    expect(records[0].durationMinutes).toBe(45);
   });
 });
