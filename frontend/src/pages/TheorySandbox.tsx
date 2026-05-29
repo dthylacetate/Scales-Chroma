@@ -120,7 +120,22 @@ export function TheorySandbox() {
                 {composition.map((element, index) => (
                   <div
                     key={`${element.id}-${index}`}
+                    aria-label={`移动 ${element.name}`}
+                    data-lane-index={index}
+                    draggable
                     className="flex h-11 items-center gap-2 rounded-md border border-[#ffd166]/50 bg-[#2a2023] px-3 text-sm text-stone-100"
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData("text/plain", `lane:${index}`);
+                      event.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const dragPayload = event.dataTransfer.getData("text/plain");
+                      moveCompositionBlock(dragPayload, index);
+                    }}
                   >
                     <span className="font-medium">{element.name}</span>
                     <span className="text-xs uppercase text-stone-400">{element.type}</span>
@@ -177,6 +192,30 @@ export function TheorySandbox() {
   function removeFromComposition(indexToRemove: number): void {
     setInvalidHint(null);
     setComposition((current) => current.filter((_, index) => index !== indexToRemove));
+  }
+
+  function moveCompositionBlock(dragPayload: string, targetIndex: number): void {
+    if (!dragPayload.startsWith("lane:")) {
+      return;
+    }
+
+    const sourceIndex = Number(dragPayload.replace("lane:", ""));
+
+    if (!Number.isInteger(sourceIndex) || sourceIndex === targetIndex) {
+      return;
+    }
+
+    setInvalidHint(null);
+    setComposition((current) => {
+      if (sourceIndex < 0 || sourceIndex >= current.length || targetIndex < 0 || targetIndex >= current.length) {
+        return current;
+      }
+
+      const next = [...current];
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
   }
 }
 

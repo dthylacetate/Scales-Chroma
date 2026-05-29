@@ -61,15 +61,17 @@ function dragTheoryBlock(name: string): void {
 function reorderLaneBlock(sourceName: string, targetName: string): void {
   const source = screen.getByLabelText(`移动 ${sourceName}`);
   const target = screen.getByLabelText(`移动 ${targetName}`);
+  const sourceIndex = source.getAttribute("data-lane-index") ?? "0";
+  const dragData = `lane:${sourceIndex}`;
 
   fireEvent.dragStart(source, {
-    dataTransfer: createDataTransfer(`lane:${sourceName.toLowerCase()}`),
+    dataTransfer: createDataTransfer(dragData),
   });
   fireEvent.dragOver(target, {
-    dataTransfer: createDataTransfer(`lane:${sourceName.toLowerCase()}`),
+    dataTransfer: createDataTransfer(dragData),
   });
   fireEvent.drop(target, {
-    dataTransfer: createDataTransfer(`lane:${sourceName.toLowerCase()}`),
+    dataTransfer: createDataTransfer(dragData),
   });
 }
 
