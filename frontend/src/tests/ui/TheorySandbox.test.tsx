@@ -301,4 +301,70 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("2026-05-29")).toBeInTheDocument();
     expect(screen.getByText("54 EXP")).toBeInTheDocument();
   });
+
+  it("saves and reloads sandbox compositions", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      if (url.endsWith("/compositions?user_id=77")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            compositions: [
+              {
+                id: 4,
+                user_id: 77,
+                name: "Saved Dim7",
+                elements: [{ id: "dim7", type: "chord", name: "Dim7" }],
+                created_at: "2026-05-29T12:00:00"
+              }
+            ]
+          })
+        });
+      }
+
+      if (url.endsWith("/compositions") && init?.method === "POST") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 5,
+            user_id: 77,
+            name: "Maj7",
+            elements: [{ id: "maj7", type: "chord", name: "Maj7" }],
+            created_at: "2026-05-29T12:01:00"
+          })
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          color: "#ffb45c",
+          glow: 0.86,
+          particles: {
+            density: 0.52,
+            trail: false
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        })
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Saved Dim7")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "保存组合" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("http://api.test/compositions", expect.any(Object));
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Saved Dim7" }));
+
+    expect(screen.getByText("Dim7")).toBeInTheDocument();
+    expect(screen.getByText("fracture")).toBeInTheDocument();
+  });
 });
