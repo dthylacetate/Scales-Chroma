@@ -19,6 +19,35 @@ def test_color_mapper_uses_theory_emotion_not_generic_palette() -> None:
     assert map_color(TheoryElement(id="e-phrygian", type="mode", name="Phrygian")).hex == "#394052"
 
 
+def test_visual_engine_covers_full_planned_theory_library() -> None:
+    expected_visuals = [
+        ("major", "scale", "Major", "#f6e27f", "soft-orb", "flowing"),
+        ("minor", "scale", "Minor", "#7b8cff", "wave", "calm"),
+        ("pentatonic", "scale", "Pentatonic", "#00d4ff", "lattice", "flowing"),
+        ("harmonic-minor", "scale", "Harmonic Minor", "#d6457a", "fracture", "tense"),
+        ("melodic-minor", "scale", "Melodic Minor", "#47c9af", "wave", "flowing"),
+        ("ionian", "mode", "Ionian", "#f8d66d", "soft-orb", "flowing"),
+        ("dorian", "mode", "Dorian", "#62d2a2", "wave", "flowing"),
+        ("phrygian", "mode", "Phrygian", "#394052", "wave", "calm"),
+        ("lydian", "mode", "Lydian", "#ffe66d", "soft-orb", "flowing"),
+        ("mixolydian", "mode", "Mixolydian", "#ff9f1c", "lattice", "flowing"),
+        ("maj7", "chord", "Maj7", "#ffb45c", "soft-orb", "flowing"),
+        ("min7", "chord", "Min7", "#7bdff2", "wave", "calm"),
+        ("dominant7", "chord", "Dominant7", "#f25f5c", "fracture", "tense"),
+        ("dim7", "chord", "Dim7", "#d7f7ff", "fracture", "tense"),
+        ("aug", "chord", "Aug", "#ff6bcb", "fracture", "explosive"),
+        ("ii-v-i", "progression", "II-V-I", "#b8f2e6", "wave", "flowing"),
+        ("i-v-vi-iv", "progression", "I-V-vi-IV", "#ffcf6e", "soft-orb", "flowing"),
+    ]
+
+    for element_id, theory_type, name, color, geometry, animation in expected_visuals:
+        element = TheoryElement(id=element_id, type=theory_type, name=name)
+
+        assert map_color(element).hex == color
+        assert generate_geometry(element).shape == geometry
+        assert select_animation_state(element).state == animation
+
+
 def test_particle_system_reacts_to_tension_and_unlocks() -> None:
     base_particles = configure_particles(tension_level=3, unlocked_effects=[])
     unlocked_particles = configure_particles(tension_level=7, unlocked_effects=["particle_trail"])
