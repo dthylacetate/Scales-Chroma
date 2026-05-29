@@ -323,7 +323,7 @@ npm test
 当前结果：
 
 ```text
-50 passed，仍有 1 个 React act(...) 测试提示
+51 passed，仍有 1 个 React act(...) 测试提示
 ```
 
 ### 前端生产构建
@@ -344,7 +344,7 @@ Vite 构建通过
 当前结果：
 
 ```text
-已验证登录会话恢复、Growth 解锁后的舞台签名切换、中文特效说明展示，以及 Temperature / Symmetry / Depth / Pulse 新读数同步刷新。
+已验证登录会话恢复、Growth 解锁后的舞台签名切换、中文特效说明展示，以及 Temperature / Symmetry / Depth / Pulse 新读数与 Stage Reading 文案同步刷新。
 ```
 
 ## 当前覆盖能力

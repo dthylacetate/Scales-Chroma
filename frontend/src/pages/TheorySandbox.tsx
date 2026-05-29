@@ -518,6 +518,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Depth" value={visual.depth.toFixed(2)} />
           <Readout label="Pulse" value={visual.pulseDensity.toFixed(2)} />
           <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
+          <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
           {visual.activeBonuses.length > 0 ? (
             <div className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
               <div className="text-xs uppercase text-stone-400">Active Bonuses</div>
@@ -997,6 +998,40 @@ function Readout({ label, value, swatch }: ReadoutProps) {
   );
 }
 
+function StageReadingPanel({
+  visual,
+  elements,
+  activeBonuses
+}: {
+  visual: VisualParameters;
+  elements: TheoryElement[];
+  activeBonuses: string[];
+}) {
+  const reading = buildStageReading(visual, elements, activeBonuses);
+
+  return (
+    <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
+      <div className="text-xs uppercase text-stone-400">Stage Reading</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{reading.summary}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="情绪" value={reading.mood} />
+        <ReadingLine label="空间" value={reading.space} />
+        <ReadingLine label="运动" value={reading.motion} />
+        <ReadingLine label="来源" value={reading.drivers} />
+      </div>
+    </section>
+  );
+}
+
+function ReadingLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-white/5 bg-white/5 px-2 py-1.5 text-xs text-stone-300">
+      <span className="font-medium text-stone-100">{label}</span>
+      <span className="ml-2">{value}</span>
+    </div>
+  );
+}
+
 interface PracticeInputProps {
   label: string;
   value: string;
@@ -1121,4 +1156,92 @@ function heatmapCellClass(exp: number): string {
   }
 
   return "border-[#3f3144] bg-[#151217]";
+}
+
+function buildStageReading(
+  visual: VisualParameters,
+  elements: TheoryElement[],
+  activeBonuses: string[]
+): {
+  summary: string;
+  mood: string;
+  space: string;
+  motion: string;
+  drivers: string;
+} {
+  const warmth = visual.temperature >= 0.62 ? "偏暖" : visual.temperature <= 0.38 ? "偏冷" : "冷暖平衡";
+  const intensity = visual.contrast >= 0.7 ? "张力明显" : visual.glow >= 0.76 ? "柔亮扩散" : "相对克制";
+  const mood = `${warmth}，${intensity}。`;
+
+  const space =
+    visual.depth >= 0.72
+      ? `空间层次很深，${visual.symmetry >= 0.68 ? "而且镜像感很强，像完整搭起一个舞台空间。" : "但保留了不完全对称的漂移感。"}`
+      : visual.symmetry >= 0.72
+        ? "空间更规整，对称骨架清晰，舞台会更像被设计过的礼堂或晶格场。"
+        : "空间更贴近前景，结构没有完全锁死，会更像即兴生成的场域。";
+
+  const motion =
+    visual.pulseDensity >= 0.72
+      ? `脉冲密度很高，配合 ${animationLabel(visual.animationState)} 会显得更推进、更有压迫感。`
+      : visual.rippleStrength >= 0.7
+        ? "波纹和相位更突出，整体更像连续流体在呼吸。"
+        : `动作密度中等，重点更多落在 ${geometryLabel(visual.geometry)} 的形体变化上。`;
+
+  const primaryDrivers = elements.map((element) => element.name).join(" + ");
+  const bonusText =
+    activeBonuses.length > 0 ? `；当前额外加成是 ${activeBonuses.join("、")}` : "；当前还没有触发额外组合加成";
+
+  return {
+    summary: `当前舞台由 ${primaryDrivers} 主导，呈现出 ${signatureTone(visual)} 的读感。`,
+    mood,
+    space,
+    motion,
+    drivers: `${primaryDrivers}${bonusText}。`
+  };
+}
+
+function animationLabel(animationState: VisualParameters["animationState"]): string {
+  switch (animationState) {
+    case "explosive":
+      return "爆发式动画";
+    case "tense":
+      return "紧张动画";
+    case "calm":
+      return "平静动画";
+    default:
+      return "流动动画";
+  }
+}
+
+function geometryLabel(geometry: VisualParameters["geometry"]): string {
+  switch (geometry) {
+    case "fracture":
+      return "碎裂几何";
+    case "wave":
+      return "波形几何";
+    case "lattice":
+      return "晶格几何";
+    default:
+      return "软球体几何";
+  }
+}
+
+function signatureTone(visual: VisualParameters): string {
+  if (visual.activeBonuses.some((bonus) => bonus.includes("Velvet") || bonus.includes("Silk"))) {
+    return "柔滑丝绒型";
+  }
+
+  if (visual.activeBonuses.some((bonus) => bonus.includes("Metal") || bonus.includes("Fracture") || bonus.includes("Voltage"))) {
+    return "高张力碎裂型";
+  }
+
+  if (visual.activeBonuses.some((bonus) => bonus.includes("Jazz") || bonus.includes("Aurora") || bonus.includes("Lattice"))) {
+    return "和声晶格型";
+  }
+
+  if (visual.activeBonuses.some((bonus) => bonus.includes("Prism") || bonus.includes("Chrome") || bonus.includes("Fusion"))) {
+    return "棱镜流变型";
+  }
+
+  return visual.glow >= visual.contrast ? "扩散发光型" : "紧凑对比型";
 }

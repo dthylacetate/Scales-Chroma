@@ -364,6 +364,51 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Lydian 与 Maj7 叠出更明亮、更抬升的和声光晕。")).toBeInTheDocument();
   });
 
+  it("renders a readable stage interpretation from visual parameters", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createAuthenticatedFetchMock({
+        visualResponse: {
+          color: "#ffe56d",
+          secondary_color: "#8fdcff",
+          background_color: "#0f1117",
+          glow: 0.92,
+          energy: 0.78,
+          complexity: 0.58,
+          temperature: 0.82,
+          symmetry: 0.88,
+          depth: 0.81,
+          pulse_density: 0.64,
+          motion_speed: 0.62,
+          ring_count: 5,
+          ripple_strength: 0.74,
+          beam_strength: 0.62,
+          grain: 0.18,
+          signature: "Celestial Bloom",
+          active_bonuses: ["Celestial Bloom"],
+          particles: {
+            density: 0.72,
+            trail: false,
+            size: 2.4,
+            speed: 1.2,
+            spread: 0.58
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        }
+      })
+    );
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Stage Reading")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/当前舞台由 Ionian 主导/)).toBeInTheDocument();
+    expect(screen.getByText("偏暖，柔亮扩散。")).toBeInTheDocument();
+    expect(screen.getByText(/空间层次很深/)).toBeInTheDocument();
+  });
+
   it("loads and displays yearly practice heatmap entries", async () => {
     vi.stubGlobal(
       "fetch",
@@ -541,6 +586,10 @@ interface TheorySandboxFetchOptions {
     glow: number;
     energy?: number;
     complexity?: number;
+    temperature?: number;
+    symmetry?: number;
+    depth?: number;
+    pulse_density?: number;
     motion_speed?: number;
     ring_count?: number;
     ripple_strength?: number;
@@ -565,6 +614,10 @@ interface TheorySandboxFetchOptions {
     glow: number;
     energy?: number;
     complexity?: number;
+    temperature?: number;
+    symmetry?: number;
+    depth?: number;
+    pulse_density?: number;
     motion_speed?: number;
     ring_count?: number;
     ripple_strength?: number;
