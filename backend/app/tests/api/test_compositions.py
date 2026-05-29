@@ -108,6 +108,44 @@ def test_update_saved_composition_replaces_name_and_elements() -> None:
     assert listed[0]["name"] == "Updated Sketch"
 
 
+def test_cannot_update_another_users_composition() -> None:
+    session = create_test_session()
+
+    def override_session() -> Generator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+
+    try:
+        client = TestClient(app)
+        create_response = client.post(
+            "/compositions",
+            json={
+                "user_id": 77,
+                "name": "Owner Sketch",
+                "elements": [
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                ],
+            },
+        )
+        composition_id = create_response.json()["id"]
+        update_response = client.put(
+            f"/compositions/{composition_id}",
+            json={
+                "user_id": 88,
+                "name": "Intruder Sketch",
+                "elements": [
+                    {"id": "dim7", "type": "chord", "name": "Dim7"},
+                ],
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert update_response.status_code == 404
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

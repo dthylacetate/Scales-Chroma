@@ -185,6 +185,14 @@ def test_list_practice_records_filters_by_topic_and_date_range() -> None:
     assert [record["topic"] for record in payload["records"]] == ["II-V-I jazz voice leading"]
 
 
+def test_practice_records_require_authentication() -> None:
+    client = TestClient(app)
+
+    response = client.get("/practice-records")
+
+    assert response.status_code == 401
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
