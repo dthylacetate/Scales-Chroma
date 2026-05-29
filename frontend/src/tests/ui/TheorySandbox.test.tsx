@@ -94,7 +94,9 @@ describe("TheorySandbox", () => {
             notes: "Clean triplets",
             exp_earned: 54,
             total_exp: 125,
-            level: 2
+            level: 2,
+            current_streak: 3,
+            longest_streak: 7
           })
         });
       }
@@ -129,6 +131,8 @@ describe("TheorySandbox", () => {
     });
     expect(screen.getByText("Total 125 EXP")).toBeInTheDocument();
     expect(screen.getByText("Level 2")).toBeInTheDocument();
+    expect(screen.getByText("Streak 3 days")).toBeInTheDocument();
+    expect(screen.getByText("Best 7 days")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/practice-records", expect.any(Object));
   });
 
@@ -149,6 +153,8 @@ describe("TheorySandbox", () => {
             exp_earned: 732,
             total_exp: 732,
             level: 8,
+            current_streak: 1,
+            longest_streak: 1,
             unlocked_effects: ["particle_trail", "neon_glow", "dynamic_ripple"]
           })
         });

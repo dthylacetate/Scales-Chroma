@@ -161,6 +161,8 @@ def test_create_practice_record_advances_streak_and_applies_bonus_exp() -> None:
     statistics = session.scalar(select(ExpStatistics).where(ExpStatistics.user_id == user.id))
 
     assert result.exp_earned == 39
+    assert result.current_streak == 3
+    assert result.longest_streak == 3
     assert statistics is not None
     assert statistics.current_streak == 3
     assert statistics.longest_streak == 3
@@ -198,6 +200,8 @@ def test_create_practice_record_resets_streak_after_a_gap() -> None:
     statistics = session.scalar(select(ExpStatistics).where(ExpStatistics.user_id == user.id))
 
     assert result.exp_earned == 36
+    assert result.current_streak == 1
+    assert result.longest_streak == 8
     assert statistics is not None
     assert statistics.current_streak == 1
     assert statistics.longest_streak == 8

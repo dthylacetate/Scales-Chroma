@@ -21,6 +21,8 @@ describe("practice records API service", () => {
         exp_earned: 54,
         total_exp: 125,
         level: 2,
+        current_streak: 3,
+        longest_streak: 7,
         unlocked_effects: ["particle_trail", "neon_glow"]
       })
     });
@@ -53,6 +55,8 @@ describe("practice records API service", () => {
     expect(record.expEarned).toBe(54);
     expect(record.totalExp).toBe(125);
     expect(record.level).toBe(2);
+    expect(record.currentStreak).toBe(3);
+    expect(record.longestStreak).toBe(7);
     expect(record.unlockedEffects).toEqual(["particle_trail", "neon_glow"]);
     expect(record.durationMinutes).toBe(45);
   });

@@ -32,6 +32,8 @@ def test_create_practice_record_returns_exp_reward() -> None:
     assert payload["exp_earned"] == 36
     assert payload["total_exp"] >= 36
     assert payload["level"] >= 1
+    assert payload["current_streak"] >= 1
+    assert payload["longest_streak"] >= payload["current_streak"]
     assert payload["unlocked_effects"] == []
 
 
