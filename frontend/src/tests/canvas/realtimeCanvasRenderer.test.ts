@@ -5,10 +5,25 @@ import type { VisualParameters } from "../../types/theory";
 
 const visual: VisualParameters = {
   color: "#ffb45c",
+  secondaryColor: "#8fdcff",
+  backgroundColor: "#091018",
   glow: 0.86,
+  contrast: 0.54,
+  energy: 0.78,
+  complexity: 0.62,
+  motionSpeed: 0.68,
+  ringCount: 5,
+  rippleStrength: 0.74,
+  beamStrength: 0.58,
+  grain: 0.32,
+  signature: "Cadence Aurora",
+  activeBonuses: ["Cadence Aurora"],
   particles: {
-    density: 0.52,
-    trail: false
+    density: 0.72,
+    trail: false,
+    size: 2.3,
+    speed: 1.14,
+    spread: 0.58
   },
   geometry: "soft-orb",
   animationState: "flowing"
@@ -19,7 +34,7 @@ describe("RealtimeCanvasRenderer", () => {
     vi.restoreAllMocks();
   });
 
-  it("starts a requestAnimationFrame loop and renders a frame", () => {
+  it("starts a requestAnimationFrame loop and paints layered stage backgrounds", () => {
     const canvas = createCanvas();
     let shouldRenderImmediately = true;
     const requestFrame = vi.fn((callback: FrameRequestCallback) => {
@@ -36,10 +51,14 @@ describe("RealtimeCanvasRenderer", () => {
       cancelFrame
     });
 
+    renderer.resize(320, 180);
     renderer.start(visual);
 
+    const context = canvas.getContext("2d");
     expect(requestFrame).toHaveBeenCalled();
-    expect(canvas.getContext("2d")?.fillRect).toHaveBeenCalled();
+    expect(context?.fillRect).toHaveBeenCalled();
+    expect(context?.createLinearGradient).toHaveBeenCalled();
+    expect(context?.createRadialGradient).toHaveBeenCalled();
     expect(renderer.isRunning()).toBe(true);
   });
 
@@ -75,7 +94,7 @@ describe("RealtimeCanvasRenderer", () => {
     expect(canvas.style.height).toBe("180px");
   });
 
-  it("draws fracture geometry with angular shards", () => {
+  it("draws fracture geometry with rotating shards and beam bursts", () => {
     const canvas = createCanvas();
     let shouldRenderImmediately = true;
     const renderer = new RealtimeCanvasRenderer(canvas, {
@@ -93,12 +112,14 @@ describe("RealtimeCanvasRenderer", () => {
     renderer.start({
       ...visual,
       geometry: "fracture",
-      animationState: "tense"
+      animationState: "explosive",
+      beamStrength: 0.9
     });
 
     const context = canvas.getContext("2d");
     expect(context?.lineTo).toHaveBeenCalled();
     expect(context?.stroke).toHaveBeenCalled();
+    expect(context?.translate).toHaveBeenCalled();
   });
 
   it("draws particle trails when the visual has unlocked trail effects", () => {
@@ -120,17 +141,31 @@ describe("RealtimeCanvasRenderer", () => {
       ...visual,
       particles: {
         density: 0.9,
-        trail: true
+        trail: true,
+        size: 2.5,
+        speed: 1.4,
+        spread: 0.66
       }
     });
 
-    expect(canvas.getContext("2d")?.arc).toHaveBeenCalledTimes(19);
+    const context = canvas.getContext("2d");
+    expect(context?.arc).toHaveBeenCalled();
+    expect(context?.moveTo).toHaveBeenCalled();
+    expect(context?.lineTo).toHaveBeenCalled();
   });
 });
 
 function createCanvas(): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
-  const context = {
+  const context = createMockContext();
+
+  vi.spyOn(canvas, "getContext").mockReturnValue(context as unknown as CanvasRenderingContext2D);
+
+  return canvas;
+}
+
+function createMockContext() {
+  return {
     clearRect: vi.fn(),
     fillRect: vi.fn(),
     beginPath: vi.fn(),
@@ -144,14 +179,21 @@ function createCanvas(): HTMLCanvasElement {
     restore: vi.fn(),
     scale: vi.fn(),
     setTransform: vi.fn(),
+    translate: vi.fn(),
+    rotate: vi.fn(),
+    quadraticCurveTo: vi.fn(),
     createRadialGradient: vi.fn(() => ({
       addColorStop: vi.fn()
     })),
+    createLinearGradient: vi.fn(() => ({
+      addColorStop: vi.fn()
+    })),
     fillStyle: "",
+    strokeStyle: "",
+    shadowBlur: 0,
+    shadowColor: "",
+    lineWidth: 1,
+    lineCap: "round",
     globalAlpha: 1
   };
-
-  vi.spyOn(canvas, "getContext").mockReturnValue(context as unknown as CanvasRenderingContext2D);
-
-  return canvas;
 }

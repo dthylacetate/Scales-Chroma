@@ -149,6 +149,40 @@ def test_metal_and_neo_soul_practice_unlock_distinct_visual_rewards() -> None:
     assert {"fracture_burst", "velvet_glow"} <= effect_names
 
 
+def test_fusion_practice_unlocks_prismatic_motion_and_phase_rings() -> None:
+    session = create_test_session()
+    user = User(username="fusion-visual-player", email="fusion-visual@example.com")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 5),
+            duration_minutes=150,
+            bpm=132,
+            topic="Fusion legato sequences",
+        ),
+    )
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 6),
+            duration_minutes=120,
+            bpm=138,
+            topic="Hybrid fusion interval study",
+        ),
+    )
+
+    effects = session.scalars(select(UnlockedEffect).where(UnlockedEffect.user_id == user.id)).all()
+    effect_names = {effect.effect_name for effect in effects}
+
+    assert {"prismatic_motion", "phase_rings"} <= effect_names
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

@@ -65,7 +65,8 @@ describe("TheorySandbox drag composition", () => {
     expect(within(lane).getByText("Maj7")).toBeInTheDocument();
     expect(within(lane).getByText("Phrygian")).toBeInTheDocument();
     expect(within(lane).queryByText("Dorian")).not.toBeInTheDocument();
-    expect(screen.getByText("calm")).toBeInTheDocument();
+    expect(screen.getByText("soft-orb")).toBeInTheDocument();
+    expect(screen.getByText("flowing")).toBeInTheDocument();
   });
 });
 

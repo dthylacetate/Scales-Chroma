@@ -15,26 +15,26 @@ def test_tension_analyzer_scores_music_theory_elements() -> None:
 
 def test_color_mapper_uses_theory_emotion_not_generic_palette() -> None:
     assert map_color(TheoryElement(id="c-maj7", type="chord", name="Maj7")).hex == "#ffb45c"
-    assert map_color(TheoryElement(id="c-dim7", type="chord", name="Dim7")).hex == "#d7f7ff"
-    assert map_color(TheoryElement(id="e-phrygian", type="mode", name="Phrygian")).hex == "#394052"
+    assert map_color(TheoryElement(id="c-dim7", type="chord", name="Dim7")).hex == "#d8f6ff"
+    assert map_color(TheoryElement(id="e-phrygian", type="mode", name="Phrygian")).hex == "#574062"
 
 
 def test_visual_engine_covers_full_planned_theory_library() -> None:
     expected_visuals = [
-        ("major", "scale", "Major", "#f6e27f", "soft-orb", "flowing"),
-        ("minor", "scale", "Minor", "#7b8cff", "wave", "calm"),
-        ("pentatonic", "scale", "Pentatonic", "#00d4ff", "lattice", "flowing"),
-        ("harmonic-minor", "scale", "Harmonic Minor", "#d6457a", "fracture", "tense"),
-        ("melodic-minor", "scale", "Melodic Minor", "#47c9af", "wave", "flowing"),
+        ("major", "scale", "Major", "#f7d56b", "soft-orb", "flowing"),
+        ("minor", "scale", "Minor", "#7488ff", "wave", "calm"),
+        ("pentatonic", "scale", "Pentatonic", "#00d7ff", "lattice", "flowing"),
+        ("harmonic-minor", "scale", "Harmonic Minor", "#df4f74", "fracture", "tense"),
+        ("melodic-minor", "scale", "Melodic Minor", "#42c6b0", "wave", "flowing"),
         ("ionian", "mode", "Ionian", "#f8d66d", "soft-orb", "flowing"),
-        ("dorian", "mode", "Dorian", "#62d2a2", "wave", "flowing"),
-        ("phrygian", "mode", "Phrygian", "#394052", "wave", "calm"),
-        ("lydian", "mode", "Lydian", "#ffe66d", "soft-orb", "flowing"),
-        ("mixolydian", "mode", "Mixolydian", "#ff9f1c", "lattice", "flowing"),
+        ("dorian", "mode", "Dorian", "#59d1a4", "wave", "flowing"),
+        ("phrygian", "mode", "Phrygian", "#574062", "wave", "tense"),
+        ("lydian", "mode", "Lydian", "#ffe56d", "soft-orb", "flowing"),
+        ("mixolydian", "mode", "Mixolydian", "#ff9b35", "lattice", "flowing"),
         ("maj7", "chord", "Maj7", "#ffb45c", "soft-orb", "flowing"),
         ("min7", "chord", "Min7", "#7bdff2", "wave", "calm"),
         ("dominant7", "chord", "Dominant7", "#f25f5c", "fracture", "tense"),
-        ("dim7", "chord", "Dim7", "#d7f7ff", "fracture", "tense"),
+        ("dim7", "chord", "Dim7", "#d8f6ff", "fracture", "tense"),
         ("aug", "chord", "Aug", "#ff6bcb", "fracture", "explosive"),
         ("ii-v-i", "progression", "II-V-I", "#b8f2e6", "wave", "flowing"),
         ("i-v-vi-iv", "progression", "I-V-vi-IV", "#ffcf6e", "soft-orb", "flowing"),
@@ -48,14 +48,26 @@ def test_visual_engine_covers_full_planned_theory_library() -> None:
         assert select_animation_state(element).state == animation
 
 
-def test_particle_system_reacts_to_tension_and_unlocks() -> None:
-    base_particles = configure_particles(tension_level=3, unlocked_effects=[])
-    unlocked_particles = configure_particles(tension_level=7, unlocked_effects=["particle_trail"])
+def test_particle_system_reacts_to_energy_complexity_and_unlocks() -> None:
+    base_particles = configure_particles(
+        density_seed=0.4,
+        energy=0.46,
+        complexity=0.34,
+        unlocked_effects=[],
+    )
+    unlocked_particles = configure_particles(
+        density_seed=0.7,
+        energy=0.9,
+        complexity=0.86,
+        unlocked_effects=["particle_trail", "fracture_burst"],
+    )
 
-    assert base_particles.density == 0.38
+    assert base_particles.density == 0.49
+    assert base_particles.size == 1.88
     assert not base_particles.trail
     assert unlocked_particles.density > base_particles.density
     assert unlocked_particles.trail
+    assert unlocked_particles.speed > base_particles.speed
 
 
 def test_geometry_and_animation_reflect_theory_identity() -> None:
@@ -74,35 +86,51 @@ def test_renderer_composes_visual_parameters_from_engine_components() -> None:
         unlocked_effects=["particle_trail"],
     )
 
-    assert visual.color == "#d7f7ff"
-    assert visual.glow > 0.6
-    assert visual.particles["density"] > 0.75
+    assert visual.color == "#d8f6ff"
+    assert visual.secondary_color == "#a6d0ff"
+    assert visual.glow > 0.7
+    assert visual.particles["density"] > 0.95
     assert visual.particles["trail"] is True
     assert visual.geometry == "fracture"
     assert visual.animation_state == "tense"
 
 
-def test_renderer_uses_highest_tension_element_in_a_composition() -> None:
+def test_renderer_uses_combo_rules_to_amplify_stage_signature() -> None:
     visual = render_visual_parameters(
         elements=[
-            TheoryElement(id="c-maj7", type="chord", name="Maj7"),
-            TheoryElement(id="c-dim7", type="chord", name="Dim7"),
+            TheoryElement(id="lydian", type="mode", name="Lydian"),
+            TheoryElement(id="maj7", type="chord", name="Maj7"),
         ],
         unlocked_effects=[],
     )
 
-    assert visual.geometry == "fracture"
-    assert visual.animation_state == "tense"
-    assert visual.particles["density"] > 0.5
-    assert visual.glow > 0.7
+    assert visual.signature == "Celestial Bloom"
+    assert "Celestial Bloom" in visual.active_bonuses
+    assert visual.glow > 0.9
+    assert visual.beam_strength > 0.5
+    assert visual.geometry == "soft-orb"
 
 
-def test_renderer_applies_style_unlocks_to_visual_parameters() -> None:
+def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
     visual = render_visual_parameters(
         elements=[TheoryElement(id="c-maj7", type="chord", name="Maj7")],
-        unlocked_effects=["harmonic_lattice", "fracture_burst", "velvet_glow"],
+        unlocked_effects=["fracture_burst", "ember_strobe"],
     )
 
     assert visual.geometry == "fracture"
     assert visual.animation_state == "explosive"
-    assert visual.glow == 1.0
+    assert visual.signature == "Fracture Burst"
+    assert visual.beam_strength > 0.75
+    assert visual.secondary_color == "#ff7b3d"
+
+
+def test_renderer_applies_neo_soul_style_unlocks_to_visual_parameters() -> None:
+    visual = render_visual_parameters(
+        elements=[TheoryElement(id="c-min7", type="chord", name="Min7")],
+        unlocked_effects=["velvet_glow", "silk_motion"],
+    )
+
+    assert visual.geometry == "soft-orb"
+    assert visual.signature == "Velvet Glow"
+    assert visual.glow > 0.8
+    assert visual.motion_speed > 0.45

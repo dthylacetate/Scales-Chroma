@@ -32,9 +32,13 @@ def test_sandbox_render_maps_theory_elements_to_visual_parameters() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["color"].startswith("#")
+    assert payload["secondary_color"].startswith("#")
+    assert payload["background_color"].startswith("#")
     assert payload["glow"] > 0.7
     assert payload["geometry"] == "soft-orb"
     assert payload["animation_state"] == "flowing"
+    assert payload["signature"] == "Maj7"
+    assert payload["ring_count"] >= 2
 
 
 def test_sandbox_render_rejects_empty_theory_elements() -> None:
@@ -82,6 +86,36 @@ def test_sandbox_render_applies_user_unlocked_effects() -> None:
 
     assert response.status_code == 200
     assert response.json()["particles"]["trail"] is True
+
+
+def test_sandbox_render_returns_combo_bonus_metadata_for_valid_compositions() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(
+            session,
+            username="combo-player",
+            email="combo@example.com",
+        )
+        response = client.post(
+            "/sandbox/render",
+            headers=headers,
+            json={
+                "elements": [
+                    {"id": "lydian", "type": "mode", "name": "Lydian"},
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                ],
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["signature"] == "Celestial Bloom"
+    assert "Celestial Bloom" in payload["active_bonuses"]
+    assert payload["beam_strength"] > 0.5
 
 
 def create_test_session() -> Session:

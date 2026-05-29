@@ -79,7 +79,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
   const [visualRefreshKey, setVisualRefreshKey] = useState(0);
   const activeElement = composition.at(-1) ?? selected;
   const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
-  const localVisual = useMemo(() => mapTheoryToVisuals([activeElement]), [activeElement]);
+  const localVisual = useMemo(() => mapTheoryToVisuals(activeElements), [activeElements]);
   const [visual, setVisual] = useState<VisualParameters>(localVisual);
 
   useEffect(() => {
@@ -337,10 +337,31 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               aria-label="实时音乐视觉舞台"
               className="h-full min-h-[360px] w-full"
             />
-            <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-md bg-[#120f12]/75 px-3 py-2 text-sm text-[#b9fff7]">
-              <Activity aria-hidden="true" className="size-4" />
-              <span>{activeElement.name}</span>
+            <div className="pointer-events-none absolute left-4 top-4 flex max-w-[min(80%,24rem)] flex-col gap-2 rounded-md border border-white/10 bg-[#120f12]/76 px-3 py-2 text-sm text-[#b9fff7] backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <Activity aria-hidden="true" className="size-4" />
+                <span className="font-medium">{visual.signature}</span>
+              </div>
+              <div className="flex flex-wrap gap-1 text-[11px] text-stone-300">
+                {activeElements.map((element, index) => (
+                  <span key={`${element.id}-${index}`} className="rounded-sm border border-white/10 bg-white/5 px-1.5 py-0.5">
+                    {element.name}
+                  </span>
+                ))}
+              </div>
             </div>
+            {visual.activeBonuses.length > 0 ? (
+              <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
+                {visual.activeBonuses.map((bonus) => (
+                  <span
+                    key={bonus}
+                    className="rounded-full border border-[#ffd166]/30 bg-[#2b2113]/88 px-2.5 py-1 text-[11px] font-medium text-[#ffe29a]"
+                  >
+                    {bonus}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <div className="pointer-events-none absolute bottom-4 right-4 rounded-md border border-[#5bd0c7]/20 bg-[#120f12]/80 px-3 py-2 text-xs text-stone-300">
               拖到舞台任意位置即可加入轨道
             </div>
@@ -447,11 +468,30 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
             </div>
           ) : null}
           <Readout label="Element" value={activeElement.name} />
+          <Readout label="Signature" value={visual.signature} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
+          <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
           <Readout label="Geometry" value={visual.geometry} />
           <Readout label="Animation" value={visual.animationState} />
           <Readout label="Glow" value={visual.glow.toFixed(2)} />
+          <Readout label="Energy" value={visual.energy.toFixed(2)} />
+          <Readout label="Complexity" value={visual.complexity.toFixed(2)} />
           <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
+          {visual.activeBonuses.length > 0 ? (
+            <div className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
+              <div className="text-xs uppercase text-stone-400">Active Bonuses</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {visual.activeBonuses.map((bonus) => (
+                  <span
+                    key={bonus}
+                    className="rounded-full border border-[#5bd0c7]/25 bg-[#182528] px-2 py-1 text-xs font-medium text-[#b9fff7]"
+                  >
+                    {bonus}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {apiBaseUrl && authToken ? (
             <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">

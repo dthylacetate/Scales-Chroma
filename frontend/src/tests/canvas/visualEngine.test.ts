@@ -25,4 +25,29 @@ describe("visual engine theory mapping", () => {
     expect(visual.geometry).toBe("fracture");
     expect(visual.animationState).toBe("tense");
   });
+
+  it("stacks multiple theory blocks into combo bonuses and richer signatures", () => {
+    const visual = mapTheoryToVisuals([
+      { id: "lydian-c", type: "mode", name: "Lydian" },
+      { id: "maj7-c", type: "chord", name: "Maj7" }
+    ]);
+
+    expect(visual.signature).toBe("Celestial Bloom");
+    expect(visual.activeBonuses).toContain("Celestial Bloom");
+    expect(visual.glow).toBeGreaterThan(0.9);
+    expect(visual.beamStrength).toBeGreaterThan(0.45);
+  });
+
+  it("pushes high-energy tension combinations toward explosive fracture states", () => {
+    const visual = mapTheoryToVisuals([
+      { id: "harmonic-minor-c", type: "scale", name: "Harmonic Minor" },
+      { id: "dim7-c", type: "chord", name: "Dim7" }
+    ]);
+
+    expect(visual.signature).toBe("Occult Fracture");
+    expect(visual.activeBonuses).toContain("Occult Fracture");
+    expect(visual.geometry).toBe("fracture");
+    expect(["tense", "explosive"]).toContain(visual.animationState);
+    expect(visual.complexity).toBeGreaterThan(0.85);
+  });
 });

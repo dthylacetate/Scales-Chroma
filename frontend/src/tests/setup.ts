@@ -9,16 +9,27 @@ const canvasContext = {
   lineTo: vi.fn(),
   moveTo: vi.fn(),
   arc: vi.fn(),
+  quadraticCurveTo: vi.fn(),
   fill: vi.fn(),
   stroke: vi.fn(),
   save: vi.fn(),
   restore: vi.fn(),
   scale: vi.fn(),
   setTransform: vi.fn(),
+  translate: vi.fn(),
+  rotate: vi.fn(),
   createRadialGradient: vi.fn(() => ({
     addColorStop: vi.fn()
   })),
+  createLinearGradient: vi.fn(() => ({
+    addColorStop: vi.fn()
+  })),
   fillStyle: "",
+  strokeStyle: "",
+  shadowBlur: 0,
+  shadowColor: "",
+  lineWidth: 1,
+  lineCap: "round",
   globalAlpha: 1
 };
 

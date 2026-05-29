@@ -15,6 +15,8 @@ METAL_SWEEP_THRESHOLD_MINUTES = 300
 METAL_SWEEP_KEYWORDS = ("sweep", "sweep picking", "metal burst")
 NEO_SOUL_MAJ7_THRESHOLD_MINUTES = 240
 NEO_SOUL_MAJ7_KEYWORDS = ("maj7", "neo soul")
+FUSION_THRESHOLD_MINUTES = 240
+FUSION_KEYWORDS = ("fusion", "legato", "hybrid")
 
 
 @dataclass(frozen=True)
@@ -38,14 +40,22 @@ PENTATONIC_UNLOCKS: tuple[UnlockRule, ...] = (
 
 JAZZ_II_V_I_UNLOCKS: tuple[UnlockRule, ...] = (
     UnlockRule("harmonic_lattice", "II-V-I / Jazz 累计练习达到 5 小时"),
+    UnlockRule("cadence_bloom", "II-V-I / Jazz 累计练习达到 5 小时"),
 )
 
 METAL_SWEEP_UNLOCKS: tuple[UnlockRule, ...] = (
     UnlockRule("fracture_burst", "Metal / Sweep Picking 累计练习达到 5 小时"),
+    UnlockRule("ember_strobe", "Metal / Sweep Picking 累计练习达到 5 小时"),
 )
 
 NEO_SOUL_MAJ7_UNLOCKS: tuple[UnlockRule, ...] = (
     UnlockRule("velvet_glow", "Maj7 / Neo Soul 累计练习达到 4 小时"),
+    UnlockRule("silk_motion", "Maj7 / Neo Soul 累计练习达到 4 小时"),
+)
+
+FUSION_UNLOCKS: tuple[UnlockRule, ...] = (
+    UnlockRule("prismatic_motion", "Fusion / Legato 累计练习达到 4 小时"),
+    UnlockRule("phase_rings", "Fusion / Legato 累计练习达到 4 小时"),
 )
 
 UNLOCK_TRACKS: tuple[UnlockTrack, ...] = (
@@ -53,6 +63,7 @@ UNLOCK_TRACKS: tuple[UnlockTrack, ...] = (
     UnlockTrack(JAZZ_II_V_I_THRESHOLD_MINUTES, JAZZ_II_V_I_KEYWORDS, JAZZ_II_V_I_UNLOCKS),
     UnlockTrack(METAL_SWEEP_THRESHOLD_MINUTES, METAL_SWEEP_KEYWORDS, METAL_SWEEP_UNLOCKS),
     UnlockTrack(NEO_SOUL_MAJ7_THRESHOLD_MINUTES, NEO_SOUL_MAJ7_KEYWORDS, NEO_SOUL_MAJ7_UNLOCKS),
+    UnlockTrack(FUSION_THRESHOLD_MINUTES, FUSION_KEYWORDS, FUSION_UNLOCKS),
 )
 
 
