@@ -80,6 +80,75 @@ def test_visual_unlocks_are_not_duplicated_after_more_qualified_practice() -> No
     assert sorted(effect_names) == ["dynamic_ripple", "neon_glow", "particle_trail"]
 
 
+def test_jazz_ii_v_i_practice_unlocks_harmonic_lattice_after_five_hours() -> None:
+    session = create_test_session()
+    user = User(username="jazz-visual-player", email="jazz-visual@example.com")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 1),
+            duration_minutes=180,
+            bpm=120,
+            topic="II-V-I jazz voice leading",
+        ),
+    )
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 2),
+            duration_minutes=130,
+            bpm=132,
+            topic="251 shell voicings",
+        ),
+    )
+
+    effects = session.scalars(select(UnlockedEffect).where(UnlockedEffect.user_id == user.id)).all()
+    effect_names = {effect.effect_name for effect in effects}
+
+    assert "harmonic_lattice" in effect_names
+    assert any("II-V-I" in effect.trigger_condition for effect in effects)
+
+
+def test_metal_and_neo_soul_practice_unlock_distinct_visual_rewards() -> None:
+    session = create_test_session()
+    user = User(username="style-visual-player", email="style-visual@example.com")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 3),
+            duration_minutes=320,
+            bpm=170,
+            topic="Sweep Picking metal burst",
+        ),
+    )
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 4),
+            duration_minutes=250,
+            bpm=96,
+            topic="Maj7 Neo Soul voicings",
+        ),
+    )
+
+    effects = session.scalars(select(UnlockedEffect).where(UnlockedEffect.user_id == user.id)).all()
+    effect_names = {effect.effect_name for effect in effects}
+
+    assert {"fracture_burst", "velvet_glow"} <= effect_names
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

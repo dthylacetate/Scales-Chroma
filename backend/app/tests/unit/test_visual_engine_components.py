@@ -95,3 +95,14 @@ def test_renderer_uses_highest_tension_element_in_a_composition() -> None:
     assert visual.animation_state == "tense"
     assert visual.particles["density"] > 0.5
     assert visual.glow > 0.7
+
+
+def test_renderer_applies_style_unlocks_to_visual_parameters() -> None:
+    visual = render_visual_parameters(
+        elements=[TheoryElement(id="c-maj7", type="chord", name="Maj7")],
+        unlocked_effects=["harmonic_lattice", "fracture_burst", "velvet_glow"],
+    )
+
+    assert visual.geometry == "fracture"
+    assert visual.animation_state == "explosive"
+    assert visual.glow == 1.0
