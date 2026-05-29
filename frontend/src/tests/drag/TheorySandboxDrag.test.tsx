@@ -34,7 +34,7 @@ describe("TheorySandbox drag composition", () => {
 });
 
 function dragTheoryBlock(name: string): void {
-  const block = screen.getByRole("button", { name: new RegExp(name) });
+  const block = screen.getByRole("button", { name: libraryButtonName(name) });
   const lane = screen.getByLabelText("乐理编排轨道");
 
   fireEvent.dragStart(block, {
@@ -44,6 +44,16 @@ function dragTheoryBlock(name: string): void {
   fireEvent.drop(lane, {
     dataTransfer: createDataTransfer(name.toLowerCase()),
   });
+}
+
+function libraryButtonName(name: string): string {
+  const types: Record<string, string> = {
+    Dorian: "mode",
+    Dim7: "chord",
+    Maj7: "chord",
+  };
+
+  return `${name} ${types[name]}`;
 }
 
 function createDataTransfer(value = ""): DataTransfer {

@@ -41,6 +41,16 @@ const THEORY_VISUALS: Record<string, VisualParameters> = {
     },
     geometry: "wave",
     animationState: "calm"
+  },
+  dorian: {
+    color: "#62d2a2",
+    glow: 0.64,
+    particles: {
+      density: 0.58,
+      trail: false
+    },
+    geometry: "wave",
+    animationState: "flowing"
   }
 };
 
