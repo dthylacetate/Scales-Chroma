@@ -1,23 +1,27 @@
 # Scales & Chroma
 
-Scales & Chroma is a music-theory visual sandbox with a gamified practice loop. It turns scales, modes, chords, tension, and practice growth into interactive visual feedback rather than a CRUD-style tracking app.
+Scales & Chroma 是一个“乐理视觉化沙盘 + 游戏化成长系统”。它不是后台管理或普通打卡工具，而是把音阶、调式、和弦、张力与练习成长转成可交互的视觉反馈。
 
-## Current Phase
+## 当前状态
 
-Phase 1 starts with:
+项目已经完成可运行的前后端基础闭环：
 
-- Project directory structure
-- Database ER design
-- Test foundation
-- First failing tests for TDD
+- 乐理元素库、拖拽编排轨道、Canvas 实时视觉舞台。
+- FastAPI 后端、SQLAlchemy 模型、SQLite 开发数据库。
+- EXP、连续签到、等级、技能树、年度热力图。
+- 练习记录创建、历史读取、主题/日期筛选。
+- 用户永久解锁视觉特效，并影响沙盘渲染参数。
+- 沙盘组合保存与读取。
+- TDD 流程下的后端和前端自动化测试。
 
-## Architecture
+## 技术栈
 
-- `frontend/`: React, TypeScript, Vite, TailwindCSS, Canvas renderer, visual sandbox UI
-- `backend/`: FastAPI, SQLAlchemy, Pydantic, EXP system, API routes
-- `docs/`: architecture notes and ER diagrams
+- Frontend：React、TypeScript、Vite、TailwindCSS、HTML5 Canvas。
+- Backend：Python、FastAPI、SQLAlchemy、Pydantic。
+- Database：SQLite 开发环境，后续可扩展 PostgreSQL。
+- Tests：pytest、Vitest、Testing Library、jsdom。
 
-## Project Structure
+## 项目结构
 
 ```text
 backend/
@@ -31,65 +35,91 @@ backend/
       unit/
       integration/
       api/
-      performance/
-      edge_cases/
-    utils/
+    visual_engine/
     main.py
 frontend/
   src/
-    components/
-    pages/
-    hooks/
-    services/
-    store/
     canvas/
-    visual_engine/
+    pages/
+    services/
     tests/
-      drag/
+      api/
       canvas/
+      drag/
       ui/
-      hooks/
-      responsiveness/
-    utils/
     types/
+    visual_engine/
 docs/
   er-design.md
+  testing-strategy.md
+项目进度.md
 ```
 
-## Test Workflow
+## 启动方式
 
-This project follows TDD:
+后端：
 
-1. Add a failing test.
-2. Commit and push the test.
-3. Implement the smallest feature that passes.
-4. Refactor after green tests.
+```bash
+cd backend
+python -m uvicorn app.main:app --reload
+```
 
-## Backend Tests
+前端：
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+默认前端开发地址通常是 `http://localhost:5173/`。
+
+## 核心 API
+
+- `POST /practice-records`：创建练习记录，返回 EXP、等级、连续签到和新解锁特效。
+- `GET /practice-records`：读取练习历史，支持 `user_id`、`limit`、`topic`、`date_from`、`date_to`。
+- `GET /heatmap/yearly`：读取年度热力图。
+- `GET /skill-tree`：读取技能树进度，节点等级按累计练习分钟数计算。
+- `GET /unlocked-effects`：读取用户永久解锁的视觉能力。
+- `POST /sandbox/render`：根据乐理组合和用户解锁状态返回视觉参数。
+- `POST /compositions`：保存沙盘组合。
+- `GET /compositions`：读取用户保存的沙盘组合。
+
+## 测试方式
+
+后端：
 
 ```bash
 cd backend
 python -m pytest
 ```
 
-## Frontend Tests
+前端：
 
 ```bash
 cd frontend
-npm install
 npm test
+npm run build
 ```
 
-## Git Workflow
+最近完整验证结果：
 
-All changes should be committed in small, traceable steps using:
+- 后端：64 passed，1 个 FastAPI/Starlette 测试客户端弃用 warning。
+- 前端：35 passed，仍有 1 个 React `act(...)` 测试提示，不影响当前功能。
+- 前端 build：通过。
 
-```text
-type(scope): message
-```
+## TDD 与 Git 工作流
 
-Examples:
+项目按 TDD 推进：
 
-- `test(exp): add failing exp calculation tests`
-- `feat(exp): implement exp calculation service`
-- `docs(er): add initial database design`
+1. 先写失败测试。
+2. commit + push 红灯测试。
+3. 实现功能。
+4. 跑目标测试和必要的完整测试。
+5. commit + push 实现。
+
+commit 信息可以使用中文，例如：
+
+- `test(解锁): 添加多风格视觉奖励红灯测试`
+- `feat(解锁): 支持多风格视觉奖励`
+- `docs(进度): 整理当前功能与后续计划`
