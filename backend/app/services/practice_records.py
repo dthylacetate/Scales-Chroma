@@ -8,6 +8,7 @@ from app.models.practice_record import PracticeRecord
 from app.models.user import User
 from app.schemas.practice_record import PracticeRecordCreate
 from app.services.exp_system import calculate_exp
+from app.services.leveling import level_from_total_exp
 from app.services.unlocks import apply_practice_unlocks
 
 
@@ -21,6 +22,8 @@ class PracticeRecordResult:
     topic: str
     notes: str | None
     exp_earned: int
+    total_exp: int
+    level: int
 
 
 def create_practice_record(
@@ -68,6 +71,7 @@ def create_practice_record(
     statistics.current_streak = max(1, statistics.current_streak)
     statistics.longest_streak = max(statistics.longest_streak, statistics.current_streak)
     user.total_exp = statistics.total_exp
+    user.level = level_from_total_exp(user.total_exp)
 
     session.flush()
     apply_practice_unlocks(session=session, user_id=user.id)
@@ -84,4 +88,6 @@ def create_practice_record(
         topic=record.topic,
         notes=record.notes,
         exp_earned=exp_earned,
+        total_exp=user.total_exp,
+        level=user.level,
     )

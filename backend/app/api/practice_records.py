@@ -24,6 +24,8 @@ class PracticeRecordCreateResponse(BaseModel):
     topic: str
     notes: str | None
     exp_earned: int
+    total_exp: int
+    level: int
 
 
 @router.post("", response_model=PracticeRecordCreateResponse, status_code=status.HTTP_201_CREATED)
@@ -46,4 +48,6 @@ def create_practice_record(
         topic=result.topic,
         notes=result.notes,
         exp_earned=result.exp_earned,
+        total_exp=result.total_exp,
+        level=result.level,
     )
