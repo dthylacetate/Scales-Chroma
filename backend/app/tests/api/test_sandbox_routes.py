@@ -1,6 +1,15 @@
-from fastapi.testclient import TestClient
+from collections.abc import Generator
 
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.core.database import get_session
 from app.main import app
+from app.models import Base
+from app.models.unlocked_effect import UnlockedEffect
+from app.models.user import User
 
 
 def test_sandbox_render_maps_theory_elements_to_visual_parameters() -> None:
@@ -29,3 +38,51 @@ def test_sandbox_render_rejects_empty_theory_elements() -> None:
     response = client.post("/sandbox/render", json={"elements": []})
 
     assert response.status_code == 422
+
+
+def test_sandbox_render_applies_user_unlocked_effects() -> None:
+    session = create_test_session()
+    user = User(id=77, username="sandbox-player", email="sandbox@example.com")
+    session.add(user)
+    session.add(
+        UnlockedEffect(
+            user_id=77,
+            effect_name="particle_trail",
+            trigger_condition="五声音阶累计练习达到 10 小时",
+        )
+    )
+    session.commit()
+
+    def override_session() -> Generator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            "/sandbox/render",
+            json={
+                "user_id": 77,
+                "elements": [
+                    {"id": "a-minor-penta", "type": "scale", "name": "Pentatonic"},
+                ],
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    assert response.json()["particles"]["trail"] is True
+
+
+def create_test_session() -> Session:
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+    return session_factory()
