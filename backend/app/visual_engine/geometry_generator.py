@@ -6,11 +6,23 @@ from app.visual_engine.types import GeometryProfile
 GeometryShape = Literal["soft-orb", "fracture", "wave", "lattice"]
 
 GEOMETRY_MAP: dict[str, GeometryShape] = {
-    "maj7": "soft-orb",
-    "dim7": "fracture",
-    "phrygian": "wave",
-    "dorian": "wave",
+    "major": "soft-orb",
+    "minor": "wave",
     "pentatonic": "lattice",
+    "harmonic minor": "fracture",
+    "melodic minor": "wave",
+    "ionian": "soft-orb",
+    "dorian": "wave",
+    "phrygian": "wave",
+    "lydian": "soft-orb",
+    "mixolydian": "lattice",
+    "maj7": "soft-orb",
+    "min7": "wave",
+    "dominant7": "fracture",
+    "dim7": "fracture",
+    "aug": "fracture",
+    "ii-v-i": "wave",
+    "i-v-vi-iv": "soft-orb",
 }
 
 

@@ -6,9 +6,13 @@ from app.visual_engine.types import AnimationProfile
 AnimationState = Literal["calm", "flowing", "tense", "explosive"]
 
 ANIMATION_MAP: dict[str, AnimationState] = {
-    "maj7": "flowing",
-    "dim7": "tense",
+    "minor": "calm",
+    "harmonic minor": "tense",
     "phrygian": "calm",
+    "maj7": "flowing",
+    "min7": "calm",
+    "dominant7": "tense",
+    "dim7": "tense",
     "aug": "explosive",
 }
 
