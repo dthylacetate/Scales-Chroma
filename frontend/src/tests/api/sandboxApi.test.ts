@@ -8,7 +8,7 @@ describe("sandbox API service", () => {
     vi.unstubAllGlobals();
   });
 
-  it("posts theory elements with user id and normalizes visual response fields", async () => {
+  it("posts theory elements with bearer auth and normalizes visual response fields", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -27,16 +27,16 @@ describe("sandbox API service", () => {
     const elements: TheoryElement[] = [{ id: "maj7", type: "chord", name: "Maj7" }];
     const visual = await renderSandboxVisual({
       apiBaseUrl: "http://localhost:8000",
-      userId: 77,
+      authToken: "token-123",
       elements
     });
 
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/sandbox/render", {
       body: JSON.stringify({
-        user_id: 77,
         elements
       }),
       headers: {
+        Authorization: "Bearer token-123",
         "Content-Type": "application/json"
       },
       method: "POST"

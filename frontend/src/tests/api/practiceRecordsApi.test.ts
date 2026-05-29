@@ -30,7 +30,7 @@ describe("practice records API service", () => {
 
     const record = await createPracticeRecord({
       apiBaseUrl: "http://localhost:8000",
-      userId: 77,
+      authToken: "token-123",
       practiceDate: "2026-05-29",
       durationMinutes: 45,
       bpm: 150,
@@ -40,7 +40,6 @@ describe("practice records API service", () => {
 
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/practice-records", {
       body: JSON.stringify({
-        user_id: 77,
         practice_date: "2026-05-29",
         duration_minutes: 45,
         bpm: 150,
@@ -48,6 +47,7 @@ describe("practice records API service", () => {
         notes: "Clean triplets"
       }),
       headers: {
+        Authorization: "Bearer token-123",
         "Content-Type": "application/json"
       },
       method: "POST"
@@ -73,7 +73,7 @@ describe("practice records API service", () => {
     await expect(
       createPracticeRecord({
         apiBaseUrl: "http://localhost:8000",
-        userId: 77,
+        authToken: "token-123",
         practiceDate: "2026-05-29",
         durationMinutes: 0,
         bpm: 120,
@@ -104,11 +104,15 @@ describe("practice records API service", () => {
 
     const records = await getPracticeRecords({
       apiBaseUrl: "http://localhost:8000",
-      userId: 77,
+      authToken: "token-123",
       limit: 5
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/practice-records?user_id=77&limit=5");
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/practice-records?limit=5", {
+      headers: {
+        Authorization: "Bearer token-123"
+      }
+    });
     expect(records[0].topic).toBe("Pentatonic speed run");
     expect(records[0].durationMinutes).toBe(45);
   });
@@ -124,7 +128,7 @@ describe("practice records API service", () => {
 
     await getPracticeRecords({
       apiBaseUrl: "http://localhost:8000",
-      userId: 77,
+      authToken: "token-123",
       limit: 20,
       topic: "jazz",
       dateFrom: "2026-05-01",
@@ -132,7 +136,12 @@ describe("practice records API service", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/practice-records?user_id=77&limit=20&topic=jazz&date_from=2026-05-01&date_to=2026-05-31"
+      "http://localhost:8000/practice-records?limit=20&topic=jazz&date_from=2026-05-01&date_to=2026-05-31",
+      {
+        headers: {
+          Authorization: "Bearer token-123"
+        }
+      }
     );
   });
 });

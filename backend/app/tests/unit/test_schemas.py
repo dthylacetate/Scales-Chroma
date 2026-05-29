@@ -10,15 +10,16 @@ from app.schemas.user import UserCreate
 
 
 def test_user_create_requires_valid_identity_fields() -> None:
-    user = UserCreate(username="player-one", email="player@example.com")
+    user = UserCreate(username="player-one", email="player@example.com", password="plain-secret")
 
     assert user.username == "player-one"
     assert user.email == "player@example.com"
+    assert user.password == "plain-secret"
 
 
 def test_user_create_rejects_empty_username() -> None:
     with pytest.raises(ValidationError):
-        UserCreate(username="", email="player@example.com")
+        UserCreate(username="", email="player@example.com", password="plain-secret")
 
 
 def test_practice_record_create_validates_positive_duration_and_bpm() -> None:

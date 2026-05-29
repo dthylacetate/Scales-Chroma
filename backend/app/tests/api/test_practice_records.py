@@ -13,19 +13,24 @@ from app.models.practice_record import PracticeRecord
 
 
 def test_create_practice_record_returns_exp_reward() -> None:
-    client = TestClient(app)
+    session = create_test_session()
 
-    response = client.post(
-        "/practice-records",
-        json={
-            "user_id": 1,
-            "practice_date": "2026-05-29",
-            "duration_minutes": 30,
-            "bpm": 120,
-            "topic": "Dorian alternate picking",
-            "notes": "Clean sixteenth-note bursts",
-        },
-    )
+    try:
+        client, headers = create_authenticated_client(session)
+        response = client.post(
+            "/practice-records",
+            headers=headers,
+            json={
+                "practice_date": "2026-05-29",
+                "duration_minutes": 30,
+                "bpm": 120,
+                "topic": "Dorian alternate picking",
+                "notes": "Clean sixteenth-note bursts",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
 
     assert response.status_code == 201
     payload = response.json()
@@ -42,17 +47,12 @@ def test_create_practice_record_returns_exp_reward() -> None:
 def test_create_practice_record_returns_new_unlocks_for_visual_growth() -> None:
     session = create_test_session()
 
-    def override_session() -> Generator[Session]:
-        yield session
-
-    app.dependency_overrides[get_session] = override_session
-
     try:
-        client = TestClient(app)
+        client, headers = create_authenticated_client(session, username="unlock-player", email="unlock@example.com")
         response = client.post(
             "/practice-records",
+            headers=headers,
             json={
-                "user_id": 1701,
                 "practice_date": "2026-05-29",
                 "duration_minutes": 610,
                 "bpm": 150,
@@ -69,34 +69,40 @@ def test_create_practice_record_returns_new_unlocks_for_visual_growth() -> None:
 
 
 def test_create_practice_record_rejects_missing_required_fields() -> None:
-    client = TestClient(app)
+    session = create_test_session()
 
-    response = client.post(
-        "/practice-records",
-        json={
-            "user_id": 1,
-            "practice_date": "2026-05-29",
-            "bpm": 120,
-            "topic": "Dorian alternate picking",
-        },
-    )
+    try:
+        client, headers = create_authenticated_client(session)
+        response = client.post(
+            "/practice-records",
+            headers=headers,
+            json={
+                "practice_date": "2026-05-29",
+                "bpm": 120,
+                "topic": "Dorian alternate picking",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
 
     assert response.status_code == 422
 
 
 def test_list_practice_records_returns_recent_records_for_user() -> None:
     session = create_test_session()
+    client, headers = create_authenticated_client(session)
     session.add_all(
         [
             PracticeRecord(
-                user_id=77,
+                user_id=1,
                 practice_date=date(2026, 5, 28),
                 duration_minutes=20,
                 bpm=120,
                 topic="Dorian phrasing",
             ),
             PracticeRecord(
-                user_id=77,
+                user_id=1,
                 practice_date=date(2026, 5, 29),
                 duration_minutes=45,
                 bpm=150,
@@ -113,14 +119,8 @@ def test_list_practice_records_returns_recent_records_for_user() -> None:
     )
     session.commit()
 
-    def override_session() -> Generator[Session]:
-        yield session
-
-    app.dependency_overrides[get_session] = override_session
-
     try:
-        client = TestClient(app)
-        response = client.get("/practice-records", params={"user_id": 77, "limit": 1})
+        response = client.get("/practice-records", headers=headers, params={"limit": 1})
     finally:
         app.dependency_overrides.clear()
         session.close()
@@ -133,24 +133,25 @@ def test_list_practice_records_returns_recent_records_for_user() -> None:
 
 def test_list_practice_records_filters_by_topic_and_date_range() -> None:
     session = create_test_session()
+    client, headers = create_authenticated_client(session)
     session.add_all(
         [
             PracticeRecord(
-                user_id=77,
+                user_id=1,
                 practice_date=date(2026, 5, 27),
                 duration_minutes=20,
                 bpm=118,
                 topic="Jazz warmup",
             ),
             PracticeRecord(
-                user_id=77,
+                user_id=1,
                 practice_date=date(2026, 5, 28),
                 duration_minutes=45,
                 bpm=128,
                 topic="II-V-I jazz voice leading",
             ),
             PracticeRecord(
-                user_id=77,
+                user_id=1,
                 practice_date=date(2026, 5, 29),
                 duration_minutes=30,
                 bpm=150,
@@ -160,17 +161,11 @@ def test_list_practice_records_filters_by_topic_and_date_range() -> None:
     )
     session.commit()
 
-    def override_session() -> Generator[Session]:
-        yield session
-
-    app.dependency_overrides[get_session] = override_session
-
     try:
-        client = TestClient(app)
         response = client.get(
             "/practice-records",
+            headers=headers,
             params={
-                "user_id": 77,
                 "topic": "jazz",
                 "date_from": "2026-05-28",
                 "date_to": "2026-05-29",
@@ -202,3 +197,26 @@ def create_test_session() -> Session:
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     return session_factory()
+
+
+def create_authenticated_client(
+    session: Session,
+    username: str = "player-one",
+    email: str = "player@example.com",
+    password: str = "plain-secret",
+) -> tuple[TestClient, dict[str, str]]:
+    def override_session() -> Generator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    client = TestClient(app)
+    response = client.post(
+        "/auth/register",
+        json={
+            "username": username,
+            "email": email,
+            "password": password,
+        },
+    )
+    token = response.json()["token"]
+    return client, {"Authorization": f"Bearer {token}"}

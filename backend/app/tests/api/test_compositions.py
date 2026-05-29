@@ -8,22 +8,18 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import get_session
 from app.main import app
 from app.models import Base
+from app.models.saved_composition import SavedComposition
 
 
 def test_create_and_list_saved_compositions_for_a_user() -> None:
     session = create_test_session()
 
-    def override_session() -> Generator[Session]:
-        yield session
-
-    app.dependency_overrides[get_session] = override_session
-
     try:
-        client = TestClient(app)
+        client, headers = create_authenticated_client(session)
         create_response = client.post(
             "/compositions",
+            headers=headers,
             json={
-                "user_id": 77,
                 "name": "Dim tension sketch",
                 "elements": [
                     {"id": "maj7", "type": "chord", "name": "Maj7"},
@@ -31,7 +27,7 @@ def test_create_and_list_saved_compositions_for_a_user() -> None:
                 ],
             },
         )
-        list_response = client.get("/compositions", params={"user_id": 77})
+        list_response = client.get("/compositions", headers=headers)
     finally:
         app.dependency_overrides.clear()
         session.close()
@@ -49,12 +45,18 @@ def test_create_and_list_saved_compositions_for_a_user() -> None:
 
 
 def test_create_saved_composition_rejects_empty_elements() -> None:
-    client = TestClient(app)
+    session = create_test_session()
 
-    response = client.post(
-        "/compositions",
-        json={"user_id": 77, "name": "Empty", "elements": []},
-    )
+    try:
+        client, headers = create_authenticated_client(session)
+        response = client.post(
+            "/compositions",
+            headers=headers,
+            json={"name": "Empty", "elements": []},
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
 
     assert response.status_code == 422
 
@@ -62,17 +64,12 @@ def test_create_saved_composition_rejects_empty_elements() -> None:
 def test_update_saved_composition_replaces_name_and_elements() -> None:
     session = create_test_session()
 
-    def override_session() -> Generator[Session]:
-        yield session
-
-    app.dependency_overrides[get_session] = override_session
-
     try:
-        client = TestClient(app)
+        client, headers = create_authenticated_client(session)
         create_response = client.post(
             "/compositions",
+            headers=headers,
             json={
-                "user_id": 77,
                 "name": "Old Sketch",
                 "elements": [
                     {"id": "maj7", "type": "chord", "name": "Maj7"},
@@ -82,8 +79,8 @@ def test_update_saved_composition_replaces_name_and_elements() -> None:
         composition_id = create_response.json()["id"]
         update_response = client.put(
             f"/compositions/{composition_id}",
+            headers=headers,
             json={
-                "user_id": 77,
                 "name": "Updated Sketch",
                 "elements": [
                     {"id": "dim7", "type": "chord", "name": "Dim7"},
@@ -91,7 +88,7 @@ def test_update_saved_composition_replaces_name_and_elements() -> None:
                 ],
             },
         )
-        list_response = client.get("/compositions", params={"user_id": 77})
+        list_response = client.get("/compositions", headers=headers)
     finally:
         app.dependency_overrides.clear()
         session.close()
@@ -111,17 +108,16 @@ def test_update_saved_composition_replaces_name_and_elements() -> None:
 def test_cannot_update_another_users_composition() -> None:
     session = create_test_session()
 
-    def override_session() -> Generator[Session]:
-        yield session
-
-    app.dependency_overrides[get_session] = override_session
-
     try:
-        client = TestClient(app)
+        client, owner_headers = create_authenticated_client(
+            session,
+            username="owner",
+            email="owner@example.com",
+        )
         create_response = client.post(
             "/compositions",
+            headers=owner_headers,
             json={
-                "user_id": 77,
                 "name": "Owner Sketch",
                 "elements": [
                     {"id": "maj7", "type": "chord", "name": "Maj7"},
@@ -129,10 +125,19 @@ def test_cannot_update_another_users_composition() -> None:
             },
         )
         composition_id = create_response.json()["id"]
+        intruder_response = client.post(
+            "/auth/register",
+            json={
+                "username": "intruder",
+                "email": "intruder@example.com",
+                "password": "plain-secret",
+            },
+        )
+        intruder_headers = {"Authorization": f"Bearer {intruder_response.json()['token']}"}
         update_response = client.put(
             f"/compositions/{composition_id}",
+            headers=intruder_headers,
             json={
-                "user_id": 88,
                 "name": "Intruder Sketch",
                 "elements": [
                     {"id": "dim7", "type": "chord", "name": "Dim7"},
@@ -146,6 +151,37 @@ def test_cannot_update_another_users_composition() -> None:
     assert update_response.status_code == 404
 
 
+def test_list_compositions_only_returns_current_users_data() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(session)
+        intruder_response = client.post(
+            "/auth/register",
+            json={
+                "username": "other-user",
+                "email": "other-user@example.com",
+                "password": "plain-secret",
+            },
+        )
+        other_user_id = intruder_response.json()["user"]["id"]
+        session.add(
+            SavedComposition(
+                user_id=other_user_id,
+                name="Other user",
+                elements=[{"id": "dim7", "type": "chord", "name": "Dim7"}],
+            )
+        )
+        session.commit()
+        response = client.get("/compositions", headers=headers)
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    assert response.json()["compositions"] == []
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
@@ -155,3 +191,26 @@ def create_test_session() -> Session:
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     return session_factory()
+
+
+def create_authenticated_client(
+    session: Session,
+    username: str = "player-one",
+    email: str = "player@example.com",
+    password: str = "plain-secret",
+) -> tuple[TestClient, dict[str, str]]:
+    def override_session() -> Generator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    client = TestClient(app)
+    response = client.post(
+        "/auth/register",
+        json={
+            "username": username,
+            "email": email,
+            "password": password,
+        },
+    )
+    token = response.json()["token"]
+    return client, {"Authorization": f"Bearer {token}"}

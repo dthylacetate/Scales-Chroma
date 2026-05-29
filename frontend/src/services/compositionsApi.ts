@@ -1,9 +1,10 @@
 import type { TheoryElement } from "../types/theory";
+import { createAuthHeaders } from "./authHeaders";
 
 interface SaveCompositionInput {
-  userId: number;
   name: string;
   elements: TheoryElement[];
+  authToken: string;
   apiBaseUrl?: string;
 }
 
@@ -12,7 +13,7 @@ interface UpdateCompositionInput extends SaveCompositionInput {
 }
 
 interface GetSavedCompositionsInput {
-  userId: number;
+  authToken: string;
   apiBaseUrl?: string;
 }
 
@@ -37,20 +38,17 @@ export interface SavedComposition {
 }
 
 export async function saveComposition({
-  userId,
   name,
   elements,
+  authToken,
   apiBaseUrl = ""
 }: SaveCompositionInput): Promise<SavedComposition> {
   const response = await fetch(`${apiBaseUrl}/compositions`, {
     body: JSON.stringify({
-      user_id: userId,
       name,
       elements
     }),
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: createAuthHeaders(authToken, true),
     method: "POST"
   });
 
@@ -63,20 +61,17 @@ export async function saveComposition({
 
 export async function updateComposition({
   compositionId,
-  userId,
   name,
   elements,
+  authToken,
   apiBaseUrl = ""
 }: UpdateCompositionInput): Promise<SavedComposition> {
   const response = await fetch(`${apiBaseUrl}/compositions/${compositionId}`, {
     body: JSON.stringify({
-      user_id: userId,
       name,
       elements
     }),
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: createAuthHeaders(authToken, true),
     method: "PUT"
   });
 
@@ -88,12 +83,12 @@ export async function updateComposition({
 }
 
 export async function getSavedCompositions({
-  userId,
+  authToken,
   apiBaseUrl = ""
 }: GetSavedCompositionsInput): Promise<SavedComposition[]> {
-  const response = await fetch(`${apiBaseUrl}/compositions?${new URLSearchParams({
-    user_id: String(userId)
-  })}`);
+  const response = await fetch(`${apiBaseUrl}/compositions`, {
+    headers: createAuthHeaders(authToken)
+  });
 
   if (!response.ok) {
     throw new Error(`Saved compositions request failed with status ${response.status}`);

@@ -27,18 +27,18 @@ describe("compositions API service", () => {
 
     const composition = await saveComposition({
       apiBaseUrl: "http://localhost:8000",
-      userId: 77,
+      authToken: "token-123",
       name: "Maj7 - Dim7",
       elements
     });
 
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/compositions", {
       body: JSON.stringify({
-        user_id: 77,
         name: "Maj7 - Dim7",
         elements
       }),
       headers: {
+        Authorization: "Bearer token-123",
         "Content-Type": "application/json"
       },
       method: "POST"
@@ -66,10 +66,14 @@ describe("compositions API service", () => {
 
     const compositions = await getSavedCompositions({
       apiBaseUrl: "http://localhost:8000",
-      userId: 77
+      authToken: "token-123"
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/compositions?user_id=77");
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/compositions", {
+      headers: {
+        Authorization: "Bearer token-123"
+      }
+    });
     expect(compositions[0].name).toBe("Maj7 - Dim7");
   });
 
@@ -93,18 +97,18 @@ describe("compositions API service", () => {
     const composition = await updateComposition({
       apiBaseUrl: "http://localhost:8000",
       compositionId: 4,
-      userId: 77,
+      authToken: "token-123",
       name: "Updated Sketch",
       elements
     });
 
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/compositions/4", {
       body: JSON.stringify({
-        user_id: 77,
         name: "Updated Sketch",
         elements
       }),
       headers: {
+        Authorization: "Bearer token-123",
         "Content-Type": "application/json"
       },
       method: "PUT"

@@ -5,8 +5,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_user
 from app.core.database import get_session
 from app.models.practice_record import PracticeRecord
+from app.models.user import User
 from app.schemas.practice_record import PracticeRecordCreate
 from app.services.practice_records import create_practice_record as create_practice_record_service
 
@@ -14,7 +16,7 @@ router = APIRouter(prefix="/practice-records", tags=["practice-records"])
 
 
 class PracticeRecordCreateRequest(PracticeRecordCreate):
-    user_id: int = Field(gt=0)
+    pass
 
 
 class PracticeRecordCreateResponse(BaseModel):
@@ -52,10 +54,11 @@ class PracticeRecordListResponse(BaseModel):
 def create_practice_record(
     payload: PracticeRecordCreateRequest,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> PracticeRecordCreateResponse:
     result = create_practice_record_service(
         session=session,
-        user_id=payload.user_id,
+        user_id=current_user.id,
         payload=payload,
     )
 
@@ -78,16 +81,16 @@ def create_practice_record(
 
 @router.get("", response_model=PracticeRecordListResponse)
 def list_practice_records(
-    user_id: int = Query(gt=0),
     limit: int = Query(default=10, ge=1, le=50),
     topic: str | None = Query(default=None, min_length=1),
     date_from: date | None = None,
     date_to: date | None = None,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> PracticeRecordListResponse:
     statement = (
         select(PracticeRecord)
-        .where(PracticeRecord.user_id == user_id)
+        .where(PracticeRecord.user_id == current_user.id)
     )
 
     if topic:

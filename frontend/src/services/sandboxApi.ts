@@ -1,4 +1,5 @@
 import type { TheoryElement, VisualParameters } from "../types/theory";
+import { createAuthHeaders } from "./authHeaders";
 
 interface SandboxRenderResponse {
   color: string;
@@ -13,23 +14,20 @@ interface SandboxRenderResponse {
 
 interface RenderSandboxVisualInput {
   elements: TheoryElement[];
-  userId?: number;
+  authToken?: string;
   apiBaseUrl?: string;
 }
 
 export async function renderSandboxVisual({
   elements,
-  userId,
+  authToken,
   apiBaseUrl = ""
 }: RenderSandboxVisualInput): Promise<VisualParameters> {
   const response = await fetch(`${apiBaseUrl}/sandbox/render`, {
     body: JSON.stringify({
-      ...(userId ? { user_id: userId } : {}),
       elements
     }),
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: createAuthHeaders(authToken, true),
     method: "POST"
   });
 

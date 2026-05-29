@@ -1,6 +1,7 @@
 """Database models."""
 
 from app.models.base import Base
+from app.models.auth_token import AuthToken
 from app.models.exp_statistics import ExpStatistics
 from app.models.practice_record import PracticeRecord
 from app.models.saved_composition import SavedComposition
@@ -10,6 +11,7 @@ from app.models.user import User
 
 __all__ = [
     "Base",
+    "AuthToken",
     "ExpStatistics",
     "PracticeRecord",
     "SavedComposition",

@@ -43,10 +43,12 @@ const THEORY_LIBRARY: TheoryElement[] = [
 
 interface TheorySandboxProps {
   apiBaseUrl?: string;
-  userId?: number;
+  authToken?: string;
+  currentUsername?: string;
+  onLogout?: () => void;
 }
 
-export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
+export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout }: TheorySandboxProps) {
   const [selected, setSelected] = useState<TheoryElement>(THEORY_LIBRARY[5]);
   const [composition, setComposition] = useState<TheoryElement[]>([]);
   const [invalidHint, setInvalidHint] = useState<string | null>(null);
@@ -82,7 +84,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     let cancelled = false;
     setVisual(localVisual);
 
-    if (!apiBaseUrl) {
+    if (!apiBaseUrl || !authToken) {
       return () => {
         cancelled = true;
       };
@@ -90,8 +92,8 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
 
     renderSandboxVisual({
       apiBaseUrl,
-      elements: activeElements,
-      userId
+      authToken,
+      elements: activeElements
     })
       .then((enhancedVisual) => {
         if (!cancelled) {
@@ -107,7 +109,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [activeElements, apiBaseUrl, localVisual, userId, visualRefreshKey]);
+  }, [activeElements, apiBaseUrl, authToken, localVisual, visualRefreshKey]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -130,14 +132,14 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   useEffect(() => {
     let cancelled = false;
 
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       setSkillTree(null);
       return () => {
         cancelled = true;
       };
     }
 
-    getSkillTree({ apiBaseUrl, userId })
+    getSkillTree({ apiBaseUrl, authToken })
       .then((nextSkillTree) => {
         if (!cancelled && Array.isArray(nextSkillTree.branches)) {
           setSkillTree(nextSkillTree);
@@ -152,12 +154,12 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl, userId, visualRefreshKey]);
+  }, [apiBaseUrl, authToken, visualRefreshKey]);
 
   useEffect(() => {
     let cancelled = false;
 
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       setHeatmap(null);
       return () => {
         cancelled = true;
@@ -166,7 +168,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
 
     getYearlyHeatmap({
       apiBaseUrl,
-      userId,
+      authToken,
       year: new Date(practiceDate).getFullYear()
     })
       .then((nextHeatmap) => {
@@ -183,19 +185,19 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl, practiceDate, userId, visualRefreshKey]);
+  }, [apiBaseUrl, authToken, practiceDate, visualRefreshKey]);
 
   useEffect(() => {
     let cancelled = false;
 
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       setUnlockedEffects([]);
       return () => {
         cancelled = true;
       };
     }
 
-    getUnlockedEffects({ apiBaseUrl, userId })
+    getUnlockedEffects({ apiBaseUrl, authToken })
       .then((effects) => {
         if (!cancelled) {
           setUnlockedEffects(effects);
@@ -210,19 +212,19 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl, userId, visualRefreshKey]);
+  }, [apiBaseUrl, authToken, visualRefreshKey]);
 
   useEffect(() => {
     let cancelled = false;
 
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       setPracticeHistory([]);
       return () => {
         cancelled = true;
       };
     }
 
-    getPracticeRecords({ apiBaseUrl, userId, limit: 5 })
+    getPracticeRecords({ apiBaseUrl, authToken, limit: 5 })
       .then((records) => {
         if (!cancelled) {
           setPracticeHistory(records);
@@ -237,19 +239,19 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl, userId]);
+  }, [apiBaseUrl, authToken]);
 
   useEffect(() => {
     let cancelled = false;
 
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       setSavedCompositions([]);
       return () => {
         cancelled = true;
       };
     }
 
-    getSavedCompositions({ apiBaseUrl, userId })
+    getSavedCompositions({ apiBaseUrl, authToken })
       .then((compositions) => {
         if (!cancelled) {
           setSavedCompositions(compositions);
@@ -267,7 +269,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl, userId]);
+  }, [apiBaseUrl, authToken]);
 
   return (
     <main className="min-h-screen bg-[#120f12] text-stone-100">
@@ -391,6 +393,16 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
             <Layers aria-hidden="true" className="size-5 text-[#d8a657]" />
             <h2 className="text-base font-semibold tracking-normal">Visual State</h2>
           </div>
+          {currentUsername ? (
+            <div className="flex items-center justify-between rounded-md border border-[#3f3144] bg-[#201922] px-3 py-2 text-sm">
+              <span className="text-stone-300">{currentUsername}</span>
+              {onLogout ? (
+                <button className="text-[#ffd166] hover:text-[#ffe29a]" type="button" onClick={onLogout}>
+                  退出
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           <Readout label="Element" value={activeElement.name} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Geometry" value={visual.geometry} />
@@ -398,7 +410,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
           <Readout label="Glow" value={visual.glow.toFixed(2)} />
           <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
 
-          {apiBaseUrl && userId ? (
+          {apiBaseUrl && authToken ? (
             <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">
               <PracticeInput
                 label="组合名称"
@@ -537,7 +549,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
             </section>
           ) : null}
 
-          {apiBaseUrl && userId ? (
+          {apiBaseUrl && authToken ? (
             <form
               aria-label="练习历史筛选"
               className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3"
@@ -652,7 +664,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   async function submitPracticeRecord(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       setPracticeError("需要连接后端后才能记录练习");
       return;
     }
@@ -668,7 +680,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
         notes: practiceNotes.trim() ? practiceNotes.trim() : null,
         practiceDate,
         topic: practiceTopic.trim(),
-        userId
+        authToken
       });
       setPracticeResult(result);
       setPracticeHistory((current) => [
@@ -686,14 +698,14 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   async function filterPracticeHistory(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       return;
     }
 
     try {
       const records = await getPracticeRecords({
         apiBaseUrl,
-        userId,
+        authToken,
         limit: 5,
         topic: historyTopicFilter.trim() || undefined,
         dateFrom: historyDateFrom || undefined,
@@ -706,7 +718,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   }
 
   async function saveCurrentComposition(): Promise<void> {
-    if (!apiBaseUrl || !userId) {
+    if (!apiBaseUrl || !authToken) {
       return;
     }
 
@@ -720,9 +732,9 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     try {
       const savedComposition = await saveComposition({
         apiBaseUrl,
+        authToken,
         elements: elementsToSave,
         name,
-        userId
       });
       setCompositionName(savedComposition.name);
       setSelectedCompositionId(savedComposition.id);
@@ -738,7 +750,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   }
 
   async function overwriteCurrentComposition(): Promise<void> {
-    if (!apiBaseUrl || !userId || selectedCompositionId === null) {
+    if (!apiBaseUrl || !authToken || selectedCompositionId === null) {
       return;
     }
 
@@ -752,10 +764,10 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     try {
       const savedComposition = await updateComposition({
         apiBaseUrl,
+        authToken,
         compositionId: selectedCompositionId,
         elements: elementsToSave,
-        name,
-        userId
+        name
       });
       setCompositionName(savedComposition.name);
       setSavedCompositions((current) =>

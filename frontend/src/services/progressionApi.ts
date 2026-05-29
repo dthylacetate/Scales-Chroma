@@ -1,16 +1,18 @@
+import { createAuthHeaders } from "./authHeaders";
+
 interface GetYearlyHeatmapInput {
-  userId: number;
   year: number;
+  authToken: string;
   apiBaseUrl?: string;
 }
 
 interface GetSkillTreeInput {
-  userId: number;
+  authToken: string;
   apiBaseUrl?: string;
 }
 
 interface GetUnlockedEffectsInput {
-  userId: number;
+  authToken: string;
   apiBaseUrl?: string;
 }
 
@@ -80,14 +82,15 @@ export interface UnlockedEffect {
 }
 
 export async function getYearlyHeatmap({
-  userId,
   year,
+  authToken,
   apiBaseUrl = ""
 }: GetYearlyHeatmapInput): Promise<YearlyHeatmap> {
   const response = await fetch(`${apiBaseUrl}/heatmap/yearly?${new URLSearchParams({
-    user_id: String(userId),
     year: String(year)
-  })}`);
+  })}`, {
+    headers: createAuthHeaders(authToken)
+  });
 
   if (!response.ok) {
     throw new Error(`Yearly heatmap request failed with status ${response.status}`);
@@ -97,12 +100,12 @@ export async function getYearlyHeatmap({
 }
 
 export async function getSkillTree({
-  userId,
+  authToken,
   apiBaseUrl = ""
 }: GetSkillTreeInput): Promise<SkillTree> {
-  const response = await fetch(`${apiBaseUrl}/skill-tree?${new URLSearchParams({
-    user_id: String(userId)
-  })}`);
+  const response = await fetch(`${apiBaseUrl}/skill-tree`, {
+    headers: createAuthHeaders(authToken)
+  });
 
   if (!response.ok) {
     throw new Error(`Skill tree request failed with status ${response.status}`);
@@ -116,12 +119,12 @@ export async function getSkillTree({
 }
 
 export async function getUnlockedEffects({
-  userId,
+  authToken,
   apiBaseUrl = ""
 }: GetUnlockedEffectsInput): Promise<UnlockedEffect[]> {
-  const response = await fetch(`${apiBaseUrl}/unlocked-effects?${new URLSearchParams({
-    user_id: String(userId)
-  })}`);
+  const response = await fetch(`${apiBaseUrl}/unlocked-effects`, {
+    headers: createAuthHeaders(authToken)
+  });
 
   if (!response.ok) {
     throw new Error(`Unlocked effects request failed with status ${response.status}`);

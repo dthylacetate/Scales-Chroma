@@ -1,19 +1,21 @@
+import { createAuthHeaders } from "./authHeaders";
+
 interface CreatePracticeRecordInput {
-  userId: number;
   practiceDate: string;
   durationMinutes: number;
   bpm: number;
   topic: string;
   notes?: string | null;
+  authToken: string;
   apiBaseUrl?: string;
 }
 
 interface GetPracticeRecordsInput {
-  userId: number;
   limit?: number;
   topic?: string;
   dateFrom?: string;
   dateTo?: string;
+  authToken: string;
   apiBaseUrl?: string;
 }
 
@@ -76,26 +78,23 @@ export interface PracticeRecordHistoryItem {
 }
 
 export async function createPracticeRecord({
-  userId,
   practiceDate,
   durationMinutes,
   bpm,
   topic,
   notes = null,
+  authToken,
   apiBaseUrl = ""
 }: CreatePracticeRecordInput): Promise<PracticeRecordResult> {
   const response = await fetch(`${apiBaseUrl}/practice-records`, {
     body: JSON.stringify({
-      user_id: userId,
       practice_date: practiceDate,
       duration_minutes: durationMinutes,
       bpm,
       topic,
       notes
     }),
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: createAuthHeaders(authToken, true),
     method: "POST"
   });
 
@@ -107,15 +106,14 @@ export async function createPracticeRecord({
 }
 
 export async function getPracticeRecords({
-  userId,
   limit = 10,
   topic,
   dateFrom,
   dateTo,
+  authToken,
   apiBaseUrl = ""
 }: GetPracticeRecordsInput): Promise<PracticeRecordHistoryItem[]> {
   const params = new URLSearchParams({
-    user_id: String(userId),
     limit: String(limit)
   });
 
@@ -131,7 +129,9 @@ export async function getPracticeRecords({
     params.set("date_to", dateTo);
   }
 
-  const response = await fetch(`${apiBaseUrl}/practice-records?${params}`);
+  const response = await fetch(`${apiBaseUrl}/practice-records?${params}`, {
+    headers: createAuthHeaders(authToken)
+  });
 
   if (!response.ok) {
     throw new Error(`Practice records request failed with status ${response.status}`);
