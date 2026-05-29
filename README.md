@@ -105,7 +105,7 @@ npm run build
 最近完整验证结果：
 
 - 后端：64 passed，1 个 FastAPI/Starlette 测试客户端弃用 warning。
-- 前端：35 passed，仍有 1 个 React `act(...)` 测试提示，不影响当前功能。
+- 前端：36 passed，仍有 1 个 React `act(...)` 测试提示，不影响当前功能。
 - 前端 build：通过。
 
 ## TDD 与 Git 工作流
