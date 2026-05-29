@@ -43,6 +43,20 @@ describe("TheorySandbox drag composition", () => {
     expect(lane.textContent).toMatch(/Dim7.*Dorian/);
     expect(screen.getByText("wave")).toBeInTheDocument();
   });
+
+  it("replaces a lane block when a library block is dropped on it", () => {
+    render(<TheorySandbox />);
+
+    dragTheoryBlock("Maj7");
+    dragTheoryBlock("Dorian");
+    replaceLaneBlock("Phrygian", "Dorian");
+
+    const lane = screen.getByLabelText("乐理编排轨道");
+    expect(within(lane).getByText("Maj7")).toBeInTheDocument();
+    expect(within(lane).getByText("Phrygian")).toBeInTheDocument();
+    expect(within(lane).queryByText("Dorian")).not.toBeInTheDocument();
+    expect(screen.getByText("calm")).toBeInTheDocument();
+  });
 });
 
 function dragTheoryBlock(name: string): void {
@@ -67,6 +81,18 @@ function reorderLaneBlock(sourceName: string, targetName: string): void {
   fireEvent.dragStart(source, {
     dataTransfer: createDataTransfer(dragData),
   });
+  fireEvent.dragOver(target, {
+    dataTransfer: createDataTransfer(dragData),
+  });
+  fireEvent.drop(target, {
+    dataTransfer: createDataTransfer(dragData),
+  });
+}
+
+function replaceLaneBlock(sourceName: string, targetName: string): void {
+  const target = screen.getByLabelText(`移动 ${targetName}`);
+  const dragData = sourceName.toLowerCase();
+
   fireEvent.dragOver(target, {
     dataTransfer: createDataTransfer(dragData),
   });
