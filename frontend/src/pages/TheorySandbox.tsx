@@ -3,7 +3,12 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
 import { getSavedCompositions, saveComposition, type SavedComposition } from "../services/compositionsApi";
-import { createPracticeRecord, type PracticeRecordResult } from "../services/practiceRecordsApi";
+import {
+  createPracticeRecord,
+  getPracticeRecords,
+  type PracticeRecordHistoryItem,
+  type PracticeRecordResult
+} from "../services/practiceRecordsApi";
 import { getSkillTree, getYearlyHeatmap, type SkillTree, type YearlyHeatmap } from "../services/progressionApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
@@ -46,6 +51,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [practiceTopic, setPracticeTopic] = useState("Maj7 voicing");
   const [practiceNotes, setPracticeNotes] = useState("");
   const [practiceResult, setPracticeResult] = useState<PracticeRecordResult | null>(null);
+  const [practiceHistory, setPracticeHistory] = useState<PracticeRecordHistoryItem[]>([]);
   const [practiceError, setPracticeError] = useState<string | null>(null);
   const [practiceSubmitting, setPracticeSubmitting] = useState(false);
   const [skillTree, setSkillTree] = useState<SkillTree | null>(null);
@@ -165,6 +171,33 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
       cancelled = true;
     };
   }, [apiBaseUrl, practiceDate, userId, visualRefreshKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!apiBaseUrl || !userId) {
+      setPracticeHistory([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getPracticeRecords({ apiBaseUrl, userId, limit: 5 })
+      .then((records) => {
+        if (!cancelled) {
+          setPracticeHistory(records);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPracticeHistory([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseUrl, userId, visualRefreshKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -423,6 +456,25 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
             {practiceError ? <div className="text-sm text-[#ff8fa3]">{practiceError}</div> : null}
           </form>
 
+          {practiceHistory.length > 0 ? (
+            <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">
+              <h2 className="text-base font-semibold tracking-normal">Recent Practice</h2>
+              <div className="grid gap-1">
+                {practiceHistory.map((record) => (
+                  <div
+                    key={record.id}
+                    className="rounded-md border border-[#3f3144] bg-[#201922] px-2 py-1.5 text-sm text-stone-100"
+                  >
+                    <div className="font-medium">{record.topic}</div>
+                    <div className="text-xs text-stone-400">
+                      {record.practiceDate} · {record.durationMinutes} min · {record.bpm} BPM
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           {skillTree ? <SkillTreePanel skillTree={skillTree} /> : null}
           {heatmap ? <HeatmapPanel heatmap={heatmap} /> : null}
         </aside>
@@ -520,6 +572,10 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
         userId
       });
       setPracticeResult(result);
+      setPracticeHistory((current) => [
+        practiceResultToHistoryItem(result),
+        ...current.filter((record) => record.id !== result.id)
+      ].slice(0, 5));
       setVisualRefreshKey((current) => current + 1);
     } catch {
       setPracticeError("练习记录提交失败");
@@ -566,6 +622,19 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     setComposition(savedComposition.elements);
     setSelected(savedComposition.elements.at(-1) ?? selected);
   }
+}
+
+function practiceResultToHistoryItem(result: PracticeRecordResult): PracticeRecordHistoryItem {
+  return {
+    id: result.id,
+    userId: result.userId,
+    practiceDate: result.practiceDate,
+    durationMinutes: result.durationMinutes,
+    bpm: result.bpm,
+    topic: result.topic,
+    notes: result.notes,
+    createdAt: new Date().toISOString()
+  };
 }
 
 interface ReadoutProps {

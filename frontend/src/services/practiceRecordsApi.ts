@@ -8,6 +8,12 @@ interface CreatePracticeRecordInput {
   apiBaseUrl?: string;
 }
 
+interface GetPracticeRecordsInput {
+  userId: number;
+  limit?: number;
+  apiBaseUrl?: string;
+}
+
 interface PracticeRecordResponse {
   id: number;
   user_id: number;
@@ -24,6 +30,21 @@ interface PracticeRecordResponse {
   unlocked_effects?: string[];
 }
 
+interface PracticeRecordHistoryResponse {
+  id: number;
+  user_id: number;
+  practice_date: string;
+  duration_minutes: number;
+  bpm: number;
+  topic: string;
+  notes: string | null;
+  created_at: string;
+}
+
+interface PracticeRecordListResponse {
+  records: PracticeRecordHistoryResponse[];
+}
+
 export interface PracticeRecordResult {
   id: number;
   userId: number;
@@ -38,6 +59,17 @@ export interface PracticeRecordResult {
   currentStreak: number;
   longestStreak: number;
   unlockedEffects: string[];
+}
+
+export interface PracticeRecordHistoryItem {
+  id: number;
+  userId: number;
+  practiceDate: string;
+  durationMinutes: number;
+  bpm: number;
+  topic: string;
+  notes: string | null;
+  createdAt: string;
 }
 
 export async function createPracticeRecord({
@@ -71,6 +103,24 @@ export async function createPracticeRecord({
   return normalizePracticeRecordResponse((await response.json()) as PracticeRecordResponse);
 }
 
+export async function getPracticeRecords({
+  userId,
+  limit = 10,
+  apiBaseUrl = ""
+}: GetPracticeRecordsInput): Promise<PracticeRecordHistoryItem[]> {
+  const response = await fetch(`${apiBaseUrl}/practice-records?${new URLSearchParams({
+    user_id: String(userId),
+    limit: String(limit)
+  })}`);
+
+  if (!response.ok) {
+    throw new Error(`Practice records request failed with status ${response.status}`);
+  }
+
+  const payload = (await response.json()) as PracticeRecordListResponse;
+  return payload.records.map(normalizePracticeRecordHistory);
+}
+
 function normalizePracticeRecordResponse(response: PracticeRecordResponse): PracticeRecordResult {
   return {
     id: response.id,
@@ -86,5 +136,18 @@ function normalizePracticeRecordResponse(response: PracticeRecordResponse): Prac
     currentStreak: response.current_streak ?? 1,
     longestStreak: response.longest_streak ?? response.current_streak ?? 1,
     unlockedEffects: response.unlocked_effects ?? []
+  };
+}
+
+function normalizePracticeRecordHistory(response: PracticeRecordHistoryResponse): PracticeRecordHistoryItem {
+  return {
+    id: response.id,
+    userId: response.user_id,
+    practiceDate: response.practice_date,
+    durationMinutes: response.duration_minutes,
+    bpm: response.bpm,
+    topic: response.topic,
+    notes: response.notes,
+    createdAt: response.created_at
   };
 }
