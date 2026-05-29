@@ -101,4 +101,57 @@ describe("TheorySandbox", () => {
     });
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/practice-records", expect.any(Object));
   });
+
+  it("refreshes sandbox visuals after practice unlocks a new effect", async () => {
+    let sandboxRenderCount = 0;
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith("/practice-records")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 13,
+            user_id: 77,
+            practice_date: "2026-05-29",
+            duration_minutes: 610,
+            bpm: 150,
+            topic: "Pentatonic speed run",
+            notes: null,
+            exp_earned: 732
+          })
+        });
+      }
+
+      sandboxRenderCount += 1;
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          color: "#62d2a2",
+          glow: 0.8,
+          particles: {
+            density: sandboxRenderCount > 1 ? 0.9 : 0.58,
+            trail: sandboxRenderCount > 1
+          },
+          geometry: "wave",
+          animation_state: "flowing"
+        })
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Off")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("练习时长"), { target: { value: "610" } });
+    fireEvent.change(screen.getByLabelText("BPM"), { target: { value: "150" } });
+    fireEvent.change(screen.getByLabelText("练习主题"), { target: { value: "Pentatonic speed run" } });
+    fireEvent.click(screen.getByRole("button", { name: "记录练习" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("On")).toBeInTheDocument();
+    });
+    expect(sandboxRenderCount).toBeGreaterThan(1);
+  });
 });
