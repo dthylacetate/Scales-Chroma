@@ -1,7 +1,8 @@
-import { Activity, Grip, Layers, Sparkles, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Activity, CalendarDays, Grip, Layers, Send, Sparkles, X } from "lucide-react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
+import { createPracticeRecord, type PracticeRecordResult } from "../services/practiceRecordsApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
@@ -29,6 +30,14 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [invalidHint, setInvalidHint] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<RealtimeCanvasRenderer | null>(null);
+  const [practiceDate, setPracticeDate] = useState("2026-05-29");
+  const [durationMinutes, setDurationMinutes] = useState("30");
+  const [bpm, setBpm] = useState("120");
+  const [practiceTopic, setPracticeTopic] = useState("Maj7 voicing");
+  const [practiceNotes, setPracticeNotes] = useState("");
+  const [practiceResult, setPracticeResult] = useState<PracticeRecordResult | null>(null);
+  const [practiceError, setPracticeError] = useState<string | null>(null);
+  const [practiceSubmitting, setPracticeSubmitting] = useState(false);
   const activeElement = composition.at(-1) ?? selected;
   const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
   const localVisual = useMemo(() => mapTheoryToVisuals([activeElement]), [activeElement]);
@@ -205,6 +214,65 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
           <Readout label="Animation" value={visual.animationState} />
           <Readout label="Glow" value={visual.glow.toFixed(2)} />
           <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
+
+          <form
+            aria-label="练习记录"
+            className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3"
+            onSubmit={submitPracticeRecord}
+          >
+            <div className="flex items-center gap-2 pb-1">
+              <CalendarDays aria-hidden="true" className="size-4 text-[#5bd0c7]" />
+              <h2 className="text-base font-semibold tracking-normal">Practice</h2>
+            </div>
+            <PracticeInput
+              label="练习日期"
+              type="date"
+              value={practiceDate}
+              onChange={setPracticeDate}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <PracticeInput
+                label="练习时长"
+                min="1"
+                type="number"
+                value={durationMinutes}
+                onChange={setDurationMinutes}
+              />
+              <PracticeInput
+                label="BPM"
+                min="1"
+                type="number"
+                value={bpm}
+                onChange={setBpm}
+              />
+            </div>
+            <PracticeInput
+              label="练习主题"
+              type="text"
+              value={practiceTopic}
+              onChange={setPracticeTopic}
+            />
+            <PracticeInput
+              label="备注"
+              type="text"
+              value={practiceNotes}
+              onChange={setPracticeNotes}
+            />
+            <button
+              className="mt-1 flex h-10 items-center justify-center gap-2 rounded-md bg-[#5bd0c7] px-3 text-sm font-semibold text-[#091113] transition hover:bg-[#7ef3ea] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={practiceSubmitting}
+              type="submit"
+            >
+              <Send aria-hidden="true" className="size-4" />
+              记录练习
+            </button>
+            {practiceResult ? (
+              <div className="rounded-md border border-[#ffd166]/40 bg-[#2a2023] px-3 py-2 text-sm font-semibold text-[#ffd166]">
+                +{practiceResult.expEarned} EXP
+              </div>
+            ) : null}
+            {practiceError ? <div className="text-sm text-[#ff8fa3]">{practiceError}</div> : null}
+          </form>
         </aside>
       </section>
     </main>
@@ -257,6 +325,35 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
       return next;
     });
   }
+
+  async function submitPracticeRecord(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+
+    if (!apiBaseUrl || !userId) {
+      setPracticeError("需要连接后端后才能记录练习");
+      return;
+    }
+
+    setPracticeSubmitting(true);
+    setPracticeError(null);
+
+    try {
+      const result = await createPracticeRecord({
+        apiBaseUrl,
+        bpm: Number(bpm),
+        durationMinutes: Number(durationMinutes),
+        notes: practiceNotes.trim() ? practiceNotes.trim() : null,
+        practiceDate,
+        topic: practiceTopic.trim(),
+        userId
+      });
+      setPracticeResult(result);
+    } catch {
+      setPracticeError("练习记录提交失败");
+    } finally {
+      setPracticeSubmitting(false);
+    }
+  }
 }
 
 interface ReadoutProps {
@@ -276,5 +373,28 @@ function Readout({ label, value, swatch }: ReadoutProps) {
         <span>{value}</span>
       </div>
     </div>
+  );
+}
+
+interface PracticeInputProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type: "date" | "number" | "text";
+  min?: string;
+}
+
+function PracticeInput({ label, value, onChange, type, min }: PracticeInputProps) {
+  return (
+    <label className="flex flex-col gap-1 text-xs uppercase text-stone-400">
+      {label}
+      <input
+        className="h-9 rounded-md border border-[#3f3144] bg-[#201922] px-2 text-sm normal-case text-stone-100 outline-none transition focus:border-[#5bd0c7]"
+        min={min}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   );
 }
