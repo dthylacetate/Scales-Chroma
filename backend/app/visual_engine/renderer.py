@@ -41,6 +41,8 @@ class AggregateVisualState:
     tension_level: int
     signature: str
     scene_family: str
+    growth_imprint: str
+    growth_imprint_intensity: float
     active_bonuses: list[str]
 
 
@@ -75,6 +77,34 @@ STYLE_AURA_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
     ({"prismatic_motion", "phase_rings"}, "Fusion Prism", {"wave": 0.18, "lattice": 0.2, "complexity": 0.16, "ripple_strength": 0.18, "beam_strength": 0.12, "depth": 0.16, "pulse_density": 0.16, "symmetry": 0.12, "valence": 0.08, "luminosity": 0.14, "arousal": 0.14, "grit": 0.02, "background_color": "#08131e", "secondary_color": "#8db8ff"}),
 )
 
+GROWTH_IMPRINT_RULES: dict[str, dict[str, set[str]]] = {
+    "pentatonic-drive": {
+        "effects": {"particle_trail", "neon_glow", "dynamic_ripple"},
+        "elements": {"pentatonic", "mixolydian", "minor", "major", "i-v-vi-iv"},
+        "bonus_keywords": {"Neon", "Roadhouse", "Lantern", "Run"},
+    },
+    "jazz-lattice": {
+        "effects": {"harmonic_lattice", "cadence_bloom"},
+        "elements": {"ii-v-i", "dorian", "maj7", "min7", "ionian", "lydian"},
+        "bonus_keywords": {"Jazz", "Cadence", "Aurora", "Lattice", "Skyline", "Blue Hour"},
+    },
+    "metal-forge": {
+        "effects": {"fracture_burst", "ember_strobe"},
+        "elements": {"harmonic minor", "dim7", "phrygian", "dominant7", "aug"},
+        "bonus_keywords": {"Metal", "Fracture", "Voltage", "Shrapnel", "Ashen", "Occult"},
+    },
+    "neo-soul-veil": {
+        "effects": {"velvet_glow", "silk_motion"},
+        "elements": {"maj7", "min7", "dorian", "major", "ii-v-i"},
+        "bonus_keywords": {"Velvet", "Silk", "Glass", "Current", "Tide"},
+    },
+    "fusion-phase": {
+        "effects": {"prismatic_motion", "phase_rings"},
+        "elements": {"melodic minor", "dominant7", "lydian", "mixolydian", "aug"},
+        "bonus_keywords": {"Prism", "Chrome", "Meridian", "Fusion", "Liquid"},
+    },
+}
+
 
 def render_visual_parameters(
     elements: list[TheoryElement],
@@ -84,6 +114,9 @@ def render_visual_parameters(
     aggregate_state = _aggregate_visual_state(elements)
     _apply_combo_bonuses(elements, aggregate_state)
     _apply_unlock_effects(aggregate_state, unlocks)
+    growth_imprint, growth_imprint_intensity = _resolve_growth_imprint(elements, unlocks, aggregate_state.active_bonuses)
+    aggregate_state.growth_imprint = growth_imprint
+    aggregate_state.growth_imprint_intensity = growth_imprint_intensity
     particles = configure_particles(
         density_seed=aggregate_state.particle_density,
         energy=aggregate_state.energy,
@@ -117,6 +150,8 @@ def render_visual_parameters(
         grain=round(aggregate_state.grain, 2),
         signature=aggregate_state.signature,
         scene_family=aggregate_state.scene_family,
+        growth_imprint=aggregate_state.growth_imprint,
+        growth_imprint_intensity=round(aggregate_state.growth_imprint_intensity, 2),
         active_bonuses=aggregate_state.active_bonuses,
         geometry=geometry_shape,
         animation_state=animation_state,
@@ -182,6 +217,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             tension_level=base_profile.tension.level,
             signature="Default Pulse",
             scene_family="neon-grid",
+            growth_imprint="neutral",
+            growth_imprint_intensity=0.0,
             active_bonuses=[],
         )
 
@@ -313,6 +350,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             luminosity=min(1.0, luminosity + stack_bonus * 0.1),
             grit=min(1.0, grit + stack_bonus * 0.12),
         ),
+        growth_imprint="neutral",
+        growth_imprint_intensity=0.0,
         active_bonuses=[],
     )
 
@@ -637,6 +676,38 @@ def _resolve_scene_family(
 
 def _contains_any(source: str, needles: list[str]) -> bool:
     return any(needle in source for needle in needles)
+
+
+def _resolve_growth_imprint(
+    elements: list[TheoryElement],
+    unlocked_effects: set[str],
+    active_bonuses: list[str],
+) -> tuple[str, float]:
+    if not unlocked_effects:
+        return "neutral", 0.0
+
+    element_names = {element.name.casefold() for element in elements}
+    bonus_text = " ".join(active_bonuses)
+    best_style = "neutral"
+    best_score = 0.0
+
+    for style, profile in GROWTH_IMPRINT_RULES.items():
+        effect_overlap = len(profile["effects"] & unlocked_effects)
+        if effect_overlap == 0:
+            continue
+
+        effect_ratio = effect_overlap / max(1, len(profile["effects"]))
+        score = 0.34 + effect_ratio * 0.44
+        element_hits = sum(1 for element_name in element_names if element_name in profile["elements"])
+        score += min(0.18, element_hits * 0.06)
+        bonus_hits = sum(1 for keyword in profile["bonus_keywords"] if keyword in bonus_text)
+        score += min(0.16, bonus_hits * 0.05)
+
+        if score > best_score:
+            best_style = style
+            best_score = score
+
+    return best_style, round(max(0.0, min(1.0, best_score)), 2)
 
 
 def _blend_hexes(weighted_hexes: list[tuple[str, float]]) -> str:

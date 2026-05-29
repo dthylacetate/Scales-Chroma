@@ -51,6 +51,8 @@ const DEFAULT_VISUALS: VisualParameters = {
   grain: 0.18,
   signature: "Pulse Field",
   sceneFamily: "neon-grid",
+  growthImprint: "neutral",
+  growthImprintIntensity: 0,
   activeBonuses: [],
   particles: {
     density: 0.42,
@@ -560,6 +562,8 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     grain: round(visual.grain),
     signature: visual.signature,
     sceneFamily: visual.sceneFamily,
+    growthImprint: "neutral",
+    growthImprintIntensity: 0,
     activeBonuses: visual.activeBonuses,
     particles,
     geometry,

@@ -37,6 +37,15 @@ class VisualParameters(BaseModel):
         "neon-grid",
         "shadow-sanctum",
     ]
+    growth_imprint: Literal[
+        "neutral",
+        "pentatonic-drive",
+        "jazz-lattice",
+        "metal-forge",
+        "neo-soul-veil",
+        "fusion-phase",
+    ]
+    growth_imprint_intensity: float = Field(ge=0.0, le=1.0)
     active_bonuses: list[str]
     particles: dict[str, float | bool]
     geometry: Literal["soft-orb", "fracture", "wave", "lattice"]

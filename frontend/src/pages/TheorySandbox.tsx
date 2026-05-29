@@ -514,6 +514,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Signature" value={visual.signature} />
           <Readout label="Scene" value={sceneFamilyLabel(visual.sceneFamily)} />
           <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
+          <GrowthImprintPanel visual={visual} />
           <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
@@ -1069,6 +1070,36 @@ function MoodAxesPanel({ visual }: { visual: VisualParameters }) {
   );
 }
 
+function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
+  const reading = buildGrowthImprintReading(visual);
+
+  return (
+    <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
+      <div className="text-xs uppercase text-stone-400">Growth Imprint</div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium text-stone-100">{reading.label}</div>
+          <div className="mt-1 text-xs text-stone-400">{reading.summary}</div>
+        </div>
+        <div className="text-sm font-semibold text-[#ffd166]">{Math.round(visual.growthImprintIntensity * 100)}%</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#140f16]">
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${Math.max(6, Math.round(visual.growthImprintIntensity * 100))}%`,
+            background: `linear-gradient(90deg, ${reading.accent}55 0%, ${reading.accent} 100%)`
+          }}
+        />
+      </div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="风格偏移" value={reading.shift} />
+        <ReadingLine label="演出变化" value={reading.impact} />
+      </div>
+    </section>
+  );
+}
+
 function MoodAxisRow({
   label,
   value,
@@ -1275,14 +1306,86 @@ function buildStageReading(
   const primaryDrivers = elements.map((element) => element.name).join(" + ");
   const bonusText =
     activeBonuses.length > 0 ? `；当前额外加成是 ${activeBonuses.join("、")}` : "；当前还没有触发额外组合加成";
+  const growthText =
+    visual.growthImprint !== "neutral"
+      ? `；Growth 已经把当前舞台往${growthImprintLabel(visual.growthImprint)}推了 ${Math.round(visual.growthImprintIntensity * 100)}%`
+      : "；当前 Growth 还没有形成独立印记";
 
   return {
     summary: `当前舞台由 ${primaryDrivers} 主导，正在形成 ${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)} 读感。`,
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}。`
   };
+}
+
+function buildGrowthImprintReading(visual: VisualParameters): {
+  label: string;
+  accent: string;
+  summary: string;
+  shift: string;
+  impact: string;
+} {
+  if (visual.growthImprint === "neutral" || visual.growthImprintIntensity <= 0.05) {
+    return {
+      label: "Neutral",
+      accent: "#8fdcff",
+      summary: "目前还是以乐理组合本身在主导舞台，成长风格还没有单独压上来。",
+      shift: "当前没有明显的成长风格偏移。",
+      impact: "舞台主要依靠和弦、调式和组合加成变化。 "
+    };
+  }
+
+  const strength =
+    visual.growthImprintIntensity >= 0.9
+      ? "几乎已经主导第二层演出"
+      : visual.growthImprintIntensity >= 0.72
+        ? "已经明显改写舞台质地"
+        : "正在温和地改变舞台重心";
+
+  switch (visual.growthImprint) {
+    case "pentatonic-drive":
+      return {
+        label: "Pentatonic Drive",
+        accent: "#59fff5",
+        summary: `成长轨迹正在把舞台推向霓虹速度场，${strength}。`,
+        shift: "节奏线、霓虹条带和高速节点会更明显，画面更像夜路与巡航。",
+        impact: "即便和声不复杂，舞台也会更强调冲刺感和横向推进。"
+      };
+    case "jazz-lattice":
+      return {
+        label: "Jazz Lattice",
+        accent: "#c2b8ff",
+        summary: `Growth 已经把当前舞台往和声教堂和悬挂晶格推过去了，${strength}。`,
+        shift: "会更容易出现吊灯式线条、和声窗格、拱形层次和纵深秩序。",
+        impact: "同样的和弦堆叠，在这里会显得更讲究声部和空间设计。"
+      };
+    case "metal-forge":
+      return {
+        label: "Metal Forge",
+        accent: "#ff7b3d",
+        summary: `成长风格正在把舞台拉向熔炉、切面和碎片风暴，${strength}。`,
+        shift: "顶部落下的碎片、底部热口和更硬的线段骨架会更常见。",
+        impact: "就算基础组合相同，舞台也会更像被高张力和速度压出火花。"
+      };
+    case "neo-soul-veil":
+      return {
+        label: "Neo Soul 幕纱",
+        accent: "#ff9fc9",
+        summary: `Growth 已经把当前舞台往丝绒、幕纱和柔性光层那边推过去了，${strength}。`,
+        shift: "帘幕、柔波和包裹式光晕会更突出，空间也会更亲密、更圆润。",
+        impact: "同一组和声在这里不再只是亮，而是更像在近距离呼吸。"
+      };
+    default:
+      return {
+        label: "Fusion Phase",
+        accent: "#8db8ff",
+        summary: `成长风格正在把舞台扭成相位环和棱镜走廊，${strength}。`,
+        shift: "会更常出现转相、折射、三角通道和多层节拍回路。",
+        impact: "同一套元素会更像复杂系统在折返，而不是单向铺开。"
+      };
+  }
 }
 
 function moodAxisLabel(axis: "valence" | "arousal" | "luminosity" | "grit", value: number): string {
@@ -1366,4 +1469,21 @@ function signatureTone(visual: VisualParameters): string {
   }
 
   return visual.glow >= visual.contrast ? "扩散发光型" : "紧凑对比型";
+}
+
+function growthImprintLabel(imprint: VisualParameters["growthImprint"]): string {
+  switch (imprint) {
+    case "pentatonic-drive":
+      return "Pentatonic Drive";
+    case "jazz-lattice":
+      return "Jazz Lattice";
+    case "metal-forge":
+      return "Metal Forge";
+    case "neo-soul-veil":
+      return "Neo Soul 幕纱";
+    case "fusion-phase":
+      return "Fusion Phase";
+    default:
+      return "Neutral";
+  }
 }

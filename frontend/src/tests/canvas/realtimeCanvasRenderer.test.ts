@@ -26,6 +26,8 @@ const visual: VisualParameters = {
   grain: 0.32,
   signature: "Cadence Aurora",
   sceneFamily: "jazz-cathedral",
+  growthImprint: "jazz-lattice",
+  growthImprintIntensity: 0.82,
   activeBonuses: ["Cadence Aurora"],
   particles: {
     density: 0.72,
@@ -161,6 +163,33 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.arc).toHaveBeenCalled();
     expect(context?.moveTo).toHaveBeenCalled();
     expect(context?.lineTo).toHaveBeenCalled();
+  });
+
+  it("draws a dedicated growth imprint layer when a style track is active", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      growthImprint: "metal-forge",
+      growthImprintIntensity: 0.94
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.fillRect).toHaveBeenCalled();
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
   });
 });
 

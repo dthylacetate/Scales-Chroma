@@ -99,6 +99,7 @@ export class RealtimeCanvasRenderer {
     this.drawAtmosphereLayers(visual, width, height, centerX, centerY, radius, time);
     this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
+    this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -561,6 +562,38 @@ export class RealtimeCanvasRenderer {
     }
   }
 
+  private drawGrowthImprintLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    if (visual.growthImprint === "neutral" || visual.growthImprintIntensity <= 0.08) {
+      return;
+    }
+
+    switch (visual.growthImprint) {
+      case "pentatonic-drive":
+        this.drawPentatonicDriveImprint(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "jazz-lattice":
+        this.drawJazzLatticeImprint(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "metal-forge":
+        this.drawMetalForgeImprint(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "neo-soul-veil":
+        this.drawNeoSoulVeilImprint(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "fusion-phase":
+        this.drawFusionPhaseImprint(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+  }
+
   private drawSolarGardenAccent(
     visual: VisualParameters,
     centerX: number,
@@ -784,6 +817,222 @@ export class RealtimeCanvasRenderer {
       this.context.beginPath();
       this.context.moveTo(Math.cos(angle) * radius * 0.26, Math.sin(angle) * radius * 0.26);
       this.context.lineTo(Math.cos(angle) * radius * 1.06, Math.sin(angle) * radius * 1.06);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawPentatonicDriveImprint(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.growthImprintIntensity;
+    const neon = mixHex(visual.secondaryColor, "#59fff5", 0.48);
+    this.context.save();
+    this.context.lineWidth = Math.max(1.6, 1.2 + intensity * 3);
+    this.context.strokeStyle = alphaHex(neon, 0.16 + intensity * 0.16);
+    const stripeCount = Math.max(3, Math.round(3 + intensity * 4));
+    for (let index = 0; index < stripeCount; index += 1) {
+      const offset = radius * (0.22 + index * 0.16);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 1.4 + Math.sin(time * 0.8 + index) * radius * 0.08, height);
+      this.context.lineTo(centerX - offset, centerY + radius * 0.2);
+      this.context.lineTo(centerX + offset * 0.18, centerY - radius * 0.68);
+      this.context.stroke();
+      this.context.beginPath();
+      this.context.moveTo(centerX + radius * 1.4 - Math.sin(time * 0.8 + index) * radius * 0.08, height);
+      this.context.lineTo(centerX + offset, centerY + radius * 0.2);
+      this.context.lineTo(centerX - offset * 0.18, centerY - radius * 0.68);
+      this.context.stroke();
+    }
+    const nodeCount = Math.max(4, Math.round(4 + intensity * 5));
+    for (let index = 0; index < nodeCount; index += 1) {
+      const angle = time * 0.7 + index * (Math.PI * 2 / nodeCount);
+      const x = centerX + Math.cos(angle) * radius * (0.92 + (index % 3) * 0.12);
+      const y = centerY + Math.sin(angle * 1.2) * radius * 0.52;
+      this.context.beginPath();
+      this.context.fillStyle = alphaHex(index % 2 === 0 ? neon : visual.color, 0.2 + intensity * 0.22);
+      this.context.arc(x, y, 2 + intensity * 4, 0, Math.PI * 2);
+      this.context.fill();
+    }
+    this.context.restore();
+  }
+
+  private drawJazzLatticeImprint(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.growthImprintIntensity;
+    const cathedral = mixHex(visual.secondaryColor, "#d6d0ff", 0.38);
+    this.context.save();
+    this.context.lineWidth = Math.max(1.2, 1 + intensity * 2.2);
+    const chandelierCount = Math.max(3, Math.round(3 + intensity * 3));
+    for (let index = 0; index < chandelierCount; index += 1) {
+      const x = centerX - radius * 0.78 + (index / Math.max(1, chandelierCount - 1)) * radius * 1.56;
+      const sway = Math.sin(time * 0.7 + index) * radius * 0.04;
+      const topY = height * 0.08;
+      const bodyY = centerY - radius * (0.62 - index * 0.05);
+      this.context.strokeStyle = alphaHex(cathedral, 0.16 + intensity * 0.16);
+      this.context.beginPath();
+      this.context.moveTo(x, topY);
+      this.context.lineTo(x + sway, bodyY);
+      this.context.stroke();
+      this.context.beginPath();
+      this.context.moveTo(x - radius * 0.16, bodyY);
+      this.context.lineTo(x + sway, bodyY - radius * 0.12);
+      this.context.lineTo(x + radius * 0.16, bodyY);
+      this.context.stroke();
+    }
+    const bandCount = Math.max(3, Math.round(3 + intensity * 4));
+    for (let index = 0; index < bandCount; index += 1) {
+      const y = centerY - radius * (0.22 + index * 0.14);
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? cathedral : visual.color, 0.12 + intensity * 0.12);
+      for (let step = 0; step <= 12; step += 1) {
+        const progress = step / 12;
+        const x = centerX - radius * 1.22 + progress * radius * 2.44;
+        const waveY = y + Math.sin(progress * Math.PI * 4 + time * 0.8 + index) * radius * 0.018;
+        if (step === 0) {
+          this.context.moveTo(x, waveY);
+        } else {
+          this.context.lineTo(x, waveY);
+        }
+      }
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawMetalForgeImprint(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.growthImprintIntensity;
+    const ember = mixHex(visual.secondaryColor, "#ff7b3d", 0.4);
+    this.context.save();
+    this.context.lineWidth = Math.max(1.4, 1.2 + intensity * 2.8);
+    this.context.strokeStyle = alphaHex(ember, 0.18 + intensity * 0.18);
+    const shardRainCount = Math.max(5, Math.round(5 + intensity * 7));
+    for (let index = 0; index < shardRainCount; index += 1) {
+      const progress = index / shardRainCount;
+      const x = progress * width;
+      const topY = height * 0.06 + Math.sin(time * 1.2 + index) * radius * 0.04;
+      const midY = centerY - radius * 0.18 + (index % 3) * radius * 0.08;
+      this.context.beginPath();
+      this.context.moveTo(x, topY);
+      this.context.lineTo(x + radius * 0.08, midY);
+      this.context.lineTo(x - radius * 0.06, midY + radius * 0.22);
+      this.context.stroke();
+    }
+    const ventY = centerY + radius * 0.96;
+    for (let index = 0; index < 6; index += 1) {
+      const x = centerX - radius * 1.12 + (index / 5) * radius * 2.24;
+      this.context.fillStyle = alphaHex(index % 2 === 0 ? ember : visual.color, 0.12 + intensity * 0.14);
+      this.context.fillRect(x, ventY - radius * 0.18, radius * 0.12, radius * 0.18);
+      this.context.beginPath();
+      this.context.moveTo(x, ventY - radius * 0.18);
+      this.context.lineTo(x + radius * 0.06, ventY - radius * (0.28 + (index % 3) * 0.08));
+      this.context.lineTo(x + radius * 0.12, ventY - radius * 0.18);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawNeoSoulVeilImprint(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.growthImprintIntensity;
+    const blush = mixHex(visual.secondaryColor, "#ffb7d6", 0.44);
+    this.context.save();
+    const veilCount = Math.max(3, Math.round(3 + intensity * 3));
+    for (let index = 0; index < veilCount; index += 1) {
+      const veilGradient = this.context.createLinearGradient(0, 0, 0, height);
+      veilGradient.addColorStop(0, alphaHex(blush, 0.14 + intensity * 0.08));
+      veilGradient.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+      this.context.fillStyle = veilGradient;
+      this.context.beginPath();
+      this.context.moveTo(index % 2 === 0 ? 0 : width, 0);
+      this.context.quadraticCurveTo(
+        centerX + Math.sin(time * 0.5 + index) * radius * 0.14,
+        centerY * (0.38 + index * 0.06),
+        index % 2 === 0 ? radius * 0.52 : width - radius * 0.52,
+        height
+      );
+      this.context.lineTo(index % 2 === 0 ? 0 : width, height);
+      this.context.closePath();
+      this.context.fill();
+    }
+    const haloCount = Math.max(2, Math.round(2 + intensity * 3));
+    for (let index = 0; index < haloCount; index += 1) {
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? blush : visual.color, 0.2 + intensity * 0.12);
+      this.context.lineWidth = Math.max(1.2, 1 + intensity * 2);
+      this.context.ellipse(
+        centerX,
+        centerY + Math.sin(time * 0.9 + index) * radius * 0.05,
+        radius * (0.82 + index * 0.18),
+        radius * (0.34 + index * 0.08),
+        0,
+        Math.PI * 0.12,
+        Math.PI * 0.88
+      );
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawFusionPhaseImprint(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.growthImprintIntensity;
+    const prism = mixHex(visual.secondaryColor, "#9fc8ff", 0.36);
+    this.context.save();
+    this.context.translate(centerX, centerY);
+    this.context.rotate(time * (0.08 + intensity * 0.1));
+    const corridorCount = Math.max(3, Math.round(3 + intensity * 4));
+    for (let index = 0; index < corridorCount; index += 1) {
+      const offset = radius * (0.18 + index * 0.18);
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? prism : visual.color, 0.18 + intensity * 0.14);
+      this.context.lineWidth = Math.max(1, 1 + intensity * 2);
+      this.context.moveTo(0, -radius * (1.02 - index * 0.08));
+      this.context.lineTo(-offset, radius * (0.12 + index * 0.14));
+      this.context.lineTo(offset, radius * (0.12 + index * 0.14));
+      this.context.closePath();
+      this.context.stroke();
+    }
+    const phaseRingCount = Math.max(2, Math.round(2 + intensity * 3));
+    for (let index = 0; index < phaseRingCount; index += 1) {
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(prism, 0.14 + intensity * 0.12);
+      this.context.arc(0, 0, radius * (0.76 + index * 0.2), time * 0.6 + index * 0.7, time * 0.6 + index * 0.7 + Math.PI * 1.2);
       this.context.stroke();
     }
     this.context.restore();

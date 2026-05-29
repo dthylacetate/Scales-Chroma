@@ -76,6 +76,8 @@ describe("TheorySandbox", () => {
         beam_strength: 0.48,
         grain: 0.22,
         signature: "Blue Hour Run",
+        growth_imprint: "jazz-lattice",
+        growth_imprint_intensity: 0.84,
         active_bonuses: ["Blue Hour Run"],
         particles: {
           density: 0.78,
@@ -385,11 +387,13 @@ describe("TheorySandbox", () => {
           ring_count: 5,
           ripple_strength: 0.74,
           beam_strength: 0.62,
-          grain: 0.18,
-          signature: "Celestial Bloom",
-          active_bonuses: ["Celestial Bloom"],
-          particles: {
-            density: 0.72,
+        grain: 0.18,
+        signature: "Celestial Bloom",
+        growth_imprint: "jazz-lattice",
+        growth_imprint_intensity: 0.88,
+        active_bonuses: ["Celestial Bloom"],
+        particles: {
+          density: 0.72,
             trail: false,
             size: 2.4,
             speed: 1.2,
@@ -410,6 +414,52 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("偏暖，情绪保持暧昧，柔亮扩散。")).toBeInTheDocument();
     expect(screen.getByText(/层次很深/)).toBeInTheDocument();
     expect(screen.getByText("日光穹庭")).toBeInTheDocument();
+  });
+
+  it("shows a dedicated growth imprint reading when unlock styles are active", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createAuthenticatedFetchMock({
+        visualResponse: {
+          color: "#ffb45c",
+          secondary_color: "#ff9fc9",
+          background_color: "#170b13",
+          glow: 0.94,
+          energy: 0.7,
+          complexity: 0.62,
+          temperature: 0.66,
+          symmetry: 0.82,
+          depth: 0.86,
+          pulse_density: 0.54,
+          motion_speed: 0.58,
+          ring_count: 5,
+          ripple_strength: 0.72,
+          beam_strength: 0.52,
+          grain: 0.08,
+          signature: "Velvet Tide",
+          growth_imprint: "neo-soul-veil",
+          growth_imprint_intensity: 0.94,
+          active_bonuses: ["Velvet Tide"],
+          particles: {
+            density: 0.72,
+            trail: false,
+            size: 2.4,
+            speed: 1.2,
+            spread: 0.58
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        }
+      })
+    );
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Growth Imprint")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Neo Soul 幕纱")).toBeInTheDocument();
+    expect(screen.getByText(/Growth 已经把当前舞台往丝绒/)).toBeInTheDocument();
   });
 
   it("loads and displays yearly practice heatmap entries", async () => {
@@ -598,6 +648,8 @@ interface TheorySandboxFetchOptions {
     ripple_strength?: number;
     beam_strength?: number;
     grain?: number;
+    growth_imprint?: string;
+    growth_imprint_intensity?: number;
     signature?: string;
     active_bonuses?: string[];
     particles: {
@@ -626,6 +678,8 @@ interface TheorySandboxFetchOptions {
     ripple_strength?: number;
     beam_strength?: number;
     grain?: number;
+    growth_imprint?: string;
+    growth_imprint_intensity?: number;
     signature?: string;
     active_bonuses?: string[];
     particles: {
@@ -679,6 +733,8 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
           ripple_strength: 0.34,
           beam_strength: 0.3,
           grain: 0.14,
+          growth_imprint: "neutral",
+          growth_imprint_intensity: 0,
           signature: "Maj7",
           active_bonuses: [],
           particles: {
@@ -816,6 +872,8 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
         ripple_strength: 0.34,
         beam_strength: 0.3,
         grain: 0.14,
+        growth_imprint: "neutral",
+        growth_imprint_intensity: 0,
         signature: "Maj7",
         active_bonuses: [],
         particles: {

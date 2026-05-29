@@ -37,6 +37,8 @@ export interface VisualParameters {
     | "nocturne-tide"
     | "neon-grid"
     | "shadow-sanctum";
+  growthImprint: "neutral" | "pentatonic-drive" | "jazz-lattice" | "metal-forge" | "neo-soul-veil" | "fusion-phase";
+  growthImprintIntensity: number;
   activeBonuses: string[];
   particles: {
     density: number;

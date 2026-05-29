@@ -163,6 +163,8 @@ def test_renderer_applies_neo_soul_style_unlocks_to_visual_parameters() -> None:
     assert visual.depth > 0.75
     assert visual.symmetry > 0.55
     assert visual.scene_family == "velvet-chamber"
+    assert visual.growth_imprint == "neo-soul-veil"
+    assert visual.growth_imprint_intensity > 0.9
 
 
 def test_renderer_applies_fusion_style_aura_to_visual_parameters() -> None:
@@ -177,3 +179,15 @@ def test_renderer_applies_fusion_style_aura_to_visual_parameters() -> None:
     assert visual.beam_strength > 0.35
     assert visual.depth > 0.7
     assert visual.scene_family == "prism-array"
+    assert visual.growth_imprint == "fusion-phase"
+    assert visual.growth_imprint_intensity > 0.75
+
+
+def test_renderer_keeps_growth_imprint_neutral_without_unlocks() -> None:
+    visual = render_visual_parameters(
+        elements=[TheoryElement(id="major", type="scale", name="Major")],
+        unlocked_effects=[],
+    )
+
+    assert visual.growth_imprint == "neutral"
+    assert visual.growth_imprint_intensity == 0.0

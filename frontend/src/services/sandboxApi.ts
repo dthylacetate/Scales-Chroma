@@ -24,6 +24,8 @@ interface SandboxRenderResponse {
   grain?: number;
   signature?: string;
   scene_family?: VisualParameters["sceneFamily"];
+  growth_imprint?: VisualParameters["growthImprint"];
+  growth_imprint_intensity?: number;
   active_bonuses?: string[];
   particles: {
     density: number;
@@ -97,6 +99,12 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
         response.luminosity ?? 0.56,
         response.grit ?? 0.28
       ),
+    growthImprint:
+      response.growth_imprint ??
+      inferGrowthImprint(response.signature ?? "Pulse Field", response.active_bonuses ?? []),
+    growthImprintIntensity:
+      response.growth_imprint_intensity ??
+      inferGrowthImprintIntensity(response.signature ?? "Pulse Field", response.active_bonuses ?? []),
     activeBonuses: response.active_bonuses ?? [],
     particles: {
       density: response.particles.density,
@@ -175,4 +183,43 @@ function inferSceneFamily(
 
 function containsAny(source: string, needles: string[]): boolean {
   return needles.some((needle) => source.includes(needle));
+}
+
+function inferGrowthImprint(
+  signature: string,
+  activeBonuses: string[]
+): VisualParameters["growthImprint"] {
+  const text = [signature, ...activeBonuses].join(" ");
+
+  if (containsAny(text, ["Velvet", "Silk", "Glass", "Current", "Tide"])) {
+    return "neo-soul-veil";
+  }
+
+  if (containsAny(text, ["Fracture", "Voltage", "Shrapnel", "Ashen", "Occult"])) {
+    return "metal-forge";
+  }
+
+  if (containsAny(text, ["Jazz", "Cadence", "Aurora", "Lattice", "Skyline", "Blue Hour"])) {
+    return "jazz-lattice";
+  }
+
+  if (containsAny(text, ["Prism", "Chrome", "Meridian", "Fusion", "Liquid"])) {
+    return "fusion-phase";
+  }
+
+  if (containsAny(text, ["Neon", "Roadhouse", "Lantern", "Run"])) {
+    return "pentatonic-drive";
+  }
+
+  return "neutral";
+}
+
+function inferGrowthImprintIntensity(signature: string, activeBonuses: string[]): number {
+  const imprint = inferGrowthImprint(signature, activeBonuses);
+
+  if (imprint === "neutral") {
+    return 0;
+  }
+
+  return activeBonuses.length > 0 ? 0.78 : 0.62;
 }

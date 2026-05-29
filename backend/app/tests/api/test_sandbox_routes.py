@@ -161,6 +161,8 @@ def test_sandbox_render_returns_growth_aura_metadata_for_unlocked_style_tracks()
     assert payload["secondary_color"] == "#ff9fc9"
     assert payload["glow"] > 0.9
     assert payload["grit"] < 0.15
+    assert payload["growth_imprint"] == "neo-soul-veil"
+    assert payload["growth_imprint_intensity"] > 0.9
 
 
 def create_test_session() -> Session:

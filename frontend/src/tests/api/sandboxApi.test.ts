@@ -15,6 +15,8 @@ describe("sandbox API service", () => {
         color: "#ffd166",
         glow: 0.92,
         scene_family: "solar-garden",
+        growth_imprint: "jazz-lattice",
+        growth_imprint_intensity: 0.86,
         particles: {
           density: 0.74,
           trail: true
@@ -47,6 +49,8 @@ describe("sandbox API service", () => {
     expect(visual.temperature).toBe(0.5);
     expect(visual.pulseDensity).toBe(0.48);
     expect(visual.sceneFamily).toBe("solar-garden");
+    expect(visual.growthImprint).toBe("jazz-lattice");
+    expect(visual.growthImprintIntensity).toBe(0.86);
   });
 
   it("throws a readable error when sandbox rendering fails", async () => {
