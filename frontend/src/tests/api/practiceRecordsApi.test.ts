@@ -18,7 +18,9 @@ describe("practice records API service", () => {
         bpm: 150,
         topic: "Pentatonic speed run",
         notes: "Clean triplets",
-        exp_earned: 54
+        exp_earned: 54,
+        total_exp: 125,
+        level: 2
       })
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -48,6 +50,8 @@ describe("practice records API service", () => {
       method: "POST"
     });
     expect(record.expEarned).toBe(54);
+    expect(record.totalExp).toBe(125);
+    expect(record.level).toBe(2);
     expect(record.durationMinutes).toBe(45);
   });
 

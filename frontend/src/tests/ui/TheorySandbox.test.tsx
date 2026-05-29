@@ -66,7 +66,9 @@ describe("TheorySandbox", () => {
             bpm: 150,
             topic: "Pentatonic speed run",
             notes: "Clean triplets",
-            exp_earned: 54
+            exp_earned: 54,
+            total_exp: 125,
+            level: 2
           })
         });
       }
@@ -99,6 +101,8 @@ describe("TheorySandbox", () => {
     await waitFor(() => {
       expect(screen.getByText("+54 EXP")).toBeInTheDocument();
     });
+    expect(screen.getByText("Total 125 EXP")).toBeInTheDocument();
+    expect(screen.getByText("Level 2")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith("http://api.test/practice-records", expect.any(Object));
   });
 
