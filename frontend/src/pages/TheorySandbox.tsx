@@ -38,6 +38,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [practiceResult, setPracticeResult] = useState<PracticeRecordResult | null>(null);
   const [practiceError, setPracticeError] = useState<string | null>(null);
   const [practiceSubmitting, setPracticeSubmitting] = useState(false);
+  const [visualRefreshKey, setVisualRefreshKey] = useState(0);
   const activeElement = composition.at(-1) ?? selected;
   const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
   const localVisual = useMemo(() => mapTheoryToVisuals([activeElement]), [activeElement]);
@@ -72,7 +73,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     return () => {
       cancelled = true;
     };
-  }, [activeElements, apiBaseUrl, localVisual, userId]);
+  }, [activeElements, apiBaseUrl, localVisual, userId, visualRefreshKey]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -348,6 +349,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
         userId
       });
       setPracticeResult(result);
+      setVisualRefreshKey((current) => current + 1);
     } catch {
       setPracticeError("练习记录提交失败");
     } finally {
