@@ -240,11 +240,17 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
                     }}
                     onDragOver={(event) => {
                       event.preventDefault();
+                      event.stopPropagation();
                     }}
                     onDrop={(event) => {
                       event.preventDefault();
+                      event.stopPropagation();
                       const dragPayload = event.dataTransfer.getData("text/plain");
-                      moveCompositionBlock(dragPayload, index);
+                      if (dragPayload.startsWith("lane:")) {
+                        moveCompositionBlock(dragPayload, index);
+                      } else {
+                        replaceCompositionBlock(dragPayload, index);
+                      }
                     }}
                   >
                     <span className="font-medium">{element.name}</span>
@@ -369,6 +375,26 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   function removeFromComposition(indexToRemove: number): void {
     setInvalidHint(null);
     setComposition((current) => current.filter((_, index) => index !== indexToRemove));
+  }
+
+  function replaceCompositionBlock(elementId: string, targetIndex: number): void {
+    const nextElement = THEORY_LIBRARY.find((element) => element.id === elementId);
+
+    if (!nextElement || targetIndex < 0 || targetIndex >= composition.length) {
+      return;
+    }
+
+    const previousElement = composition[targetIndex - 1];
+    const followingElement = composition[targetIndex + 1];
+
+    if (previousElement?.id === nextElement.id || followingElement?.id === nextElement.id) {
+      setInvalidHint("相邻位置不能重复同一个乐理积木");
+      return;
+    }
+
+    setInvalidHint(null);
+    setSelected(nextElement);
+    setComposition((current) => current.map((element, index) => (index === targetIndex ? nextElement : element)));
   }
 
   function moveCompositionBlock(dragPayload: string, targetIndex: number): void {
