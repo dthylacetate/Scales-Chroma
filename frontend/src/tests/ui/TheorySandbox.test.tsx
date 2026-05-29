@@ -201,7 +201,7 @@ describe("TheorySandbox", () => {
       expect(screen.getByText("Growth")).toBeInTheDocument();
     });
     expect(screen.getByText("Jazz")).toBeInTheDocument();
-    expect(screen.getByText("II-V-I")).toBeInTheDocument();
+    expect(screen.getAllByText("II-V-I").length).toBeGreaterThan(1);
     expect(screen.getByText("Lv 2")).toBeInTheDocument();
   });
 });

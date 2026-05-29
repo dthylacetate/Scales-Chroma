@@ -1,8 +1,9 @@
-import { Activity, CalendarDays, Grip, Layers, Send, Sparkles, X } from "lucide-react";
+import { Activity, CalendarDays, GitBranch, Grip, Layers, Send, Sparkles, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
 import { createPracticeRecord, type PracticeRecordResult } from "../services/practiceRecordsApi";
+import { getSkillTree, type SkillTree } from "../services/progressionApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
@@ -38,6 +39,7 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [practiceResult, setPracticeResult] = useState<PracticeRecordResult | null>(null);
   const [practiceError, setPracticeError] = useState<string | null>(null);
   const [practiceSubmitting, setPracticeSubmitting] = useState(false);
+  const [skillTree, setSkillTree] = useState<SkillTree | null>(null);
   const [visualRefreshKey, setVisualRefreshKey] = useState(0);
   const activeElement = composition.at(-1) ?? selected;
   const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
@@ -92,6 +94,33 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
       rendererRef.current = null;
     };
   }, [visual]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!apiBaseUrl || !userId) {
+      setSkillTree(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getSkillTree({ apiBaseUrl, userId })
+      .then((nextSkillTree) => {
+        if (!cancelled && Array.isArray(nextSkillTree.branches)) {
+          setSkillTree(nextSkillTree);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSkillTree(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseUrl, userId, visualRefreshKey]);
 
   return (
     <main className="min-h-screen bg-[#120f12] text-stone-100">
@@ -274,6 +303,8 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
             ) : null}
             {practiceError ? <div className="text-sm text-[#ff8fa3]">{practiceError}</div> : null}
           </form>
+
+          {skillTree ? <SkillTreePanel skillTree={skillTree} /> : null}
         </aside>
       </section>
     </main>
@@ -398,5 +429,36 @@ function PracticeInput({ label, value, onChange, type, min }: PracticeInputProps
         onChange={(event) => onChange(event.target.value)}
       />
     </label>
+  );
+}
+
+function SkillTreePanel({ skillTree }: { skillTree: SkillTree }) {
+  return (
+    <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">
+      <div className="flex items-center gap-2 pb-1">
+        <GitBranch aria-hidden="true" className="size-4 text-[#ffd166]" />
+        <h2 className="text-base font-semibold tracking-normal">Growth</h2>
+      </div>
+      <div className="flex flex-col gap-2">
+        {skillTree.branches.map((branch) => (
+          <div key={branch.direction} className="rounded-md border border-[#3f3144] bg-[#201922] p-2">
+            <div className="mb-2 text-xs font-semibold uppercase text-[#ffd166]">{branch.direction}</div>
+            <div className="flex flex-col gap-1.5">
+              {branch.nodes.map((node) => (
+                <div
+                  key={node.id}
+                  className={`flex items-center justify-between rounded-sm px-2 py-1.5 text-sm ${
+                    node.unlocked ? "bg-[#2a2a24] text-stone-100" : "bg-[#151217] text-stone-500"
+                  }`}
+                >
+                  <span>{node.label}</span>
+                  <span className="text-xs text-stone-300">Lv {node.level}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
