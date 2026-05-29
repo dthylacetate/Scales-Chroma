@@ -1,5 +1,9 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.core.database import get_session
+from app.services.heatmap import get_yearly_heatmap as get_yearly_heatmap_service
 
 router = APIRouter(tags=["progression"])
 
@@ -37,8 +41,21 @@ class SkillTreeResponse(BaseModel):
 def get_yearly_heatmap(
     user_id: int = Query(gt=0),
     year: int = Query(ge=1970, le=9999),
+    session: Session = Depends(get_session),
 ) -> YearlyHeatmapResponse:
-    return YearlyHeatmapResponse(user_id=user_id, year=year, days=[])
+    result = get_yearly_heatmap_service(session=session, user_id=user_id, year=year)
+    return YearlyHeatmapResponse(
+        user_id=result.user_id,
+        year=result.year,
+        days=[
+            HeatmapDay(
+                date=day.date,
+                duration_minutes=day.duration_minutes,
+                exp=day.exp,
+            )
+            for day in result.days
+        ],
+    )
 
 
 @router.get("/skill-tree", response_model=SkillTreeResponse)
