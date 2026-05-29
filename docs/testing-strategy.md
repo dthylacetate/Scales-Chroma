@@ -1,32 +1,46 @@
-# Testing Strategy
+# 测试策略
 
-Scales & Chroma uses TDD for core logic and interaction behavior.
+Scales & Chroma 采用 TDD 开发方式。也就是先写会失败的测试，用测试把目标行为说清楚，再写实现让测试通过，最后再做整理和重构。
 
-## Backend
+这个项目的测试重点不是普通表单或后台 CRUD，而是下面这些核心体验：
 
-Backend tests live in `backend/app/tests/`.
+- 乐理元素能被组合和编排
+- 乐理特征能映射成颜色、粒子、几何和动画
+- Canvas 能稳定进行实时渲染
+- EXP 和连续练习逻辑可预测、可追踪
+- API 返回结构稳定，方便前后端持续联调
 
-- `unit/`: deterministic logic such as EXP and streak calculations
-- `integration/`: database and service integration
-- `api/`: FastAPI route behavior
-- `performance/`: high-volume and concurrency checks
-- `edge_cases/`: invalid dates, extreme BPM, leap years, and boundary behavior
+## 后端测试
 
-## Frontend
+后端测试放在 `backend/app/tests/`。
 
-Frontend tests live in `frontend/src/tests/`.
+- `unit/`：单元测试，主要覆盖 EXP 计算、连续签到、数据库模型、Schema 校验、视觉引擎组件等确定性逻辑
+- `integration/`：集成测试，后续用于覆盖数据库、服务层和跨模块协作
+- `api/`：接口测试，覆盖 FastAPI 路由的输入、输出和错误状态
+- `performance/`：性能测试，后续用于高并发、批量数据和实时计算压力场景
+- `edge_cases/`：边界测试，后续用于非法日期、极端 BPM、闰年、跨月、跨年等场景
 
-- `drag/`: sandbox drag, reorder, replace, and invalid joins
-- `canvas/`: visual engine and renderer behavior
-- `ui/`: component-level behavior
-- `hooks/`: stateful React logic
-- `responsiveness/`: viewport coverage and overlap checks
+## 前端测试
 
-## First Red Tests
+前端测试放在 `frontend/src/tests/`。
 
-The initial failing tests define the first implementation targets:
+- `drag/`：沙盘拖拽、编排轨道、积木删除、非法组合、轨道内重排
+- `canvas/`：视觉映射和 Canvas 实时渲染器
+- `ui/`：用户能看到和操作的界面行为
+- `hooks/`：后续用于覆盖 React 状态逻辑
+- `responsiveness/`：后续用于覆盖不同屏幕尺寸、UI 重叠、Canvas 缩放
+
+## 第一批红灯测试
+
+项目一开始先写了两类会失败的测试：
 
 - `backend/app/tests/unit/test_exp_service.py`
 - `frontend/src/tests/canvas/visualEngine.test.ts`
 
-They intentionally import modules that do not exist yet. The next implementation step should make these tests pass without weakening the assertions.
+它们当时故意引用了还不存在的模块。这样做的目的不是制造错误，而是先把“接下来要实现什么”写成可运行、可追踪的测试目标。
+
+后续每个阶段都尽量保持这个节奏：
+
+```text
+写红灯测试 -> 提交并推送 -> 实现功能 -> 跑通测试 -> 再提交并推送
+```

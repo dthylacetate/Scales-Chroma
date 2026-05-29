@@ -1,6 +1,8 @@
 # 开发测试思路与历程
 
-本文档记录 Scales & Chroma 当前阶段的 TDD 开发过程、测试设计思路和验证结果。项目目标不是普通 CRUD 应用，而是“乐理视觉化沙盘 + 游戏化成长系统”，所以测试重点始终围绕核心体验闭环展开：
+本文档记录 Scales & Chroma 当前阶段的 TDD 开发过程、测试设计思路和验证结果。这里会尽量用中文说明真实开发过程；路径、函数名、API 名称、commit 原文会保留英文或代码格式，方便和仓库内容对照。
+
+项目目标不是普通 CRUD 应用，而是“乐理视觉化沙盘 + 游戏化成长系统”，所以测试重点始终围绕核心体验闭环展开：
 
 ```text
 乐理元素组合 -> 视觉映射 -> Canvas 实时反馈 -> 练习成长 -> 解锁更强视觉能力
@@ -65,17 +67,22 @@ frontend/src/tests/
 - 证明测试不是事后补的，而是先定义目标行为。
 - 初始失败点清晰：缺少 EXP 服务和前端视觉映射。
 
-### 2. 数据库 Models 与 Schemas
+### 2. 数据库模型与数据校验
 
 提交：
 
 - `698b556 test(models): add failing database and schema tests`
 - `1810ebe feat(models): implement database models and schemas`
 
+对应中文说明：
+
+- 先添加数据库模型和 Schema 的红灯测试。
+- 再实现 SQLAlchemy 模型和 Pydantic 数据结构。
+
 测试思路：
 
 - 用单元测试锁定五张核心表：`users`、`practice_records`、`exp_statistics`、`theory_visual_mapping`、`unlocked_effects`。
-- Schema 测试覆盖用户创建、练习记录创建、沙盘渲染请求的基础校验。
+- 数据校验测试覆盖用户创建、练习记录创建、沙盘渲染请求的基础校验。
 
 验证重点：
 
@@ -101,12 +108,17 @@ frontend/src/tests/
 - EXP 计算可作为独立服务测试。
 - 日期连续性使用 `timedelta(days=1)`，天然支持闰日、跨月、跨年。
 
-### 4. 核心 API Routes
+### 4. 核心接口路由
 
 提交：
 
 - `673249c test(api): add failing core route tests`
 - `a2009a8 feat(api): implement core backend routes`
+
+对应中文说明：
+
+- 先添加核心 API 的红灯测试。
+- 再实现练习记录、热力图、技能树、沙盘渲染这些基础接口。
 
 测试思路：
 
@@ -122,11 +134,16 @@ frontend/src/tests/
 - 技能树返回 Metal、Jazz、Fusion、Neo Soul 四个方向。
 - 沙盘渲染能把 Maj7 映射到暖色、发光、柔和几何与 flowing 动画。
 
-### 5. 前端 Visual Engine 映射
+### 5. 前端视觉引擎映射
 
 提交：
 
 - `886dec8 feat(visual-engine): implement frontend theory mapping`
+
+对应中文说明：
+
+- 实现前端本地的乐理到视觉参数映射。
+- 这样沙盘即使暂时不请求后端，也能实时反馈视觉状态。
 
 测试思路：
 
@@ -139,12 +156,17 @@ frontend/src/tests/
 - 视觉不是装饰，而是乐理情绪映射。
 - 前端沙盘可以在没有后端请求时先进行本地实时反馈。
 
-### 6. 后端 Visual Engine 模块化
+### 6. 后端视觉引擎模块化
 
 提交：
 
 - `f00e300 test(视觉引擎): 添加模块化组件红灯测试`
 - `26913b7 feat(视觉引擎): 拆分后端视觉映射组件`
+
+对应中文说明：
+
+- 先测试视觉引擎应该拆成哪些职责模块。
+- 再把原本集中在服务里的视觉逻辑拆成独立模块。
 
 测试思路：
 
@@ -170,12 +192,17 @@ backend/app/visual_engine/
 - `animation_controller` 负责动画状态。
 - `renderer` 组合各模块输出 API 所需的视觉参数。
 
-### 7. Canvas Renderer 生命周期
+### 7. 画布实时渲染器生命周期
 
 提交：
 
 - `2a7acab test(画布): 添加实时渲染器生命周期红灯测试`
 - `b9d20eb feat(画布): 实现实时渲染器生命周期管理`
+
+对应中文说明：
+
+- 先测试 Canvas 渲染器的启动、绘制、停止和尺寸适配。
+- 再实现可复用的实时渲染器。
 
 测试思路：
 
@@ -183,7 +210,7 @@ backend/app/visual_engine/
   - `requestAnimationFrame` 启动
   - 每帧绘制
   - `cancelAnimationFrame` 清理
-  - Canvas backing size 随设备像素比 resize
+  - Canvas 内部绘制尺寸随设备像素比调整
 
 验证重点：
 
@@ -197,6 +224,11 @@ backend/app/visual_engine/
 
 - `0467600 test(界面): 添加沙盘首屏红灯测试`
 - `70dbbc9 feat(界面): 实现乐理视觉沙盘首屏`
+
+对应中文说明：
+
+- 先测试用户进入页面后应该看到什么。
+- 再实现真正的沙盘首屏，而不是做一个后台管理或介绍页。
 
 测试思路：
 
@@ -282,7 +314,7 @@ npm test
 11 passed
 ```
 
-### 前端构建
+### 前端生产构建
 
 ```bash
 cd frontend
@@ -292,7 +324,7 @@ npm run build
 当前结果：
 
 ```text
-vite build passed
+Vite 构建通过
 ```
 
 ## 当前覆盖能力
