@@ -146,7 +146,10 @@ describe("TheorySandbox", () => {
             bpm: 150,
             topic: "Pentatonic speed run",
             notes: null,
-            exp_earned: 732
+            exp_earned: 732,
+            total_exp: 732,
+            level: 8,
+            unlocked_effects: ["particle_trail", "neon_glow", "dynamic_ripple"]
           })
         });
       }
@@ -182,6 +185,9 @@ describe("TheorySandbox", () => {
     await waitFor(() => {
       expect(screen.getByText("On")).toBeInTheDocument();
     });
+    expect(screen.getByText("Unlocked particle_trail")).toBeInTheDocument();
+    expect(screen.getByText("Unlocked neon_glow")).toBeInTheDocument();
+    expect(screen.getByText("Unlocked dynamic_ripple")).toBeInTheDocument();
     expect(sandboxRenderCount).toBeGreaterThan(1);
   });
 
@@ -245,9 +251,19 @@ describe("TheorySandbox", () => {
             year: 2026,
             days: [
               {
+                date: "2026-01-01",
+                duration_minutes: 0,
+                exp: 0
+              },
+              {
                 date: "2026-05-29",
                 duration_minutes: 45,
                 exp: 54
+              },
+              {
+                date: "2026-12-31",
+                duration_minutes: 0,
+                exp: 0
               }
             ]
           })
@@ -275,6 +291,7 @@ describe("TheorySandbox", () => {
     await waitFor(() => {
       expect(screen.getByText("Heatmap")).toBeInTheDocument();
     });
+    expect(screen.getByLabelText("年度练习热力图").children).toHaveLength(3);
     expect(screen.getByText("2026-05-29")).toBeInTheDocument();
     expect(screen.getByText("54 EXP")).toBeInTheDocument();
   });

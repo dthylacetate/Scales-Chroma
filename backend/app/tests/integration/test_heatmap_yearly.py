@@ -53,10 +53,13 @@ def test_yearly_heatmap_aggregates_duration_and_exp_by_date() -> None:
 
     assert heatmap.user_id == user.id
     assert heatmap.year == 2026
-    assert len(heatmap.days) == 1
-    assert heatmap.days[0].date == "2026-05-29"
-    assert heatmap.days[0].duration_minutes == 50
-    assert heatmap.days[0].exp == 56
+    assert len(heatmap.days) == 365
+    assert heatmap.days[0].date == "2026-01-01"
+    assert heatmap.days[-1].date == "2026-12-31"
+
+    practiced_day = next(day for day in heatmap.days if day.date == "2026-05-29")
+    assert practiced_day.duration_minutes == 50
+    assert practiced_day.exp == 56
 
 
 def create_test_session() -> Session:

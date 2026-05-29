@@ -107,6 +107,28 @@ def test_create_practice_record_returns_total_exp_and_updates_user_level() -> No
     assert refreshed_user.level == 2
 
 
+def test_create_practice_record_returns_newly_unlocked_visual_effects() -> None:
+    session = create_test_session()
+    user = User(username="unlock-player", email="unlock@example.com")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    result = create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 5, 29),
+            duration_minutes=610,
+            bpm=150,
+            topic="Pentatonic speed run",
+            notes=None,
+        ),
+    )
+
+    assert sorted(result.unlocked_effects) == ["dynamic_ripple", "neon_glow", "particle_trail"]
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

@@ -20,7 +20,8 @@ describe("practice records API service", () => {
         notes: "Clean triplets",
         exp_earned: 54,
         total_exp: 125,
-        level: 2
+        level: 2,
+        unlocked_effects: ["particle_trail", "neon_glow"]
       })
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -52,6 +53,7 @@ describe("practice records API service", () => {
     expect(record.expEarned).toBe(54);
     expect(record.totalExp).toBe(125);
     expect(record.level).toBe(2);
+    expect(record.unlockedEffects).toEqual(["particle_trail", "neon_glow"]);
     expect(record.durationMinutes).toBe(45);
   });
 
