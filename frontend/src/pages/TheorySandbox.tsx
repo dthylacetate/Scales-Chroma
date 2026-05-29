@@ -2,7 +2,8 @@ import { Activity, Grip, Layers, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
-import type { TheoryElement } from "../types/theory";
+import { renderSandboxVisual } from "../services/sandboxApi";
+import type { TheoryElement, VisualParameters } from "../types/theory";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
 
 const THEORY_LIBRARY: TheoryElement[] = [
@@ -17,14 +18,52 @@ const THEORY_LIBRARY: TheoryElement[] = [
   { id: "ii-v-i", type: "progression", name: "II-V-I" }
 ];
 
-export function TheorySandbox() {
+interface TheorySandboxProps {
+  apiBaseUrl?: string;
+  userId?: number;
+}
+
+export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [selected, setSelected] = useState<TheoryElement>(THEORY_LIBRARY[5]);
   const [composition, setComposition] = useState<TheoryElement[]>([]);
   const [invalidHint, setInvalidHint] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<RealtimeCanvasRenderer | null>(null);
   const activeElement = composition.at(-1) ?? selected;
-  const visual = useMemo(() => mapTheoryToVisuals([activeElement]), [activeElement]);
+  const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
+  const localVisual = useMemo(() => mapTheoryToVisuals([activeElement]), [activeElement]);
+  const [visual, setVisual] = useState<VisualParameters>(localVisual);
+
+  useEffect(() => {
+    let cancelled = false;
+    setVisual(localVisual);
+
+    if (!apiBaseUrl) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    renderSandboxVisual({
+      apiBaseUrl,
+      elements: activeElements,
+      userId
+    })
+      .then((enhancedVisual) => {
+        if (!cancelled) {
+          setVisual(enhancedVisual);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setVisual(localVisual);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeElements, apiBaseUrl, localVisual, userId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -165,6 +204,7 @@ export function TheorySandbox() {
           <Readout label="Geometry" value={visual.geometry} />
           <Readout label="Animation" value={visual.animationState} />
           <Readout label="Glow" value={visual.glow.toFixed(2)} />
+          <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
         </aside>
       </section>
     </main>
