@@ -80,13 +80,27 @@ def create_practice_record(
 def list_practice_records(
     user_id: int = Query(gt=0),
     limit: int = Query(default=10, ge=1, le=50),
+    topic: str | None = Query(default=None, min_length=1),
+    date_from: date | None = None,
+    date_to: date | None = None,
     session: Session = Depends(get_session),
 ) -> PracticeRecordListResponse:
-    records = session.scalars(
+    statement = (
         select(PracticeRecord)
         .where(PracticeRecord.user_id == user_id)
-        .order_by(PracticeRecord.practice_date.desc(), PracticeRecord.id.desc())
-        .limit(limit)
+    )
+
+    if topic:
+        statement = statement.where(PracticeRecord.topic.ilike(f"%{topic}%"))
+
+    if date_from:
+        statement = statement.where(PracticeRecord.practice_date >= date_from)
+
+    if date_to:
+        statement = statement.where(PracticeRecord.practice_date <= date_to)
+
+    records = session.scalars(
+        statement.order_by(PracticeRecord.practice_date.desc(), PracticeRecord.id.desc()).limit(limit)
     ).all()
     return PracticeRecordListResponse(
         records=[

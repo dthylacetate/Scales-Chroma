@@ -11,6 +11,9 @@ interface CreatePracticeRecordInput {
 interface GetPracticeRecordsInput {
   userId: number;
   limit?: number;
+  topic?: string;
+  dateFrom?: string;
+  dateTo?: string;
   apiBaseUrl?: string;
 }
 
@@ -106,12 +109,29 @@ export async function createPracticeRecord({
 export async function getPracticeRecords({
   userId,
   limit = 10,
+  topic,
+  dateFrom,
+  dateTo,
   apiBaseUrl = ""
 }: GetPracticeRecordsInput): Promise<PracticeRecordHistoryItem[]> {
-  const response = await fetch(`${apiBaseUrl}/practice-records?${new URLSearchParams({
+  const params = new URLSearchParams({
     user_id: String(userId),
     limit: String(limit)
-  })}`);
+  });
+
+  if (topic) {
+    params.set("topic", topic);
+  }
+
+  if (dateFrom) {
+    params.set("date_from", dateFrom);
+  }
+
+  if (dateTo) {
+    params.set("date_to", dateTo);
+  }
+
+  const response = await fetch(`${apiBaseUrl}/practice-records?${params}`);
 
   if (!response.ok) {
     throw new Error(`Practice records request failed with status ${response.status}`);
