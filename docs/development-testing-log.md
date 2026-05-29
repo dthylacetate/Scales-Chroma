@@ -310,7 +310,7 @@ python -m pytest
 当前结果：
 
 ```text
-79 passed，1 个 FastAPI/Starlette 测试客户端弃用 warning
+81 passed，1 个 FastAPI/Starlette 测试客户端弃用 warning
 ```
 
 ### 前端测试
@@ -323,7 +323,7 @@ npm test
 当前结果：
 
 ```text
-48 passed，仍有 1 个 React act(...) 测试提示
+50 passed，仍有 1 个 React act(...) 测试提示
 ```
 
 ### 前端生产构建

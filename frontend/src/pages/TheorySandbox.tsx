@@ -1,8 +1,8 @@
-import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Save, Search, Send, Sparkles, X } from "lucide-react";
+import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Save, Search, Send, Sparkles, Trash2, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
-import { getSavedCompositions, saveComposition, type SavedComposition, updateComposition } from "../services/compositionsApi";
+import { deleteComposition, getSavedCompositions, saveComposition, type SavedComposition, updateComposition } from "../services/compositionsApi";
 import {
   createPracticeRecord,
   getPracticeRecords,
@@ -111,6 +111,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
   const [compositionName, setCompositionName] = useState("");
   const [selectedCompositionId, setSelectedCompositionId] = useState<number | null>(null);
   const [compositionSaving, setCompositionSaving] = useState(false);
+  const [compositionDeletingId, setCompositionDeletingId] = useState<number | null>(null);
   const [compositionError, setCompositionError] = useState<string | null>(null);
   const [visualRefreshKey, setVisualRefreshKey] = useState(0);
   const activeElement = composition.at(-1) ?? selected;
@@ -570,18 +571,31 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {savedCompositions.length > 0 ? (
                 <div className="grid gap-1">
                   {savedCompositions.map((savedComposition) => (
-                    <button
+                    <div
                       key={savedComposition.id}
-                      className={`rounded-md border px-2 py-1.5 text-left text-sm text-stone-100 hover:border-[#ffd166] ${
+                      className={`flex items-center gap-2 rounded-md border px-2 py-1.5 ${
                         selectedCompositionId === savedComposition.id
                           ? "border-[#ffd166] bg-[#2a2023]"
                           : "border-[#3f3144] bg-[#201922]"
                       }`}
-                      type="button"
-                      onClick={() => loadSavedComposition(savedComposition)}
                     >
-                      {savedComposition.name}
-                    </button>
+                      <button
+                        className="min-w-0 flex-1 text-left text-sm text-stone-100 hover:text-white"
+                        type="button"
+                        onClick={() => loadSavedComposition(savedComposition)}
+                      >
+                        <span className="block truncate">{savedComposition.name}</span>
+                      </button>
+                      <button
+                        aria-label={`删除组合 ${savedComposition.name}`}
+                        className="grid size-8 shrink-0 place-items-center rounded-sm text-stone-400 transition hover:bg-[#3a2b31] hover:text-[#ff8fa3] disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={compositionDeletingId === savedComposition.id}
+                        type="button"
+                        onClick={() => removeSavedComposition(savedComposition)}
+                      >
+                        <Trash2 aria-hidden="true" className="size-4" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               ) : null}
@@ -921,6 +935,32 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
     setCompositionName(savedComposition.name);
     setSelectedCompositionId(savedComposition.id);
     setSelected(savedComposition.elements.at(-1) ?? selected);
+  }
+
+  async function removeSavedComposition(savedComposition: SavedComposition): Promise<void> {
+    if (!apiBaseUrl || !authToken) {
+      return;
+    }
+
+    setCompositionDeletingId(savedComposition.id);
+    setCompositionError(null);
+
+    try {
+      await deleteComposition({
+        apiBaseUrl,
+        authToken,
+        compositionId: savedComposition.id
+      });
+      setSavedCompositions((current) => current.filter((compositionItem) => compositionItem.id !== savedComposition.id));
+
+      if (selectedCompositionId === savedComposition.id) {
+        setSelectedCompositionId(null);
+      }
+    } catch {
+      setCompositionError("组合删除失败");
+    } finally {
+      setCompositionDeletingId(null);
+    }
   }
 }
 

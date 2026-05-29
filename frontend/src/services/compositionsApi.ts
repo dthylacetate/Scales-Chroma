@@ -17,6 +17,12 @@ interface GetSavedCompositionsInput {
   apiBaseUrl?: string;
 }
 
+interface DeleteCompositionInput {
+  compositionId: number;
+  authToken: string;
+  apiBaseUrl?: string;
+}
+
 interface SavedCompositionResponse {
   id: number;
   user_id: number;
@@ -96,6 +102,21 @@ export async function getSavedCompositions({
 
   const payload = (await response.json()) as SavedCompositionListResponse;
   return payload.compositions.map(normalizeSavedComposition);
+}
+
+export async function deleteComposition({
+  compositionId,
+  authToken,
+  apiBaseUrl = ""
+}: DeleteCompositionInput): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/compositions/${compositionId}`, {
+    headers: createAuthHeaders(authToken),
+    method: "DELETE"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Delete composition request failed with status ${response.status}`);
+  }
 }
 
 function normalizeSavedComposition(response: SavedCompositionResponse): SavedComposition {

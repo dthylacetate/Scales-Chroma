@@ -151,6 +151,70 @@ def test_cannot_update_another_users_composition() -> None:
     assert update_response.status_code == 404
 
 
+def test_delete_saved_composition_removes_it_from_current_users_list() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(session)
+        create_response = client.post(
+            "/compositions",
+            headers=headers,
+            json={
+                "name": "Disposable Sketch",
+                "elements": [
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                ],
+            },
+        )
+        composition_id = create_response.json()["id"]
+        delete_response = client.delete(f"/compositions/{composition_id}", headers=headers)
+        list_response = client.get("/compositions", headers=headers)
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert delete_response.status_code == 204
+    assert list_response.status_code == 200
+    assert list_response.json()["compositions"] == []
+
+
+def test_cannot_delete_another_users_composition() -> None:
+    session = create_test_session()
+
+    try:
+        client, owner_headers = create_authenticated_client(
+            session,
+            username="owner-delete",
+            email="owner-delete@example.com",
+        )
+        create_response = client.post(
+            "/compositions",
+            headers=owner_headers,
+            json={
+                "name": "Owner Keep",
+                "elements": [
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                ],
+            },
+        )
+        composition_id = create_response.json()["id"]
+        intruder_response = client.post(
+            "/auth/register",
+            json={
+                "username": "intruder-delete",
+                "email": "intruder-delete@example.com",
+                "password": "plain-secret",
+            },
+        )
+        intruder_headers = {"Authorization": f"Bearer {intruder_response.json()['token']}"}
+        delete_response = client.delete(f"/compositions/{composition_id}", headers=intruder_headers)
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert delete_response.status_code == 404
+
+
 def test_list_compositions_only_returns_current_users_data() -> None:
     session = create_test_session()
 

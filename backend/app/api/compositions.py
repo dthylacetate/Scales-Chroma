@@ -82,6 +82,21 @@ def update_composition(
     return _to_response(composition)
 
 
+@router.delete("/{composition_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_composition(
+    composition_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    composition = session.get(SavedComposition, composition_id)
+
+    if composition is None or composition.user_id != current_user.id:
+        return _raise_not_found()
+
+    session.delete(composition)
+    session.commit()
+
+
 def _raise_not_found() -> None:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Composition not found")
 

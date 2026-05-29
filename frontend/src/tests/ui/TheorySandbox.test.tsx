@@ -498,6 +498,39 @@ describe("TheorySandbox", () => {
       })
     );
   });
+
+  it("deletes a saved composition from the list", async () => {
+    const fetchMock = createAuthenticatedFetchMock({
+      savedCompositions: [
+        {
+          id: 4,
+          user_id: 77,
+          name: "Saved Dim7",
+          elements: [{ id: "dim7", type: "chord", name: "Dim7" }],
+          created_at: "2026-05-29T12:00:00"
+        }
+      ]
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Saved Dim7")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "删除组合 Saved Dim7" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Saved Dim7")).not.toBeInTheDocument();
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/compositions/4",
+      expect.objectContaining({
+        method: "DELETE"
+      })
+    );
+  });
 });
 
 interface TheorySandboxFetchOptions {
@@ -565,6 +598,7 @@ interface TheorySandboxFetchOptions {
   savedCompositions?: Array<Record<string, unknown>>;
   saveCompositionResponse?: Record<string, unknown>;
   updateCompositionResponse?: Record<string, unknown>;
+  deleteCompositionStatus?: number;
 }
 
 function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
@@ -689,18 +723,28 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
       );
     }
 
-    if (requestUrl.pathname === "/compositions/4" && method === "PUT") {
-      return Promise.resolve(
-        okJson(
-          options.updateCompositionResponse ?? {
-            id: 4,
-            user_id: 77,
-            name: "Updated Sketch",
-            elements: [{ id: "maj7", type: "chord", name: "Maj7" }],
-            created_at: "2026-05-29T12:00:00"
-          }
-        )
-      );
+    if (requestUrl.pathname === "/compositions/4") {
+      if (method === "PUT") {
+        return Promise.resolve(
+          okJson(
+            options.updateCompositionResponse ?? {
+              id: 4,
+              user_id: 77,
+              name: "Updated Sketch",
+              elements: [{ id: "maj7", type: "chord", name: "Maj7" }],
+              created_at: "2026-05-29T12:00:00"
+            }
+          )
+        );
+      }
+
+      if (method === "DELETE") {
+        return Promise.resolve({
+          ok: (options.deleteCompositionStatus ?? 204) < 400,
+          status: options.deleteCompositionStatus ?? 204,
+          json: async () => ({})
+        });
+      }
     }
 
     return Promise.resolve(

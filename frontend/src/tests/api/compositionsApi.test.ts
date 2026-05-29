@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getSavedCompositions, saveComposition, updateComposition } from "../../services/compositionsApi";
+import { deleteComposition, getSavedCompositions, saveComposition, updateComposition } from "../../services/compositionsApi";
 import type { TheoryElement } from "../../types/theory";
 
 describe("compositions API service", () => {
@@ -115,5 +115,25 @@ describe("compositions API service", () => {
     });
     expect(composition.name).toBe("Updated Sketch");
     expect(composition.elements[1].name).toBe("II-V-I");
+  });
+
+  it("deletes a saved composition with bearer auth", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await deleteComposition({
+      apiBaseUrl: "http://localhost:8000",
+      compositionId: 4,
+      authToken: "token-123"
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/compositions/4", {
+      headers: {
+        Authorization: "Bearer token-123"
+      },
+      method: "DELETE"
+    });
   });
 });
