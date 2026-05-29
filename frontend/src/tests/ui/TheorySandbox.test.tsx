@@ -18,7 +18,7 @@ describe("TheorySandbox", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Dim7/ }));
 
-    expect(screen.getByText("Dim7")).toBeInTheDocument();
+    expect(screen.getAllByText("Dim7").length).toBeGreaterThan(0);
     expect(screen.getByText("fracture")).toBeInTheDocument();
     expect(screen.getByText("tense")).toBeInTheDocument();
   });

@@ -90,7 +90,7 @@ export class RealtimeCanvasRenderer {
     const radius = Math.max(24, Math.min(width, height) * 0.18 * pulse);
 
     this.context.clearRect(0, 0, width, height);
-    this.context.fillStyle = "rgba(6, 10, 18, 0.92)";
+    this.context.fillStyle = "rgba(18, 15, 18, 0.94)";
     this.context.globalAlpha = 1;
     this.context.fillRect(0, 0, width, height);
 
