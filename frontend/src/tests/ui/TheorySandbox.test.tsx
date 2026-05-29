@@ -204,4 +204,48 @@ describe("TheorySandbox", () => {
     expect(screen.getAllByText("II-V-I").length).toBeGreaterThan(1);
     expect(screen.getByText("Lv 2")).toBeInTheDocument();
   });
+
+  it("loads and displays yearly practice heatmap entries", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith("/heatmap/yearly?user_id=77&year=2026")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            user_id: 77,
+            year: 2026,
+            days: [
+              {
+                date: "2026-05-29",
+                duration_minutes: 45,
+                exp: 54
+              }
+            ]
+          })
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          color: "#ffb45c",
+          glow: 0.86,
+          particles: {
+            density: 0.52,
+            trail: false
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        })
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Heatmap")).toBeInTheDocument();
+    });
+    expect(screen.getByText("2026-05-29")).toBeInTheDocument();
+    expect(screen.getByText("54 EXP")).toBeInTheDocument();
+  });
 });
