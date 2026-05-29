@@ -21,8 +21,12 @@ describe("RealtimeCanvasRenderer", () => {
 
   it("starts a requestAnimationFrame loop and renders a frame", () => {
     const canvas = createCanvas();
+    let shouldRenderImmediately = true;
     const requestFrame = vi.fn((callback: FrameRequestCallback) => {
-      callback(16);
+      if (shouldRenderImmediately) {
+        shouldRenderImmediately = false;
+        callback(16);
+      }
       return 7;
     });
     const cancelFrame = vi.fn();
