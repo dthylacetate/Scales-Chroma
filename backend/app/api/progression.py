@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_session
 from app.services.heatmap import get_yearly_heatmap as get_yearly_heatmap_service
+from app.services.skill_tree import get_skill_tree as get_skill_tree_service
 
 router = APIRouter(tags=["progression"])
 
@@ -59,21 +60,26 @@ def get_yearly_heatmap(
 
 
 @router.get("/skill-tree", response_model=SkillTreeResponse)
-def get_skill_tree(user_id: int = Query(gt=0)) -> SkillTreeResponse:
-    branches = [
-        _branch("Metal", "palm-mute", "Sweep Picking"),
-        _branch("Jazz", "ii-v-i", "Altered Dominants"),
-        _branch("Fusion", "legato", "Hybrid Picking"),
-        _branch("Neo Soul", "maj7-voicings", "Double Stops"),
-    ]
-    return SkillTreeResponse(user_id=user_id, branches=branches)
-
-
-def _branch(direction: str, first_id: str, second_label: str) -> SkillBranch:
-    return SkillBranch(
-        direction=direction,
-        nodes=[
-            SkillNode(id=first_id, label=first_id.replace("-", " ").title(), level=1, unlocked=True),
-            SkillNode(id=second_label.lower().replace(" ", "-"), label=second_label, level=0, unlocked=False),
+def get_skill_tree(
+    user_id: int = Query(gt=0),
+    session: Session = Depends(get_session),
+) -> SkillTreeResponse:
+    result = get_skill_tree_service(session=session, user_id=user_id)
+    return SkillTreeResponse(
+        user_id=result.user_id,
+        branches=[
+            SkillBranch(
+                direction=branch.direction,
+                nodes=[
+                    SkillNode(
+                        id=node.id,
+                        label=node.label,
+                        level=node.level,
+                        unlocked=node.unlocked,
+                    )
+                    for node in branch.nodes
+                ],
+            )
+            for branch in result.branches
         ],
     )
