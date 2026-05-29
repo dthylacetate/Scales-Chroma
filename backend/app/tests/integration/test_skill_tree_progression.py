@@ -52,6 +52,42 @@ def test_skill_tree_unlocks_nodes_from_practice_topics() -> None:
     assert branches["Neo Soul"].nodes[1].level == 0
 
 
+def test_skill_tree_levels_scale_with_accumulated_practice_minutes() -> None:
+    session = create_test_session()
+    user = User(username="duration-skill-player", email="duration-skill@example.com")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 1),
+            duration_minutes=150,
+            bpm=120,
+            topic="II-V-I jazz voice leading",
+        ),
+    )
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 2),
+            duration_minutes=90,
+            bpm=132,
+            topic="251 shell voicings",
+        ),
+    )
+
+    tree = get_skill_tree(session=session, user_id=user.id)
+    jazz_branch = next(branch for branch in tree.branches if branch.direction == "Jazz")
+    ii_v_i_node = next(node for node in jazz_branch.nodes if node.id == "ii-v-i")
+
+    assert ii_v_i_node.unlocked
+    assert ii_v_i_node.level == 4
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
