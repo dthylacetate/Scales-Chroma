@@ -12,12 +12,20 @@ const THEORY_LIBRARY: TheoryElement[] = [
   { id: "major", type: "scale", name: "Major" },
   { id: "minor", type: "scale", name: "Minor" },
   { id: "pentatonic", type: "scale", name: "Pentatonic" },
+  { id: "harmonic-minor", type: "scale", name: "Harmonic Minor" },
+  { id: "melodic-minor", type: "scale", name: "Melodic Minor" },
+  { id: "ionian", type: "mode", name: "Ionian" },
   { id: "dorian", type: "mode", name: "Dorian" },
   { id: "phrygian", type: "mode", name: "Phrygian" },
+  { id: "lydian", type: "mode", name: "Lydian" },
+  { id: "mixolydian", type: "mode", name: "Mixolydian" },
   { id: "maj7", type: "chord", name: "Maj7" },
   { id: "min7", type: "chord", name: "Min7" },
+  { id: "dominant7", type: "chord", name: "Dominant7" },
   { id: "dim7", type: "chord", name: "Dim7" },
-  { id: "ii-v-i", type: "progression", name: "II-V-I" }
+  { id: "aug", type: "chord", name: "Aug" },
+  { id: "ii-v-i", type: "progression", name: "II-V-I" },
+  { id: "i-v-vi-iv", type: "progression", name: "I-V-vi-IV" }
 ];
 
 interface TheorySandboxProps {
