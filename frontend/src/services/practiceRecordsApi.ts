@@ -17,6 +17,8 @@ interface PracticeRecordResponse {
   topic: string;
   notes: string | null;
   exp_earned: number;
+  total_exp?: number;
+  level?: number;
 }
 
 export interface PracticeRecordResult {
@@ -28,6 +30,8 @@ export interface PracticeRecordResult {
   topic: string;
   notes: string | null;
   expEarned: number;
+  totalExp: number;
+  level: number;
 }
 
 export async function createPracticeRecord({
@@ -70,6 +74,8 @@ function normalizePracticeRecordResponse(response: PracticeRecordResponse): Prac
     bpm: response.bpm,
     topic: response.topic,
     notes: response.notes,
-    expEarned: response.exp_earned
+    expEarned: response.exp_earned,
+    totalExp: response.total_exp ?? response.exp_earned,
+    level: response.level ?? 1
   };
 }

@@ -329,8 +329,12 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
               记录练习
             </button>
             {practiceResult ? (
-              <div className="rounded-md border border-[#ffd166]/40 bg-[#2a2023] px-3 py-2 text-sm font-semibold text-[#ffd166]">
-                +{practiceResult.expEarned} EXP
+              <div className="grid gap-1 rounded-md border border-[#ffd166]/40 bg-[#2a2023] px-3 py-2 text-sm font-semibold text-[#ffd166]">
+                <span>+{practiceResult.expEarned} EXP</span>
+                <div className="flex flex-wrap gap-2 text-xs text-[#ffe8a7]">
+                  <span>Total {practiceResult.totalExp} EXP</span>
+                  <span>Level {practiceResult.level}</span>
+                </div>
               </div>
             ) : null}
             {practiceError ? <div className="text-sm text-[#ff8fa3]">{practiceError}</div> : null}
