@@ -7,6 +7,10 @@ interface SaveCompositionInput {
   apiBaseUrl?: string;
 }
 
+interface UpdateCompositionInput extends SaveCompositionInput {
+  compositionId: number;
+}
+
 interface GetSavedCompositionsInput {
   userId: number;
   apiBaseUrl?: string;
@@ -52,6 +56,32 @@ export async function saveComposition({
 
   if (!response.ok) {
     throw new Error(`Save composition request failed with status ${response.status}`);
+  }
+
+  return normalizeSavedComposition((await response.json()) as SavedCompositionResponse);
+}
+
+export async function updateComposition({
+  compositionId,
+  userId,
+  name,
+  elements,
+  apiBaseUrl = ""
+}: UpdateCompositionInput): Promise<SavedComposition> {
+  const response = await fetch(`${apiBaseUrl}/compositions/${compositionId}`, {
+    body: JSON.stringify({
+      user_id: userId,
+      name,
+      elements
+    }),
+    headers: {
+      "Content-Type": "application/json"
+    },
+    method: "PUT"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Update composition request failed with status ${response.status}`);
   }
 
   return normalizeSavedComposition((await response.json()) as SavedCompositionResponse);

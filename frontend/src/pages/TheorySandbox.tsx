@@ -2,7 +2,7 @@ import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Save, Search, S
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
-import { getSavedCompositions, saveComposition, type SavedComposition } from "../services/compositionsApi";
+import { getSavedCompositions, saveComposition, type SavedComposition, updateComposition } from "../services/compositionsApi";
 import {
   createPracticeRecord,
   getPracticeRecords,
@@ -68,6 +68,8 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [heatmap, setHeatmap] = useState<YearlyHeatmap | null>(null);
   const [unlockedEffects, setUnlockedEffects] = useState<UnlockedEffect[]>([]);
   const [savedCompositions, setSavedCompositions] = useState<SavedComposition[]>([]);
+  const [compositionName, setCompositionName] = useState("");
+  const [selectedCompositionId, setSelectedCompositionId] = useState<number | null>(null);
   const [compositionSaving, setCompositionSaving] = useState(false);
   const [compositionError, setCompositionError] = useState<string | null>(null);
   const [visualRefreshKey, setVisualRefreshKey] = useState(0);
@@ -251,6 +253,9 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
       .then((compositions) => {
         if (!cancelled) {
           setSavedCompositions(compositions);
+          if (compositions.length > 0 && !selectedCompositionId) {
+            setCompositionName((current) => current || compositions[0].name);
+          }
         }
       })
       .catch(() => {
@@ -395,6 +400,12 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
 
           {apiBaseUrl && userId ? (
             <section className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3">
+              <PracticeInput
+                label="组合名称"
+                type="text"
+                value={compositionName}
+                onChange={setCompositionName}
+              />
               <button
                 className="flex h-10 items-center justify-center gap-2 rounded-md border border-[#5bd0c7]/40 bg-[#182528] px-3 text-sm font-semibold text-[#b9fff7] transition hover:border-[#5bd0c7] disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={compositionSaving}
@@ -404,12 +415,25 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
                 <Save aria-hidden="true" className="size-4" />
                 保存组合
               </button>
+              <button
+                className="flex h-10 items-center justify-center gap-2 rounded-md border border-[#ffd166]/35 bg-[#2a2023] px-3 text-sm font-semibold text-[#ffd166] transition hover:border-[#ffd166] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={compositionSaving || selectedCompositionId === null}
+                type="button"
+                onClick={overwriteCurrentComposition}
+              >
+                <Save aria-hidden="true" className="size-4" />
+                覆盖当前组合
+              </button>
               {savedCompositions.length > 0 ? (
                 <div className="grid gap-1">
                   {savedCompositions.map((savedComposition) => (
                     <button
                       key={savedComposition.id}
-                      className="rounded-md border border-[#3f3144] bg-[#201922] px-2 py-1.5 text-left text-sm text-stone-100 hover:border-[#ffd166]"
+                      className={`rounded-md border px-2 py-1.5 text-left text-sm text-stone-100 hover:border-[#ffd166] ${
+                        selectedCompositionId === savedComposition.id
+                          ? "border-[#ffd166] bg-[#2a2023]"
+                          : "border-[#3f3144] bg-[#201922]"
+                      }`}
                       type="button"
                       onClick={() => loadSavedComposition(savedComposition)}
                     >
@@ -687,7 +711,8 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
     }
 
     const elementsToSave = activeElements;
-    const name = elementsToSave.map((element) => element.name).join(" - ");
+    const generatedName = elementsToSave.map((element) => element.name).join(" - ");
+    const name = compositionName.trim() || generatedName;
 
     setCompositionSaving(true);
     setCompositionError(null);
@@ -699,12 +724,45 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
         name,
         userId
       });
+      setCompositionName(savedComposition.name);
+      setSelectedCompositionId(savedComposition.id);
       setSavedCompositions((current) => [
         savedComposition,
         ...current.filter((compositionItem) => compositionItem.id !== savedComposition.id)
       ]);
     } catch {
       setCompositionError("组合保存失败");
+    } finally {
+      setCompositionSaving(false);
+    }
+  }
+
+  async function overwriteCurrentComposition(): Promise<void> {
+    if (!apiBaseUrl || !userId || selectedCompositionId === null) {
+      return;
+    }
+
+    const elementsToSave = activeElements;
+    const generatedName = elementsToSave.map((element) => element.name).join(" - ");
+    const name = compositionName.trim() || generatedName;
+
+    setCompositionSaving(true);
+    setCompositionError(null);
+
+    try {
+      const savedComposition = await updateComposition({
+        apiBaseUrl,
+        compositionId: selectedCompositionId,
+        elements: elementsToSave,
+        name,
+        userId
+      });
+      setCompositionName(savedComposition.name);
+      setSavedCompositions((current) =>
+        current.map((compositionItem) => (compositionItem.id === savedComposition.id ? savedComposition : compositionItem))
+      );
+    } catch {
+      setCompositionError("组合覆盖失败");
     } finally {
       setCompositionSaving(false);
     }
@@ -717,6 +775,8 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
 
     setInvalidHint(null);
     setComposition(savedComposition.elements);
+    setCompositionName(savedComposition.name);
+    setSelectedCompositionId(savedComposition.id);
     setSelected(savedComposition.elements.at(-1) ?? selected);
   }
 }

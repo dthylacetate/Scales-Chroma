@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -62,6 +62,25 @@ def list_compositions(
     return CompositionListResponse(compositions=[_to_response(composition) for composition in compositions])
 
 
+@router.put("/{composition_id}", response_model=CompositionResponse)
+def update_composition(
+    composition_id: int,
+    payload: CompositionCreateRequest,
+    session: Session = Depends(get_session),
+) -> CompositionResponse:
+    composition = session.get(SavedComposition, composition_id)
+
+    if composition is None or composition.user_id != payload.user_id:
+        return _raise_not_found()
+
+    composition.name = payload.name
+    composition.elements = [element.model_dump() for element in payload.elements]
+    session.commit()
+    session.refresh(composition)
+
+    return _to_response(composition)
+
+
 def _ensure_user(session: Session, user_id: int) -> None:
     if session.get(User, user_id) is not None:
         return
@@ -74,6 +93,10 @@ def _ensure_user(session: Session, user_id: int) -> None:
         )
     )
     session.flush()
+
+
+def _raise_not_found() -> None:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Composition not found")
 
 
 def _to_response(composition: SavedComposition) -> CompositionResponse:
