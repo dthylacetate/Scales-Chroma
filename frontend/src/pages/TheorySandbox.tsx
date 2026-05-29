@@ -1,4 +1,4 @@
-import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Save, Send, Sparkles, X } from "lucide-react";
+import { Activity, CalendarDays, Flame, GitBranch, Grip, Layers, Save, Search, Send, Sparkles, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RealtimeCanvasRenderer } from "../canvas/RealtimeCanvasRenderer";
@@ -59,6 +59,9 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
   const [practiceNotes, setPracticeNotes] = useState("");
   const [practiceResult, setPracticeResult] = useState<PracticeRecordResult | null>(null);
   const [practiceHistory, setPracticeHistory] = useState<PracticeRecordHistoryItem[]>([]);
+  const [historyTopicFilter, setHistoryTopicFilter] = useState("");
+  const [historyDateFrom, setHistoryDateFrom] = useState("");
+  const [historyDateTo, setHistoryDateTo] = useState("");
   const [practiceError, setPracticeError] = useState<string | null>(null);
   const [practiceSubmitting, setPracticeSubmitting] = useState(false);
   const [skillTree, setSkillTree] = useState<SkillTree | null>(null);
@@ -510,6 +513,42 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
             </section>
           ) : null}
 
+          {apiBaseUrl && userId ? (
+            <form
+              aria-label="练习历史筛选"
+              className="mt-1 flex flex-col gap-2 border-t border-[#5bd0c7]/15 pt-3"
+              onSubmit={filterPracticeHistory}
+            >
+              <PracticeInput
+                label="历史主题"
+                type="text"
+                value={historyTopicFilter}
+                onChange={setHistoryTopicFilter}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <PracticeInput
+                  label="开始日期"
+                  type="date"
+                  value={historyDateFrom}
+                  onChange={setHistoryDateFrom}
+                />
+                <PracticeInput
+                  label="结束日期"
+                  type="date"
+                  value={historyDateTo}
+                  onChange={setHistoryDateTo}
+                />
+              </div>
+              <button
+                className="flex h-10 items-center justify-center gap-2 rounded-md border border-[#5bd0c7]/40 bg-[#182528] px-3 text-sm font-semibold text-[#b9fff7] transition hover:border-[#5bd0c7]"
+                type="submit"
+              >
+                <Search aria-hidden="true" className="size-4" />
+                筛选历史
+              </button>
+            </form>
+          ) : null}
+
           {unlockedEffects.length > 0 ? <UnlockedEffectsPanel effects={unlockedEffects} /> : null}
           {skillTree ? <SkillTreePanel skillTree={skillTree} /> : null}
           {heatmap ? <HeatmapPanel heatmap={heatmap} /> : null}
@@ -617,6 +656,28 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
       setPracticeError("练习记录提交失败");
     } finally {
       setPracticeSubmitting(false);
+    }
+  }
+
+  async function filterPracticeHistory(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+
+    if (!apiBaseUrl || !userId) {
+      return;
+    }
+
+    try {
+      const records = await getPracticeRecords({
+        apiBaseUrl,
+        userId,
+        limit: 5,
+        topic: historyTopicFilter.trim() || undefined,
+        dateFrom: historyDateFrom || undefined,
+        dateTo: historyDateTo || undefined
+      });
+      setPracticeHistory(records);
+    } catch {
+      setPracticeHistory([]);
     }
   }
 
