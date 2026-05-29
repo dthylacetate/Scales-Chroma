@@ -8,6 +8,7 @@ from app.models.practice_record import PracticeRecord
 from app.models.user import User
 from app.schemas.practice_record import PracticeRecordCreate
 from app.services.exp_system import calculate_exp
+from app.services.unlocks import apply_practice_unlocks
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,9 @@ def create_practice_record(
     statistics.current_streak = max(1, statistics.current_streak)
     statistics.longest_streak = max(statistics.longest_streak, statistics.current_streak)
     user.total_exp = statistics.total_exp
+
+    session.flush()
+    apply_practice_unlocks(session=session, user_id=user.id)
 
     session.commit()
     session.refresh(record)
