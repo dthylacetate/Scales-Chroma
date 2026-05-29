@@ -1,8 +1,10 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.auth import router as auth_router
 from app.api.compositions import router as compositions_router
@@ -18,24 +20,38 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="Scales & Chroma API", lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[],
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|\d{1,3}(?:\.\d{1,3}){3})(:\d+)?$",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(practice_records_router)
-app.include_router(progression_router)
-app.include_router(sandbox_router)
-app.include_router(compositions_router)
-app.include_router(auth_router)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_FRONTEND_DIST_DIR = REPO_ROOT / "frontend" / "dist"
 
 
-@app.get("/health")
-def health_check() -> dict[str, str]:
-    return {"status": "ok"}
+def create_app(frontend_dist_dir: Path | None = None) -> FastAPI:
+    app = FastAPI(title="Scales & Chroma API", lifespan=lifespan)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[],
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|\d{1,3}(?:\.\d{1,3}){3})(:\d+)?$",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(practice_records_router)
+    app.include_router(progression_router)
+    app.include_router(sandbox_router)
+    app.include_router(compositions_router)
+    app.include_router(auth_router)
+
+    @app.get("/health")
+    def health_check() -> dict[str, str]:
+        return {"status": "ok"}
+
+    dist_dir = frontend_dist_dir or DEFAULT_FRONTEND_DIST_DIR
+
+    if dist_dir.exists():
+        app.mount("/", StaticFiles(directory=dist_dir, html=True), name="frontend")
+
+    return app
+
+
+app = create_app()

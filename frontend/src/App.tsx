@@ -4,9 +4,10 @@ import { TheorySandbox } from "./pages/TheorySandbox";
 import { type AuthSession, getCurrentUser, login, logout, register } from "./services/authApi";
 
 const AUTH_STORAGE_KEY = "scales-chroma-auth-token";
+const DEV_PORTS = new Set(["4173", "5173", "5174"]);
 
 export function App() {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || undefined;
+  const apiBaseUrl = resolveApiBaseUrl();
   const [session, setSession] = useState<AuthSession | null>(null);
   const [authLoading, setAuthLoading] = useState(Boolean(apiBaseUrl));
 
@@ -71,6 +72,24 @@ export function App() {
       }}
     />
   );
+}
+
+function resolveApiBaseUrl(): string | undefined {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  if (typeof window === "undefined" || window.location.protocol === "file:") {
+    return undefined;
+  }
+
+  if (DEV_PORTS.has(window.location.port)) {
+    return undefined;
+  }
+
+  return window.location.origin;
 }
 
 interface AuthScreenProps {

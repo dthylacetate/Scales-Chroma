@@ -52,6 +52,8 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
   const [selected, setSelected] = useState<TheoryElement>(THEORY_LIBRARY[5]);
   const [composition, setComposition] = useState<TheoryElement[]>([]);
   const [invalidHint, setInvalidHint] = useState<string | null>(null);
+  const [stageDropActive, setStageDropActive] = useState(false);
+  const [laneDropActive, setLaneDropActive] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<RealtimeCanvasRenderer | null>(null);
   const [practiceDate, setPracticeDate] = useState("2026-05-29");
@@ -273,8 +275,8 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
 
   return (
     <main className="min-h-screen bg-[#120f12] text-stone-100">
-      <section className="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[280px_minmax(0,1fr)_240px]">
-        <aside className="flex flex-col gap-3 rounded-lg border border-[#d8a657]/20 bg-[#18131b]/90 p-3">
+      <section className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[280px_minmax(0,1fr)_240px]">
+        <aside className="flex flex-col gap-3 rounded-lg border border-[#d8a657]/20 bg-[#18131b]/90 p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-2.5rem)] lg:overflow-y-auto">
           <div className="flex items-center gap-2 border-b border-[#5bd0c7]/15 pb-3">
             <Sparkles aria-hidden="true" className="size-5 text-[#5bd0c7]" />
             <h1 className="text-xl font-semibold tracking-normal">Scales &amp; Chroma</h1>
@@ -306,30 +308,71 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           </div>
         </aside>
 
-        <section className="flex min-h-[560px] flex-col gap-3">
-          <div className="relative min-h-[420px] flex-1 overflow-hidden rounded-lg border border-[#5bd0c7]/20 bg-[#090809]">
-            <canvas
-              ref={canvasRef}
-              aria-label="实时音乐视觉舞台"
-              className="h-full min-h-[420px] w-full"
-            />
-            <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-md bg-[#120f12]/75 px-3 py-2 text-sm text-[#b9fff7]">
-              <Activity aria-hidden="true" className="size-4" />
-              <span>{activeElement.name}</span>
-            </div>
-          </div>
-
+        <section className="grid min-h-[560px] gap-3 lg:sticky lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:grid-rows-[minmax(0,1fr)_auto]">
           <div
-            aria-label="乐理编排轨道"
-            className="min-h-28 rounded-lg border border-dashed border-[#5bd0c7]/40 bg-[#18131b]/90 p-3"
+            aria-label="视觉舞台拖放区"
+            className={`relative min-h-[360px] overflow-hidden rounded-lg border bg-[#090809] transition ${
+              stageDropActive ? "border-[#ffd166] shadow-[0_0_0_1px_rgba(255,209,102,0.35)]" : "border-[#5bd0c7]/20"
+            }`}
             onDragOver={(event) => {
               event.preventDefault();
               if (event.dataTransfer) {
                 event.dataTransfer.dropEffect = "move";
               }
+              setStageDropActive(true);
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setStageDropActive(false);
+              }
             }}
             onDrop={(event) => {
               event.preventDefault();
+              setStageDropActive(false);
+              addToComposition(event.dataTransfer.getData("text/plain"));
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              aria-label="实时音乐视觉舞台"
+              className="h-full min-h-[360px] w-full"
+            />
+            <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-md bg-[#120f12]/75 px-3 py-2 text-sm text-[#b9fff7]">
+              <Activity aria-hidden="true" className="size-4" />
+              <span>{activeElement.name}</span>
+            </div>
+            <div className="pointer-events-none absolute bottom-4 right-4 rounded-md border border-[#5bd0c7]/20 bg-[#120f12]/80 px-3 py-2 text-xs text-stone-300">
+              拖到舞台任意位置即可加入轨道
+            </div>
+            {stageDropActive ? (
+              <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[#0f0b10]/58">
+                <div className="rounded-md border border-[#ffd166]/40 bg-[#18131b]/90 px-4 py-3 text-sm font-medium text-[#ffe29a]">
+                  松开后加入 Composition Lane
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div
+            aria-label="乐理编排轨道"
+            className={`min-h-36 rounded-lg border border-dashed bg-[#18131b]/90 p-3 transition ${
+              laneDropActive ? "border-[#ffd166]/70 bg-[#201922]" : "border-[#5bd0c7]/40"
+            }`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = "move";
+              }
+              setLaneDropActive(true);
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setLaneDropActive(false);
+              }
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setLaneDropActive(false);
               const elementId = event.dataTransfer.getData("text/plain");
               addToComposition(elementId);
             }}
@@ -339,11 +382,11 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               <span>{composition.length} blocks</span>
             </div>
             {composition.length === 0 ? (
-              <div className="flex min-h-14 items-center justify-center rounded-md border border-[#3f3144] bg-[#201922] text-sm text-stone-400">
+              <div className="flex min-h-24 items-center justify-center rounded-md border border-[#3f3144] bg-[#201922] text-sm text-stone-400">
                 把乐理积木拖到这里
               </div>
             ) : (
-              <div className="flex min-h-14 flex-wrap items-center gap-2">
+              <div className="flex min-h-24 flex-wrap items-center gap-2">
                 {composition.map((element, index) => (
                   <div
                     key={`${element.id}-${index}`}
@@ -388,7 +431,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           </div>
         </section>
 
-        <aside className="flex flex-col gap-3 rounded-lg border border-[#d8a657]/20 bg-[#18131b]/90 p-3">
+        <aside className="flex flex-col gap-3 rounded-lg border border-[#d8a657]/20 bg-[#18131b]/90 p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-2.5rem)] lg:overflow-y-auto">
           <div className="flex items-center gap-2 border-b border-[#5bd0c7]/15 pb-3">
             <Layers aria-hidden="true" className="size-5 text-[#d8a657]" />
             <h2 className="text-base font-semibold tracking-normal">Visual State</h2>

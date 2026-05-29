@@ -14,6 +14,16 @@ describe("TheorySandbox drag composition", () => {
     expect(screen.getByText("wave")).toBeInTheDocument();
   });
 
+  it("lets the visual stage accept dragged theory blocks directly", () => {
+    render(<TheorySandbox />);
+
+    dragTheoryBlockToStage("Maj7");
+
+    const lane = screen.getByLabelText("乐理编排轨道");
+    expect(within(lane).getByText("Maj7")).toBeInTheDocument();
+    expect(screen.getByText("soft-orb")).toBeInTheDocument();
+  });
+
   it("removes a block from the composition lane", () => {
     render(<TheorySandbox />);
 
@@ -86,6 +96,21 @@ function reorderLaneBlock(sourceName: string, targetName: string): void {
   });
   fireEvent.drop(target, {
     dataTransfer: createDataTransfer(dragData),
+  });
+}
+
+function dragTheoryBlockToStage(name: string): void {
+  const block = screen.getByRole("button", { name: libraryButtonName(name) });
+  const stage = screen.getByLabelText("视觉舞台拖放区");
+
+  fireEvent.dragStart(block, {
+    dataTransfer: createDataTransfer(),
+  });
+  fireEvent.dragOver(stage, {
+    dataTransfer: createDataTransfer(name.toLowerCase()),
+  });
+  fireEvent.drop(stage, {
+    dataTransfer: createDataTransfer(name.toLowerCase()),
   });
 }
 
