@@ -23,6 +23,8 @@ def test_create_practice_record_returns_exp_reward() -> None:
     assert payload["user_id"] == 1
     assert payload["topic"] == "Dorian alternate picking"
     assert payload["exp_earned"] == 36
+    assert payload["total_exp"] >= 36
+    assert payload["level"] >= 1
 
 
 def test_create_practice_record_rejects_missing_required_fields() -> None:

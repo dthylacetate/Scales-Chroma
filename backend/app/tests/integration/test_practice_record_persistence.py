@@ -77,6 +77,36 @@ def test_create_practice_record_accumulates_exp_for_existing_statistics() -> Non
     assert refreshed_user.total_exp == 40
 
 
+def test_create_practice_record_returns_total_exp_and_updates_user_level() -> None:
+    session = create_test_session()
+    user = User(username="level-player", email="level@example.com", total_exp=95, level=1)
+    session.add(user)
+    session.flush()
+    session.add(ExpStatistics(user_id=user.id, total_exp=95, current_streak=1, longest_streak=1))
+    session.commit()
+    session.refresh(user)
+
+    result = create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 5, 29),
+            duration_minutes=20,
+            bpm=180,
+            topic="Pentatonic speed run",
+            notes=None,
+        ),
+    )
+
+    refreshed_user = session.get(User, user.id)
+
+    assert result.exp_earned == 30
+    assert result.total_exp == 125
+    assert result.level == 2
+    assert refreshed_user is not None
+    assert refreshed_user.level == 2
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
