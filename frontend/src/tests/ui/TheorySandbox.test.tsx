@@ -52,4 +52,53 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Trail")).toBeInTheDocument();
     expect(screen.getByText("On")).toBeInTheDocument();
   });
+
+  it("records a practice session and shows earned exp", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith("/practice-records")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 12,
+            user_id: 77,
+            practice_date: "2026-05-29",
+            duration_minutes: 45,
+            bpm: 150,
+            topic: "Pentatonic speed run",
+            notes: "Clean triplets",
+            exp_earned: 54
+          })
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          color: "#ffb45c",
+          glow: 0.86,
+          particles: {
+            density: 0.52,
+            trail: false
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        })
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox apiBaseUrl="http://api.test" userId={77} />);
+
+    fireEvent.change(screen.getByLabelText("练习日期"), { target: { value: "2026-05-29" } });
+    fireEvent.change(screen.getByLabelText("练习时长"), { target: { value: "45" } });
+    fireEvent.change(screen.getByLabelText("BPM"), { target: { value: "150" } });
+    fireEvent.change(screen.getByLabelText("练习主题"), { target: { value: "Pentatonic speed run" } });
+    fireEvent.change(screen.getByLabelText("备注"), { target: { value: "Clean triplets" } });
+    fireEvent.click(screen.getByRole("button", { name: "记录练习" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("+54 EXP")).toBeInTheDocument();
+    });
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/practice-records", expect.any(Object));
+  });
 });
