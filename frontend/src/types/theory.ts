@@ -14,6 +14,10 @@ export interface VisualParameters {
   contrast: number;
   energy: number;
   complexity: number;
+  temperature: number;
+  symmetry: number;
+  depth: number;
+  pulseDensity: number;
   motionSpeed: number;
   ringCount: number;
   rippleStrength: number;

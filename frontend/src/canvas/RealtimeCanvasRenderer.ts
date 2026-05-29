@@ -93,10 +93,12 @@ export class RealtimeCanvasRenderer {
 
     this.context.clearRect(0, 0, width, height);
     this.drawBackground(visual, width, height, centerX, centerY, radius, time);
+    this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
     this.drawBonusMotifs(visual, centerX, centerY, radius, time);
+    this.drawPulseConstellation(visual, centerX, centerY, radius, time);
     this.drawParticles(visual, centerX, centerY, radius, time);
     this.drawGrain(visual, width, height, time);
   }
@@ -112,8 +114,8 @@ export class RealtimeCanvasRenderer {
   ): void {
     const backgroundGradient = this.context.createLinearGradient(0, 0, width, height);
     backgroundGradient.addColorStop(0, visual.backgroundColor);
-    backgroundGradient.addColorStop(0.45, mixHex(visual.backgroundColor, visual.secondaryColor, 0.26));
-    backgroundGradient.addColorStop(1, mixHex(visual.backgroundColor, visual.color, 0.18));
+    backgroundGradient.addColorStop(0.38, mixHex(visual.backgroundColor, visual.secondaryColor, 0.16 + visual.depth * 0.18));
+    backgroundGradient.addColorStop(1, mixHex(visual.backgroundColor, visual.color, 0.12 + visual.temperature * 0.14));
 
     this.context.globalAlpha = 1;
     this.context.fillStyle = backgroundGradient;
@@ -126,19 +128,69 @@ export class RealtimeCanvasRenderer {
     this.context.fillStyle = halo;
     this.context.fillRect(0, 0, width, height);
 
-    const driftCount = Math.max(2, Math.min(6, Math.round(2 + visual.energy * 4)));
+    const driftCount = Math.max(2, Math.min(7, Math.round(2 + visual.energy * 3 + visual.depth * 3)));
     for (let index = 0; index < driftCount; index += 1) {
       const orbit = radius * (1.2 + index * 0.34);
       const angle = time * (0.22 + visual.motionSpeed * 0.18) + index * 1.7;
       const glowX = centerX + Math.cos(angle) * orbit * 0.7;
-      const glowY = centerY + Math.sin(angle * 1.12) * orbit * 0.45;
+      const glowY = centerY + Math.sin(angle * (1.04 + visual.symmetry * 0.18)) * orbit * (0.34 + visual.depth * 0.16);
       const glowRadius = radius * (0.8 + index * 0.22);
       const accent = this.context.createRadialGradient(glowX, glowY, 0, glowX, glowY, glowRadius);
-      accent.addColorStop(0, alphaHex(index % 2 === 0 ? visual.color : visual.secondaryColor, 0.08));
+      accent.addColorStop(0, alphaHex(index % 2 === 0 ? visual.color : visual.secondaryColor, 0.05 + visual.temperature * 0.06));
       accent.addColorStop(1, alphaHex(visual.backgroundColor, 0));
       this.context.fillStyle = accent;
       this.context.fillRect(0, 0, width, height);
     }
+  }
+
+  private drawStageArchitecture(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const horizonY = centerY + radius * (0.72 - visual.depth * 0.16);
+    const floorGradient = this.context.createLinearGradient(0, horizonY, 0, height);
+    floorGradient.addColorStop(0, alphaHex(visual.secondaryColor, 0.02 + visual.depth * 0.06));
+    floorGradient.addColorStop(1, alphaHex(visual.color, 0.18 + visual.depth * 0.1));
+    this.context.fillStyle = floorGradient;
+    this.context.fillRect(0, horizonY, width, height - horizonY);
+
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + visual.symmetry * 2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.1 + visual.depth * 0.08);
+    this.context.beginPath();
+    this.context.moveTo(0, horizonY);
+    this.context.lineTo(width, horizonY);
+    this.context.stroke();
+
+    const laneCount = Math.max(2, Math.round(2 + visual.symmetry * 5));
+    for (let index = 0; index < laneCount; index += 1) {
+      const offset = ((index + 1) / (laneCount + 1) - 0.5) * radius * (1.8 + visual.symmetry * 0.8);
+      const baseX = centerX + offset;
+      this.context.beginPath();
+      this.context.moveTo(baseX, horizonY);
+      this.context.lineTo(centerX + offset * (0.18 + visual.symmetry * 0.18), centerY + radius * 0.08);
+      this.context.stroke();
+    }
+
+    const columnCount = Math.max(0, Math.round(visual.symmetry * 4));
+    for (let index = 0; index < columnCount; index += 1) {
+      const side = index % 2 === 0 ? -1 : 1;
+      const tier = Math.floor(index / 2) + 1;
+      const columnX = centerX + side * radius * (0.7 + tier * 0.24);
+      const columnTop = centerY - radius * (0.92 + Math.sin(time * 0.4 + tier) * 0.04);
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.color : visual.secondaryColor, 0.08 + visual.depth * 0.12);
+      this.context.moveTo(columnX, horizonY);
+      this.context.lineTo(columnX, columnTop);
+      this.context.stroke();
+    }
+
+    this.context.restore();
   }
 
   private drawBeamField(
@@ -439,6 +491,30 @@ export class RealtimeCanvasRenderer {
 
     const activeText = visual.activeBonuses.join(" ");
 
+    if (containsAny(activeText, ["Celestial", "Sunwake", "Daybreak", "Bloom"])) {
+      this.context.save();
+      this.context.lineWidth = Math.max(1.2, 1.2 + visual.symmetry * 2.4);
+      this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + visual.glow * 0.14);
+      this.context.shadowBlur = 14 + visual.glow * 24;
+      this.context.shadowColor = visual.secondaryColor;
+      for (let index = 0; index < 3; index += 1) {
+        const archRadius = radius * (0.94 + index * 0.18);
+        this.context.beginPath();
+        this.context.arc(centerX, centerY - radius * 0.06, archRadius, Math.PI * 1.04, Math.PI * 1.96);
+        this.context.stroke();
+      }
+      for (let index = 0; index < 4; index += 1) {
+        const angle = -Math.PI * 0.75 + index * 0.48 + Math.sin(time + index) * 0.08;
+        const nodeX = centerX + Math.cos(angle) * radius * 1.18;
+        const nodeY = centerY + Math.sin(angle) * radius * 0.9;
+        this.context.beginPath();
+        this.context.fillStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.34);
+        this.context.arc(nodeX, nodeY, 3 + visual.glow * 4, 0, Math.PI * 2);
+        this.context.fill();
+      }
+      this.context.restore();
+    }
+
     if (containsAny(activeText, ["Velvet", "Silk"])) {
       this.context.save();
       this.context.lineWidth = Math.max(1.2, 1.2 + visual.glow * 2.2);
@@ -490,6 +566,20 @@ export class RealtimeCanvasRenderer {
       this.context.restore();
     }
 
+    if (containsAny(activeText, ["Skyline", "Aurora", "Cadence", "Lattice"])) {
+      this.context.save();
+      const baseY = centerY + radius * 0.8;
+      const barCount = Math.max(4, Math.round(4 + visual.symmetry * 6));
+      for (let index = 0; index < barCount; index += 1) {
+        const progress = index / Math.max(1, barCount - 1);
+        const barX = centerX - radius * 1.18 + progress * radius * 2.36;
+        const barHeight = radius * (0.12 + ((index + 2) % 4) * 0.12 + visual.depth * 0.18);
+        this.context.fillStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.1 + visual.depth * 0.1);
+        this.context.fillRect(barX, baseY - barHeight, radius * 0.1, barHeight);
+      }
+      this.context.restore();
+    }
+
     if (containsAny(activeText, ["Current", "Run", "Phase", "Tide"])) {
       this.context.save();
       this.context.lineWidth = Math.max(1.2, 1 + visual.rippleStrength * 2.8);
@@ -508,6 +598,65 @@ export class RealtimeCanvasRenderer {
       }
       this.context.restore();
     }
+
+    if (containsAny(activeText, ["Prism", "Chrome", "Meridian", "Fusion"])) {
+      this.context.save();
+      this.context.translate(centerX, centerY - radius * 0.12);
+      this.context.rotate(Math.sin(time * 0.6) * 0.08);
+      this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 2);
+      for (let index = 0; index < 5; index += 1) {
+        const topY = -radius * (1.1 - index * 0.08);
+        const baseWidth = radius * (0.16 + index * 0.08);
+        const depthY = radius * (0.12 + index * 0.12);
+        this.context.beginPath();
+        this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.14 + visual.depth * 0.1);
+        this.context.moveTo(0, topY);
+        this.context.lineTo(-baseWidth, depthY);
+        this.context.lineTo(baseWidth, depthY);
+        this.context.closePath();
+        this.context.stroke();
+      }
+      this.context.restore();
+    }
+  }
+
+  private drawPulseConstellation(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const nodeCount = Math.max(3, Math.round(3 + visual.pulseDensity * 10));
+    const travel = radius * (0.44 + visual.pulseDensity * 0.42);
+
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 0.8 + visual.pulseDensity * 2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.pulseDensity * 0.14);
+    this.context.fillStyle = alphaHex(visual.color, 0.2 + visual.pulseDensity * 0.16);
+    for (let index = 0; index < nodeCount; index += 1) {
+      const angle = time * (0.5 + visual.motionSpeed * 0.4) + (Math.PI * 2 * index) / nodeCount;
+      const orbit = travel * (0.68 + ((index + 2) % 4) * 0.08);
+      const x = centerX + Math.cos(angle) * orbit;
+      const y = centerY + Math.sin(angle * (0.9 + visual.symmetry * 0.3)) * orbit * (0.54 + visual.depth * 0.22);
+
+      if (index > 0) {
+        const previousAngle = time * (0.5 + visual.motionSpeed * 0.4) + (Math.PI * 2 * (index - 1)) / nodeCount;
+        const previousOrbit = travel * (0.68 + (((index - 1) + 2) % 4) * 0.08);
+        const previousX = centerX + Math.cos(previousAngle) * previousOrbit;
+        const previousY =
+          centerY + Math.sin(previousAngle * (0.9 + visual.symmetry * 0.3)) * previousOrbit * (0.54 + visual.depth * 0.22);
+        this.context.beginPath();
+        this.context.moveTo(previousX, previousY);
+        this.context.lineTo(x, y);
+        this.context.stroke();
+      }
+
+      this.context.beginPath();
+      this.context.arc(x, y, 1.8 + visual.pulseDensity * 3.2, 0, Math.PI * 2);
+      this.context.fill();
+    }
+    this.context.restore();
   }
 
   private drawGrain(visual: VisualParameters, width: number, height: number, time: number): void {

@@ -43,6 +43,8 @@ describe("sandbox API service", () => {
     });
     expect(visual.animationState).toBe("flowing");
     expect(visual.particles.trail).toBe(true);
+    expect(visual.temperature).toBe(0.5);
+    expect(visual.pulseDensity).toBe(0.48);
   });
 
   it("throws a readable error when sandbox rendering fails", async () => {

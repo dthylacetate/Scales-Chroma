@@ -9,6 +9,10 @@ interface SandboxRenderResponse {
   contrast?: number;
   energy?: number;
   complexity?: number;
+  temperature?: number;
+  symmetry?: number;
+  depth?: number;
+  pulse_density?: number;
   motion_speed?: number;
   ring_count?: number;
   ripple_strength?: number;
@@ -62,6 +66,10 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
     contrast: response.contrast ?? 0.5,
     energy: response.energy ?? 0.55,
     complexity: response.complexity ?? 0.45,
+    temperature: response.temperature ?? 0.5,
+    symmetry: response.symmetry ?? 0.52,
+    depth: response.depth ?? 0.56,
+    pulseDensity: response.pulse_density ?? 0.48,
     motionSpeed: response.motion_speed ?? 0.5,
     ringCount: response.ring_count ?? 3,
     rippleStrength: response.ripple_strength ?? 0.4,

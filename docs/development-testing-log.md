@@ -310,7 +310,7 @@ python -m pytest
 当前结果：
 
 ```text
-40 passed
+79 passed，1 个 FastAPI/Starlette 测试客户端弃用 warning
 ```
 
 ### 前端测试
@@ -323,7 +323,7 @@ npm test
 当前结果：
 
 ```text
-11 passed
+48 passed，仍有 1 个 React act(...) 测试提示
 ```
 
 ### 前端生产构建
@@ -337,6 +337,14 @@ npm run build
 
 ```text
 Vite 构建通过
+```
+
+### 浏览器烟测
+
+当前结果：
+
+```text
+已验证登录会话恢复、Growth 解锁后的舞台签名切换、中文特效说明展示，以及 Temperature / Symmetry / Depth / Pulse 新读数同步刷新。
 ```
 
 ## 当前覆盖能力
@@ -353,6 +361,9 @@ Vite 构建通过
 - 沙盘首屏 UI
 - 乐理积木拖入、删除、非法重复提示
 - 轨道内积木重排
+- 组合签名库与 Growth 风格 aura 的返回
+- 舞台参数新增的温度、对称性、空间深度、脉冲密度
+- 中文 bonus 说明与特效说明渲染
 
 尚未覆盖或后续要增强：
 
@@ -365,6 +376,23 @@ Vite 构建通过
 - 移动端响应式截图测试
 - 更完整的非法和弦/调式组合规则
 - 视觉解锁系统与练习时长的联动测试
+
+## 最近一次视觉升级的测试思路
+
+这次大升级不是单纯“把 Canvas 画得更花”，而是验证一条新的参数链路是否成立：
+
+1. 乐理模块和组合是否真的生成了更多可区分参数。
+2. Growth 解锁是否真的改变了舞台风格，而不只是数值轻微波动。
+3. 新参数是否能穿过 API、前端 service、React 状态、Canvas renderer 这一整条路径。
+
+这次测试重点因此分成三层：
+
+- 后端单元测试：
+  验证 `Celestial Bloom`、`Chrome Meridian`、`Metal Shrapnel`、`Velvet Tide`、`Fusion Prism` 这些签名除了名字变化，还会拉动 `symmetry / depth / pulse_density` 等关键参数。
+- 前端映射测试：
+  验证本地兜底 `mapTheoryToVisuals` 也能生成相同方向的参数变化，避免后端异常时舞台退化太严重。
+- UI 与浏览器烟测：
+  验证右侧新读数能显示，`Active Bonuses` 文案能解释来源，登录后的真实用户数据能把舞台签名切到 `Velvet Tide`。
 
 ## 经验总结
 

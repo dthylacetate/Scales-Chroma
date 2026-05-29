@@ -108,6 +108,8 @@ def test_renderer_uses_combo_rules_to_amplify_stage_signature() -> None:
     assert "Celestial Bloom" in visual.active_bonuses
     assert visual.glow > 0.9
     assert visual.beam_strength > 0.5
+    assert visual.symmetry > 0.65
+    assert visual.depth > 0.6
     assert visual.geometry == "soft-orb"
 
 
@@ -124,6 +126,7 @@ def test_renderer_supports_expanded_combo_library_for_modern_tension_blends() ->
     assert "Chrome Meridian" in visual.active_bonuses
     assert visual.energy > 0.8
     assert visual.complexity > 0.7
+    assert visual.pulse_density > 0.7
 
 
 def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
@@ -138,6 +141,8 @@ def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
     assert "Metal Shrapnel" in visual.active_bonuses
     assert visual.beam_strength > 0.75
     assert visual.secondary_color == "#ff7b3d"
+    assert visual.pulse_density > 0.8
+    assert visual.symmetry < 0.45
 
 
 def test_renderer_applies_neo_soul_style_unlocks_to_visual_parameters() -> None:
@@ -151,6 +156,8 @@ def test_renderer_applies_neo_soul_style_unlocks_to_visual_parameters() -> None:
     assert "Velvet Tide" in visual.active_bonuses
     assert visual.glow > 0.8
     assert visual.motion_speed > 0.45
+    assert visual.depth > 0.75
+    assert visual.symmetry > 0.55
 
 
 def test_renderer_applies_fusion_style_aura_to_visual_parameters() -> None:
@@ -163,3 +170,4 @@ def test_renderer_applies_fusion_style_aura_to_visual_parameters() -> None:
     assert visual.secondary_color == "#8db8ff"
     assert visual.ripple_strength > 0.9
     assert visual.beam_strength > 0.35
+    assert visual.depth > 0.7

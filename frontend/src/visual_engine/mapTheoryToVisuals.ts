@@ -29,6 +29,10 @@ const DEFAULT_VISUALS: VisualParameters = {
   contrast: 0.44,
   energy: 0.58,
   complexity: 0.46,
+  temperature: 0.5,
+  symmetry: 0.52,
+  depth: 0.56,
+  pulseDensity: 0.48,
   motionSpeed: 0.5,
   ringCount: 3,
   rippleStrength: 0.42,
@@ -158,6 +162,8 @@ const COMBO_BONUSES = [
     softOrb: 0.18,
     beamStrength: 0.16,
     rippleStrength: 0.12,
+    depth: 0.16,
+    symmetry: 0.12,
     secondaryColor: "#8fdcff"
   }),
   combo(["lydian", "major"], "Sunwake Atlas", {
@@ -165,12 +171,16 @@ const COMBO_BONUSES = [
     softOrb: 0.14,
     beamStrength: 0.14,
     energy: 0.08,
+    temperature: 0.12,
+    symmetry: 0.1,
     secondaryColor: "#bfe6ff"
   }),
   combo(["dorian", "min7"], "Midnight Current", {
     wave: 0.22,
     rippleStrength: 0.2,
     complexity: 0.12,
+    depth: 0.1,
+    pulseDensity: 0.08,
     secondaryColor: "#9af0dd"
   }),
   combo(["dorian", "ii-v-i"], "Blue Hour Run", {
@@ -178,6 +188,8 @@ const COMBO_BONUSES = [
     lattice: 0.14,
     rippleStrength: 0.18,
     beamStrength: 0.1,
+    depth: 0.1,
+    pulseDensity: 0.12,
     secondaryColor: "#7fe0c8"
   }),
   combo(["phrygian", "dominant7"], "Desert Voltage", {
@@ -185,6 +197,8 @@ const COMBO_BONUSES = [
     contrast: 0.14,
     beamStrength: 0.18,
     energy: 0.1,
+    pulseDensity: 0.14,
+    temperature: 0.12,
     secondaryColor: "#ff9b35"
   }),
   combo(["harmonic minor", "dim7"], "Occult Fracture", {
@@ -192,6 +206,9 @@ const COMBO_BONUSES = [
     grain: 0.18,
     complexity: 0.14,
     glow: 0.1,
+    depth: 0.18,
+    pulseDensity: 0.12,
+    symmetry: -0.12,
     backgroundColor: "#05060d"
   }),
   combo(["melodic minor", "dominant7"], "Chrome Meridian", {
@@ -199,37 +216,50 @@ const COMBO_BONUSES = [
     fracture: 0.12,
     complexity: 0.16,
     energy: 0.12,
+    depth: 0.14,
+    pulseDensity: 0.1,
+    symmetry: 0.08,
     secondaryColor: "#73f0d5"
   }),
   combo(["ii-v-i", "maj7"], "Cadence Aurora", {
     lattice: 0.2,
     rippleStrength: 0.16,
     beamStrength: 0.18,
+    depth: 0.12,
+    symmetry: 0.14,
     secondaryColor: "#c2b8ff"
   }),
   combo(["i-v-vi-iv", "major"], "Anthem Lift", {
     softOrb: 0.22,
     glow: 0.1,
     energy: 0.12,
-    beamStrength: 0.12
+    beamStrength: 0.12,
+    temperature: 0.1,
+    pulseDensity: 0.12
   }),
   combo(["ionian", "i-v-vi-iv"], "Daybreak Parade", {
     softOrb: 0.18,
     glow: 0.12,
     beamStrength: 0.14,
     rippleStrength: 0.08,
+    temperature: 0.14,
+    symmetry: 0.12,
     secondaryColor: "#ffe5a8"
   }),
   combo(["pentatonic", "mixolydian"], "Roadhouse Neon", {
     lattice: 0.18,
     beamStrength: 0.2,
     contrast: 0.12,
-    energy: 0.12
+    energy: 0.12,
+    pulseDensity: 0.14,
+    temperature: 0.08
   }),
   combo(["minor", "pentatonic"], "Midnight Run", {
     wave: 0.16,
     contrast: 0.12,
     rippleStrength: 0.18,
+    depth: 0.12,
+    pulseDensity: 0.12,
     backgroundColor: "#08111e"
   }),
   combo(["mixolydian", "dominant7"], "Brass Overdrive", {
@@ -237,6 +267,8 @@ const COMBO_BONUSES = [
     fracture: 0.12,
     beamStrength: 0.18,
     energy: 0.14,
+    pulseDensity: 0.14,
+    temperature: 0.14,
     secondaryColor: "#ffc145"
   }),
   combo(["aug", "lydian"], "Prism Flare", {
@@ -244,6 +276,8 @@ const COMBO_BONUSES = [
     softOrb: 0.14,
     glow: 0.12,
     beamStrength: 0.18,
+    symmetry: 0.08,
+    depth: 0.1,
     secondaryColor: "#ff9be8"
   })
 ];
@@ -278,15 +312,26 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
       fracture: weightedAverage(weightedElements, totalWeight, (profileItem) => profileFor(profileItem).geometryWeights.fracture),
       lattice: weightedAverage(weightedElements, totalWeight, (profileItem) => profileFor(profileItem).geometryWeights.lattice)
     },
+    temperature: weightedAverage(weightedElements, totalWeight, (profileItem) => moodTemperature(profileItem.name)),
+    symmetry: 0,
+    depth: 0,
+    pulseDensity: 0,
     signature: elements.length > 1 ? "Composite Pulse" : elements[0].name,
     activeBonuses: [] as string[]
   };
+  visual.symmetry = resolveSymmetry(visual.geometryWeights);
+  visual.depth = resolveDepth(visual);
+  visual.pulseDensity = resolvePulseDensity(visual);
 
   const stackBonus = Math.max(0, elements.length - 1) * 0.05;
   visual.glow = clamp01(visual.glow + stackBonus * 0.25);
   visual.contrast = clamp01(visual.contrast + stackBonus * 0.35);
   visual.energy = clamp01(visual.energy + stackBonus * 0.4);
   visual.complexity = clamp01(visual.complexity + stackBonus * 0.6);
+  visual.temperature = clamp01(visual.temperature + stackBonus * 0.18);
+  visual.symmetry = clamp01(visual.symmetry + stackBonus * 0.12);
+  visual.depth = clamp01(visual.depth + stackBonus * 0.2);
+  visual.pulseDensity = clamp01(visual.pulseDensity + stackBonus * 0.22);
   visual.motionSpeed = clamp01(visual.motionSpeed + stackBonus * 0.45);
   visual.rippleStrength = clamp01(visual.rippleStrength + stackBonus * 0.3);
   visual.beamStrength = clamp01(visual.beamStrength + stackBonus * 0.35);
@@ -325,6 +370,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     contrast: round(visual.contrast),
     energy: round(visual.energy),
     complexity: round(visual.complexity),
+    temperature: round(visual.temperature),
+    symmetry: round(visual.symmetry),
+    depth: round(visual.depth),
+    pulseDensity: round(visual.pulseDensity),
     motionSpeed: round(visual.motionSpeed),
     ringCount,
     rippleStrength: round(visual.rippleStrength),
@@ -425,6 +474,10 @@ function applyComboEffects(
     contrast: number;
     energy: number;
     complexity: number;
+    temperature: number;
+    symmetry: number;
+    depth: number;
+    pulseDensity: number;
     motionSpeed: number;
     rippleStrength: number;
     beamStrength: number;
@@ -490,6 +543,52 @@ function dominantAnimationState(visual: {
   }
 
   return "flowing";
+}
+
+function moodTemperature(elementName: string): number {
+  const name = elementName.toLowerCase();
+
+  if (["major", "ionian", "lydian", "mixolydian", "maj7", "dominant7", "aug", "i-v-vi-iv"].includes(name)) {
+    return 0.82;
+  }
+
+  if (["minor", "pentatonic", "melodic minor", "dorian", "min7", "ii-v-i", "dim7"].includes(name)) {
+    return 0.28;
+  }
+
+  return 0.46;
+}
+
+function resolveSymmetry(weights: ElementVisualProfile["geometryWeights"]): number {
+  return clamp01(weights.softOrb * 0.36 + weights.wave * 0.18 + weights.lattice * 0.42 + (1 - weights.fracture) * 0.22);
+}
+
+function resolveDepth(visual: {
+  glow: number;
+  contrast: number;
+  complexity: number;
+  rippleStrength: number;
+  beamStrength: number;
+}): number {
+  return clamp01(
+    0.16 +
+      visual.glow * 0.2 +
+      visual.contrast * 0.08 +
+      visual.complexity * 0.28 +
+      visual.rippleStrength * 0.18 +
+      visual.beamStrength * 0.16
+  );
+}
+
+function resolvePulseDensity(visual: {
+  energy: number;
+  motionSpeed: number;
+  rippleStrength: number;
+  contrast: number;
+}): number {
+  return clamp01(
+    0.14 + visual.energy * 0.34 + visual.motionSpeed * 0.16 + visual.rippleStrength * 0.14 + visual.contrast * 0.24
+  );
 }
 
 function blendHexes(weightedHexes: Array<[string, number]>): string {

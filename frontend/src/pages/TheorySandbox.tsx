@@ -512,6 +512,10 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Glow" value={visual.glow.toFixed(2)} />
           <Readout label="Energy" value={visual.energy.toFixed(2)} />
           <Readout label="Complexity" value={visual.complexity.toFixed(2)} />
+          <Readout label="Temperature" value={visual.temperature.toFixed(2)} />
+          <Readout label="Symmetry" value={visual.symmetry.toFixed(2)} />
+          <Readout label="Depth" value={visual.depth.toFixed(2)} />
+          <Readout label="Pulse" value={visual.pulseDensity.toFixed(2)} />
           <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
           {visual.activeBonuses.length > 0 ? (
             <div className="rounded-md border border-[#3f3144] bg-[#201922] p-3">

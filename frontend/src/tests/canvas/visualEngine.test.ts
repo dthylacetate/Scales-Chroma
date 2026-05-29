@@ -36,6 +36,8 @@ describe("visual engine theory mapping", () => {
     expect(visual.activeBonuses).toContain("Celestial Bloom");
     expect(visual.glow).toBeGreaterThan(0.9);
     expect(visual.beamStrength).toBeGreaterThan(0.45);
+    expect(visual.symmetry).toBeGreaterThan(0.6);
+    expect(visual.depth).toBeGreaterThan(0.6);
   });
 
   it("pushes high-energy tension combinations toward explosive fracture states", () => {
@@ -61,5 +63,6 @@ describe("visual engine theory mapping", () => {
     expect(visual.activeBonuses).toContain("Chrome Meridian");
     expect(visual.energy).toBeGreaterThan(0.85);
     expect(visual.beamStrength).toBeGreaterThan(0.45);
+    expect(visual.pulseDensity).toBeGreaterThan(0.7);
   });
 });
