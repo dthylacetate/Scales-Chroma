@@ -1,10 +1,12 @@
 from datetime import date
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
+from app.core.database import get_session
 from app.schemas.practice_record import PracticeRecordCreate
-from app.services.exp_system import calculate_exp
+from app.services.practice_records import create_practice_record as create_practice_record_service
 
 router = APIRouter(prefix="/practice-records", tags=["practice-records"])
 
@@ -25,20 +27,23 @@ class PracticeRecordCreateResponse(BaseModel):
 
 
 @router.post("", response_model=PracticeRecordCreateResponse, status_code=status.HTTP_201_CREATED)
-def create_practice_record(payload: PracticeRecordCreateRequest) -> PracticeRecordCreateResponse:
-    exp_earned = calculate_exp(
-        duration_minutes=payload.duration_minutes,
-        bpm=payload.bpm,
-        streak_days=1,
+def create_practice_record(
+    payload: PracticeRecordCreateRequest,
+    session: Session = Depends(get_session),
+) -> PracticeRecordCreateResponse:
+    result = create_practice_record_service(
+        session=session,
+        user_id=payload.user_id,
+        payload=payload,
     )
 
     return PracticeRecordCreateResponse(
-        id=1,
-        user_id=payload.user_id,
-        practice_date=payload.practice_date,
-        duration_minutes=payload.duration_minutes,
-        bpm=payload.bpm,
-        topic=payload.topic,
-        notes=payload.notes,
-        exp_earned=exp_earned,
+        id=result.id,
+        user_id=result.user_id,
+        practice_date=result.practice_date,
+        duration_minutes=result.duration_minutes,
+        bpm=result.bpm,
+        topic=result.topic,
+        notes=result.notes,
+        exp_earned=result.exp_earned,
     )
