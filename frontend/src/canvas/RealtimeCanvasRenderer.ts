@@ -97,15 +97,128 @@ export class RealtimeCanvasRenderer {
     this.context.save();
     this.context.globalAlpha = Math.max(0.2, Math.min(1, visual.glow));
     this.context.fillStyle = visual.color;
+    this.context.strokeStyle = visual.color;
+    this.context.lineWidth = Math.max(1, visual.glow * 4);
+    this.context.shadowBlur = visual.glow * 42;
+    this.context.shadowColor = visual.color;
 
-    if (visual.geometry === "fracture") {
-      this.context.fillRect(centerX - radius / 2, centerY - radius / 2, radius, radius);
-    } else {
-      this.context.beginPath();
-      this.context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      this.context.fill();
-    }
+    this.drawGeometry(visual, timestamp, centerX, centerY, radius);
+    this.drawParticles(visual, timestamp, centerX, centerY, radius);
 
     this.context.restore();
+  }
+
+  private drawGeometry(
+    visual: VisualParameters,
+    timestamp: number,
+    centerX: number,
+    centerY: number,
+    radius: number
+  ): void {
+    if (visual.geometry === "fracture") {
+      this.drawFracture(timestamp, centerX, centerY, radius);
+      return;
+    }
+
+    if (visual.geometry === "wave") {
+      this.drawWave(timestamp, centerX, centerY, radius);
+      return;
+    }
+
+    if (visual.geometry === "lattice") {
+      this.drawLattice(timestamp, centerX, centerY, radius);
+      return;
+    }
+
+    this.context.beginPath();
+    this.context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    this.context.fill();
+  }
+
+  private drawFracture(timestamp: number, centerX: number, centerY: number, radius: number): void {
+    const shardCount = 7;
+    const rotation = timestamp / 900;
+
+    this.context.beginPath();
+    for (let index = 0; index < shardCount; index += 1) {
+      const angle = rotation + (Math.PI * 2 * index) / shardCount;
+      const innerRadius = radius * (0.28 + (index % 2) * 0.12);
+      const outerRadius = radius * (0.82 + (index % 3) * 0.08);
+
+      this.context.moveTo(centerX + Math.cos(angle) * innerRadius, centerY + Math.sin(angle) * innerRadius);
+      this.context.lineTo(centerX + Math.cos(angle + 0.18) * outerRadius, centerY + Math.sin(angle + 0.18) * outerRadius);
+      this.context.lineTo(centerX + Math.cos(angle + 0.48) * innerRadius, centerY + Math.sin(angle + 0.48) * innerRadius);
+      this.context.closePath();
+    }
+    this.context.fill();
+    this.context.stroke();
+  }
+
+  private drawWave(timestamp: number, centerX: number, centerY: number, radius: number): void {
+    const waveWidth = radius * 2.8;
+    const startX = centerX - waveWidth / 2;
+    const amplitude = radius * 0.3;
+
+    this.context.beginPath();
+    for (let step = 0; step <= 32; step += 1) {
+      const progress = step / 32;
+      const x = startX + waveWidth * progress;
+      const y = centerY + Math.sin(progress * Math.PI * 4 + timestamp / 360) * amplitude;
+
+      if (step === 0) {
+        this.context.moveTo(x, y);
+      } else {
+        this.context.lineTo(x, y);
+      }
+    }
+    this.context.stroke();
+  }
+
+  private drawLattice(timestamp: number, centerX: number, centerY: number, radius: number): void {
+    const lines = 6;
+    const span = radius * 1.4;
+    const drift = Math.sin(timestamp / 620) * 4;
+
+    this.context.beginPath();
+    for (let index = 0; index < lines; index += 1) {
+      const offset = -span / 2 + (span * index) / (lines - 1);
+
+      this.context.moveTo(centerX - span / 2 + drift, centerY + offset);
+      this.context.lineTo(centerX + span / 2 + drift, centerY + offset);
+      this.context.moveTo(centerX + offset, centerY - span / 2 - drift);
+      this.context.lineTo(centerX + offset, centerY + span / 2 - drift);
+    }
+    this.context.stroke();
+  }
+
+  private drawParticles(
+    visual: VisualParameters,
+    timestamp: number,
+    centerX: number,
+    centerY: number,
+    radius: number
+  ): void {
+    if (!visual.particles.trail) {
+      return;
+    }
+
+    const particleCount = Math.max(4, Math.round(visual.particles.density * 20));
+    this.context.globalAlpha = Math.min(0.85, visual.glow);
+
+    for (let index = 0; index < particleCount; index += 1) {
+      const orbit = radius * (1.05 + (index % 4) * 0.14);
+      const angle = timestamp / 700 + (Math.PI * 2 * index) / particleCount;
+      const particleRadius = 1.8 + (index % 3) * 0.8;
+
+      this.context.beginPath();
+      this.context.arc(
+        centerX + Math.cos(angle) * orbit,
+        centerY + Math.sin(angle) * orbit,
+        particleRadius,
+        0,
+        Math.PI * 2
+      );
+      this.context.fill();
+    }
   }
 }
