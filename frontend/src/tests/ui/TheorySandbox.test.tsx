@@ -17,6 +17,32 @@ describe("TheorySandbox", () => {
     expect(screen.getByLabelText("实时音乐视觉舞台")).toBeInTheDocument();
   });
 
+  it("renders the complete planned theory element library", () => {
+    render(<TheorySandbox />);
+
+    [
+      "Major scale",
+      "Minor scale",
+      "Pentatonic scale",
+      "Harmonic Minor scale",
+      "Melodic Minor scale",
+      "Ionian mode",
+      "Dorian mode",
+      "Phrygian mode",
+      "Lydian mode",
+      "Mixolydian mode",
+      "Maj7 chord",
+      "Min7 chord",
+      "Dominant7 chord",
+      "Dim7 chord",
+      "Aug chord",
+      "II-V-I progression",
+      "I-V-vi-IV progression"
+    ].forEach((name) => {
+      expect(screen.getByRole("button", { name })).toBeInTheDocument();
+    });
+  });
+
   it("updates visual readout when a theory element is selected", () => {
     render(<TheorySandbox />);
 
