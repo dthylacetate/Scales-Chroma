@@ -31,6 +31,18 @@ describe("TheorySandbox drag composition", () => {
 
     expect(screen.getByText("相邻位置不能重复同一个乐理积木")).toBeInTheDocument();
   });
+
+  it("reorders blocks inside the composition lane", () => {
+    render(<TheorySandbox />);
+
+    dragTheoryBlock("Dorian");
+    dragTheoryBlock("Dim7");
+    reorderLaneBlock("Dim7", "Dorian");
+
+    const lane = screen.getByLabelText("乐理编排轨道");
+    expect(lane.textContent).toMatch(/Dim7.*Dorian/);
+    expect(screen.getByText("wave")).toBeInTheDocument();
+  });
 });
 
 function dragTheoryBlock(name: string): void {
@@ -43,6 +55,21 @@ function dragTheoryBlock(name: string): void {
   fireEvent.dragOver(lane);
   fireEvent.drop(lane, {
     dataTransfer: createDataTransfer(name.toLowerCase()),
+  });
+}
+
+function reorderLaneBlock(sourceName: string, targetName: string): void {
+  const source = screen.getByLabelText(`移动 ${sourceName}`);
+  const target = screen.getByLabelText(`移动 ${targetName}`);
+
+  fireEvent.dragStart(source, {
+    dataTransfer: createDataTransfer(`lane:${sourceName.toLowerCase()}`),
+  });
+  fireEvent.dragOver(target, {
+    dataTransfer: createDataTransfer(`lane:${sourceName.toLowerCase()}`),
+  });
+  fireEvent.drop(target, {
+    dataTransfer: createDataTransfer(`lane:${sourceName.toLowerCase()}`),
   });
 }
 
