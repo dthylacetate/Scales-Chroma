@@ -59,6 +59,55 @@ def test_create_saved_composition_rejects_empty_elements() -> None:
     assert response.status_code == 422
 
 
+def test_update_saved_composition_replaces_name_and_elements() -> None:
+    session = create_test_session()
+
+    def override_session() -> Generator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+
+    try:
+        client = TestClient(app)
+        create_response = client.post(
+            "/compositions",
+            json={
+                "user_id": 77,
+                "name": "Old Sketch",
+                "elements": [
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                ],
+            },
+        )
+        composition_id = create_response.json()["id"]
+        update_response = client.put(
+            f"/compositions/{composition_id}",
+            json={
+                "user_id": 77,
+                "name": "Updated Sketch",
+                "elements": [
+                    {"id": "dim7", "type": "chord", "name": "Dim7"},
+                    {"id": "ii-v-i", "type": "progression", "name": "II-V-I"},
+                ],
+            },
+        )
+        list_response = client.get("/compositions", params={"user_id": 77})
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert update_response.status_code == 200
+    updated = update_response.json()
+    assert updated["name"] == "Updated Sketch"
+    assert updated["elements"][0]["name"] == "Dim7"
+    assert updated["elements"][1]["name"] == "II-V-I"
+
+    listed = list_response.json()["compositions"]
+    assert len(listed) == 1
+    assert listed[0]["id"] == composition_id
+    assert listed[0]["name"] == "Updated Sketch"
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

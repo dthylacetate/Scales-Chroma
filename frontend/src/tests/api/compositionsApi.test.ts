@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getSavedCompositions, saveComposition } from "../../services/compositionsApi";
+import { getSavedCompositions, saveComposition, updateComposition } from "../../services/compositionsApi";
 import type { TheoryElement } from "../../types/theory";
 
 describe("compositions API service", () => {
@@ -71,5 +71,45 @@ describe("compositions API service", () => {
 
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/compositions?user_id=77");
     expect(compositions[0].name).toBe("Maj7 - Dim7");
+  });
+
+  it("updates an existing composition and normalizes returned elements", async () => {
+    const elements: TheoryElement[] = [
+      { id: "dim7", type: "chord", name: "Dim7" },
+      { id: "ii-v-i", type: "progression", name: "II-V-I" }
+    ];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 4,
+        user_id: 77,
+        name: "Updated Sketch",
+        elements,
+        created_at: "2026-05-29T12:00:00"
+      })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const composition = await updateComposition({
+      apiBaseUrl: "http://localhost:8000",
+      compositionId: 4,
+      userId: 77,
+      name: "Updated Sketch",
+      elements
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/compositions/4", {
+      body: JSON.stringify({
+        user_id: 77,
+        name: "Updated Sketch",
+        elements
+      }),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      method: "PUT"
+    });
+    expect(composition.name).toBe("Updated Sketch");
+    expect(composition.elements[1].name).toBe("II-V-I");
   });
 });
