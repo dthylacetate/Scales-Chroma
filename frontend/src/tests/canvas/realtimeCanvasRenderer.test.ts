@@ -74,6 +74,58 @@ describe("RealtimeCanvasRenderer", () => {
     expect(canvas.style.width).toBe("320px");
     expect(canvas.style.height).toBe("180px");
   });
+
+  it("draws fracture geometry with angular shards", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      geometry: "fracture",
+      animationState: "tense"
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
+  });
+
+  it("draws particle trails when the visual has unlocked trail effects", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      particles: {
+        density: 0.9,
+        trail: true
+      }
+    });
+
+    expect(canvas.getContext("2d")?.arc).toHaveBeenCalledTimes(19);
+  });
 });
 
 function createCanvas(): HTMLCanvasElement {
@@ -82,7 +134,11 @@ function createCanvas(): HTMLCanvasElement {
     clearRect: vi.fn(),
     fillRect: vi.fn(),
     beginPath: vi.fn(),
+    closePath: vi.fn(),
+    lineTo: vi.fn(),
+    moveTo: vi.fn(),
     arc: vi.fn(),
+    stroke: vi.fn(),
     fill: vi.fn(),
     save: vi.fn(),
     restore: vi.fn(),
