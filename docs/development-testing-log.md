@@ -258,6 +258,38 @@ backend/app/visual_engine/
 - 页面通过 `npm run build` 生产构建验证。
 - 浏览器实测确认页面可打开、Canvas 可见、状态读数可更新。
 
+### 9. Growth Imprint 独立风格层
+
+这一轮新增的重点不是“再加一点 glow”，而是把 Growth 从原来偏附属的数值增幅，拆成独立可感知的舞台层。
+
+这次测试思路分三层：
+
+1. 后端契约测试
+
+- 在 `render_visual_parameters(...)` 的单元测试里，直接要求 `neo-soul-veil`、`fusion-phase` 这类成长印记字段出现。
+- API 测试要求 `/sandbox/render` 返回 `growth_imprint` 与 `growth_imprint_intensity`，避免前端只能靠猜。
+
+2. 前端契约与渲染测试
+
+- `sandboxApi` 测试负责把后端的 `growth_imprint` / `growth_imprint_intensity` 正确归一化到前端类型。
+- Canvas renderer 测试要求在高强度成长印记下，仍然会发生独立绘制，不会只剩普通场景层。
+- UI 测试要求右侧真的出现 `Growth Imprint` 面板，并能读到像 `Neo Soul 幕纱` 这样的中文结果。
+
+3. 浏览器烟测
+
+- 这次把 `scripts/visual-smoke.mjs` 扩成全链路脚本：
+- 注册临时用户
+- 提交 240 分钟 `neo soul maj7 groove` 练习
+- 等待 `Unlocked velvet_glow`
+- 拖入 `Dorian + Maj7`，确认出现 `Growth Imprint` 和 `Neo Soul 幕纱`
+- 再切到 `Lydian + Maj7` 与 `Harmonic Minor + Dim7`
+- 最后确认舞台仍能在 `日光穹庭` 和 `影纹祭坛` 之间切换，同时 `Valence` 明显从 `1.00` 降到 `0.27`
+
+这部分的意义是：
+
+- 证明 Growth 已经不是后台数值，而是真会改写前端舞台人格。
+- 证明“成长风格”和“乐理组合”现在是两层叠加关系，而不是其中一层把另一层盖掉。
+
 ### 9. 乐理积木拖拽编排
 
 提交：
