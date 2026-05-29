@@ -12,6 +12,10 @@ const visual: VisualParameters = {
   energy: 0.78,
   complexity: 0.62,
   temperature: 0.72,
+  valence: 0.82,
+  arousal: 0.76,
+  luminosity: 0.84,
+  grit: 0.24,
   symmetry: 0.76,
   depth: 0.7,
   pulseDensity: 0.68,
@@ -21,6 +25,7 @@ const visual: VisualParameters = {
   beamStrength: 0.58,
   grain: 0.32,
   signature: "Cadence Aurora",
+  sceneFamily: "jazz-cathedral",
   activeBonuses: ["Cadence Aurora"],
   particles: {
     density: 0.72,

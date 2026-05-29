@@ -15,6 +15,10 @@ export interface VisualParameters {
   energy: number;
   complexity: number;
   temperature: number;
+  valence: number;
+  arousal: number;
+  luminosity: number;
+  grit: number;
   symmetry: number;
   depth: number;
   pulseDensity: number;
@@ -24,6 +28,15 @@ export interface VisualParameters {
   beamStrength: number;
   grain: number;
   signature: string;
+  sceneFamily:
+    | "solar-garden"
+    | "velvet-chamber"
+    | "metal-foundry"
+    | "jazz-cathedral"
+    | "prism-array"
+    | "nocturne-tide"
+    | "neon-grid"
+    | "shadow-sanctum";
   activeBonuses: string[];
   particles: {
     density: number;

@@ -89,11 +89,16 @@ export class RealtimeCanvasRenderer {
     const time = timestamp / 1000;
     const motionFactor = 0.72 + visual.motionSpeed * 1.2;
     const pulse = 1 + Math.sin(time * (1.8 + motionFactor)) * (0.04 + visual.glow * 0.08);
-    const radius = Math.max(44, Math.min(width, height) * (0.16 + visual.energy * 0.07) * pulse);
+    const radius = Math.max(
+      44,
+      Math.min(width, height) * (0.14 + visual.energy * 0.06 + visual.luminosity * 0.04) * pulse
+    );
 
     this.context.clearRect(0, 0, width, height);
     this.drawBackground(visual, width, height, centerX, centerY, radius, time);
+    this.drawAtmosphereLayers(visual, width, height, centerX, centerY, radius, time);
     this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
+    this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -114,33 +119,92 @@ export class RealtimeCanvasRenderer {
   ): void {
     const backgroundGradient = this.context.createLinearGradient(0, 0, width, height);
     backgroundGradient.addColorStop(0, visual.backgroundColor);
-    backgroundGradient.addColorStop(0.38, mixHex(visual.backgroundColor, visual.secondaryColor, 0.16 + visual.depth * 0.18));
-    backgroundGradient.addColorStop(1, mixHex(visual.backgroundColor, visual.color, 0.12 + visual.temperature * 0.14));
+    backgroundGradient.addColorStop(
+      0.38,
+      mixHex(visual.backgroundColor, visual.secondaryColor, 0.14 + visual.depth * 0.16 + visual.luminosity * 0.08)
+    );
+    backgroundGradient.addColorStop(
+      1,
+      mixHex(visual.backgroundColor, visual.color, 0.1 + visual.temperature * 0.12 + visual.valence * 0.08)
+    );
 
     this.context.globalAlpha = 1;
     this.context.fillStyle = backgroundGradient;
     this.context.fillRect(0, 0, width, height);
 
-    const halo = this.context.createRadialGradient(centerX, centerY, radius * 0.3, centerX, centerY, radius * 2.8);
-    halo.addColorStop(0, alphaHex(visual.color, 0.2 + visual.glow * 0.26));
-    halo.addColorStop(0.42, alphaHex(visual.secondaryColor, 0.08 + visual.beamStrength * 0.16));
+    const halo = this.context.createRadialGradient(centerX, centerY, radius * 0.3, centerX, centerY, radius * 3.1);
+    halo.addColorStop(0, alphaHex(visual.color, 0.18 + visual.glow * 0.22 + visual.luminosity * 0.1));
+    halo.addColorStop(0.42, alphaHex(visual.secondaryColor, 0.08 + visual.beamStrength * 0.1 + visual.valence * 0.08));
     halo.addColorStop(1, alphaHex(visual.backgroundColor, 0));
     this.context.fillStyle = halo;
     this.context.fillRect(0, 0, width, height);
 
-    const driftCount = Math.max(2, Math.min(7, Math.round(2 + visual.energy * 3 + visual.depth * 3)));
+    const driftCount = Math.max(
+      2,
+      Math.min(8, Math.round(2 + visual.energy * 2 + visual.depth * 2 + visual.luminosity * 4))
+    );
     for (let index = 0; index < driftCount; index += 1) {
       const orbit = radius * (1.2 + index * 0.34);
       const angle = time * (0.22 + visual.motionSpeed * 0.18) + index * 1.7;
       const glowX = centerX + Math.cos(angle) * orbit * 0.7;
       const glowY = centerY + Math.sin(angle * (1.04 + visual.symmetry * 0.18)) * orbit * (0.34 + visual.depth * 0.16);
-      const glowRadius = radius * (0.8 + index * 0.22);
+      const glowRadius = radius * (0.7 + index * 0.18 + visual.luminosity * 0.2);
       const accent = this.context.createRadialGradient(glowX, glowY, 0, glowX, glowY, glowRadius);
-      accent.addColorStop(0, alphaHex(index % 2 === 0 ? visual.color : visual.secondaryColor, 0.05 + visual.temperature * 0.06));
+      accent.addColorStop(
+        0,
+        alphaHex(index % 2 === 0 ? visual.color : visual.secondaryColor, 0.04 + visual.temperature * 0.04 + visual.valence * 0.06)
+      );
       accent.addColorStop(1, alphaHex(visual.backgroundColor, 0));
       this.context.fillStyle = accent;
       this.context.fillRect(0, 0, width, height);
     }
+  }
+
+  private drawAtmosphereLayers(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+
+    if (visual.luminosity > 0.54) {
+      const canopyCount = Math.max(2, Math.round(2 + visual.luminosity * 4));
+      for (let index = 0; index < canopyCount; index += 1) {
+        const canopyY = centerY - radius * (1.1 + index * 0.18);
+        this.context.beginPath();
+        this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.08 + visual.luminosity * 0.08);
+        this.context.lineWidth = Math.max(1, 1 + visual.luminosity * 2.4 - index * 0.2);
+        this.context.arc(centerX, canopyY, radius * (0.92 + index * 0.18), Math.PI * 0.98, Math.PI * 2.02);
+        this.context.stroke();
+      }
+    }
+
+    if (visual.grit > 0.4) {
+      const hazeCount = Math.max(3, Math.round(3 + visual.grit * 7));
+      for (let index = 0; index < hazeCount; index += 1) {
+        const y = centerY + radius * (0.3 + (index / hazeCount) * 0.8);
+        this.context.beginPath();
+        this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.04 + visual.grit * 0.08);
+        this.context.lineWidth = Math.max(1, 0.8 + visual.grit * 2.2);
+        for (let step = 0; step <= 10; step += 1) {
+          const progress = step / 10;
+          const x = progress * width;
+          const waveY = y + Math.sin(progress * Math.PI * 3 + time * (0.6 + index * 0.08)) * radius * (0.015 + visual.grit * 0.02);
+          if (step === 0) {
+            this.context.moveTo(x, waveY);
+          } else {
+            this.context.lineTo(x, waveY);
+          }
+        }
+        this.context.stroke();
+      }
+    }
+
+    this.context.restore();
   }
 
   private drawStageArchitecture(
@@ -193,6 +257,271 @@ export class RealtimeCanvasRenderer {
     this.context.restore();
   }
 
+  private drawSceneFamilyAccent(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    switch (visual.sceneFamily) {
+      case "solar-garden":
+        this.drawSolarGardenAccent(visual, centerX, centerY, radius, time);
+        break;
+      case "velvet-chamber":
+        this.drawVelvetChamberAccent(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "metal-foundry":
+        this.drawMetalFoundryAccent(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "jazz-cathedral":
+        this.drawJazzCathedralAccent(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-array":
+        this.drawPrismArrayAccent(visual, centerX, centerY, radius, time);
+        break;
+      case "nocturne-tide":
+        this.drawNocturneTideAccent(visual, width, centerX, centerY, radius, time);
+        break;
+      case "shadow-sanctum":
+        this.drawShadowSanctumAccent(visual, centerX, centerY, radius, time);
+        break;
+      default:
+        this.drawNeonGridAccent(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+  }
+
+  private drawSolarGardenAccent(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + visual.symmetry * 2.4);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + visual.glow * 0.16);
+    this.context.shadowBlur = 14 + visual.glow * 22;
+    this.context.shadowColor = visual.secondaryColor;
+    for (let index = 0; index < 4; index += 1) {
+      const archRadius = radius * (0.82 + index * 0.16);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY - radius * 0.12, archRadius, Math.PI * 1.02, Math.PI * 1.98);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawVelvetChamberAccent(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    const curtainGradient = this.context.createLinearGradient(0, 0, 0, height);
+    curtainGradient.addColorStop(0, alphaHex(visual.secondaryColor, 0.16));
+    curtainGradient.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+    this.context.fillStyle = curtainGradient;
+    for (let index = 0; index < 3; index += 1) {
+      const wave = Math.sin(time * 0.6 + index) * radius * 0.06;
+      this.context.beginPath();
+      this.context.moveTo(index === 0 ? 0 : width, 0);
+      this.context.quadraticCurveTo(centerX + wave, centerY * 0.44, index === 0 ? radius * 0.42 : width - radius * 0.42, height);
+      this.context.lineTo(index === 0 ? 0 : width, height);
+      this.context.closePath();
+      this.context.fill();
+    }
+    this.context.restore();
+  }
+
+  private drawMetalFoundryAccent(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + visual.contrast * 0.16);
+    this.context.lineWidth = Math.max(1.2, 1.2 + visual.contrast * 2.2);
+    const baseY = centerY + radius * 0.86;
+    for (let index = 0; index < 9; index += 1) {
+      const progress = index / 8;
+      const x = centerX - radius * 1.26 + progress * radius * 2.52;
+      this.context.beginPath();
+      this.context.moveTo(x, baseY);
+      this.context.lineTo(x + radius * 0.04, baseY - radius * (0.1 + ((index + 1) % 3) * 0.18));
+      this.context.lineTo(x + radius * 0.1, baseY);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 5; index += 1) {
+      const emberX = centerX + Math.sin(time * 0.9 + index * 1.7) * radius * 1.18;
+      const emberY = centerY + radius * (0.38 + index * 0.1);
+      this.context.fillStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.24);
+      this.context.fillRect(emberX, emberY, 3, 10 + visual.energy * 14);
+    }
+    this.context.restore();
+  }
+
+  private drawJazzCathedralAccent(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    const windowCount = Math.max(3, Math.round(3 + visual.symmetry * 4));
+    for (let index = 0; index < windowCount; index += 1) {
+      const progress = (index + 1) / (windowCount + 1);
+      const x = centerX - radius * 1.08 + progress * radius * 2.16;
+      const topY = centerY - radius * 1.08;
+      const panelHeight = radius * (0.82 + Math.sin(time * 0.4 + index) * 0.06);
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.16 + visual.depth * 0.12);
+      this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 1.8);
+      this.context.beginPath();
+      this.context.moveTo(x, topY + panelHeight);
+      this.context.lineTo(x, topY + radius * 0.18);
+      this.context.quadraticCurveTo(x, topY - radius * 0.08, x + radius * 0.08, topY - radius * 0.08);
+      this.context.stroke();
+    }
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.06 + visual.depth * 0.08);
+    this.context.fillRect(0, height - radius * 0.16, width, radius * 0.16);
+    this.context.restore();
+  }
+
+  private drawPrismArrayAccent(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.translate(centerX, centerY - radius * 0.12);
+    this.context.rotate(Math.sin(time * 0.6) * 0.08);
+    for (let index = 0; index < 6; index += 1) {
+      const topY = -radius * (1.08 - index * 0.07);
+      const baseWidth = radius * (0.14 + index * 0.08);
+      const baseY = radius * (0.06 + index * 0.1);
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.14 + visual.depth * 0.1);
+      this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 1.6);
+      this.context.moveTo(0, topY);
+      this.context.lineTo(-baseWidth, baseY);
+      this.context.lineTo(baseWidth, baseY);
+      this.context.closePath();
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawNocturneTideAccent(
+    visual: VisualParameters,
+    width: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.lineWidth = Math.max(1.2, 1 + visual.rippleStrength * 2.2);
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY + radius * (0.44 + index * 0.16);
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.16 + visual.depth * 0.08);
+      for (let step = 0; step <= 16; step += 1) {
+        const progress = step / 16;
+        const x = progress * width;
+        const waveY = y + Math.sin(progress * Math.PI * 4 + time * (0.9 + index * 0.14)) * radius * (0.04 + index * 0.01);
+        if (step === 0) {
+          this.context.moveTo(x, waveY);
+        } else {
+          this.context.lineTo(x, waveY);
+        }
+      }
+      this.context.stroke();
+    }
+    const moonX = centerX + radius * 0.78;
+    const moonY = centerY - radius * 0.76;
+    this.context.beginPath();
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.2 + visual.glow * 0.1);
+    this.context.arc(moonX, moonY, radius * 0.14, 0, Math.PI * 2);
+    this.context.fill();
+    this.context.restore();
+  }
+
+  private drawNeonGridAccent(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.beamStrength * 0.1);
+    this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 1.4);
+    const horizonY = centerY + radius * 0.82;
+    const lineCount = 7;
+    for (let index = 0; index < lineCount; index += 1) {
+      const progress = index / (lineCount - 1);
+      const x = progress * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(centerX + (x - centerX) * 0.12, horizonY);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 5; index += 1) {
+      const y = horizonY + index * radius * 0.14 + Math.sin(time * 0.8 + index) * radius * 0.01;
+      this.context.beginPath();
+      this.context.moveTo(0, y);
+      this.context.lineTo(width, y);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawShadowSanctumAccent(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.translate(centerX, centerY);
+    this.context.rotate(time * 0.06);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + visual.contrast * 0.1);
+    this.context.lineWidth = Math.max(1, 1 + visual.contrast * 1.8);
+    for (let index = 0; index < 3; index += 1) {
+      const runeRadius = radius * (0.86 + index * 0.16);
+      this.context.beginPath();
+      this.context.arc(0, 0, runeRadius, 0, Math.PI * 2);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 6; index += 1) {
+      const angle = (Math.PI * 2 * index) / 6 + time * 0.12;
+      this.context.beginPath();
+      this.context.moveTo(Math.cos(angle) * radius * 0.26, Math.sin(angle) * radius * 0.26);
+      this.context.lineTo(Math.cos(angle) * radius * 1.06, Math.sin(angle) * radius * 1.06);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
   private drawBeamField(
     visual: VisualParameters,
     centerX: number,
@@ -200,8 +529,8 @@ export class RealtimeCanvasRenderer {
     radius: number,
     time: number
   ): void {
-    const beamCount = Math.max(3, Math.round(4 + visual.beamStrength * 10 + visual.energy * 3));
-    const beamLength = radius * (1.7 + visual.energy * 1.2);
+    const beamCount = Math.max(3, Math.round(4 + visual.beamStrength * 8 + visual.energy * 2 + visual.arousal * 4));
+    const beamLength = radius * (1.6 + visual.energy * 0.9 + visual.arousal * 0.6);
     const beamWidth = Math.max(1.5, 1 + visual.beamStrength * 6);
 
     this.context.save();
@@ -210,10 +539,10 @@ export class RealtimeCanvasRenderer {
     this.context.lineCap = "round";
     this.context.shadowBlur = 18 + visual.glow * 34;
     this.context.shadowColor = visual.secondaryColor;
-    this.context.globalAlpha = 0.08 + visual.beamStrength * 0.18;
+    this.context.globalAlpha = 0.07 + visual.beamStrength * 0.14 + visual.luminosity * 0.06;
 
     for (let index = 0; index < beamCount; index += 1) {
-      const angle = (Math.PI * 2 * index) / beamCount + time * (0.18 + visual.motionSpeed * 0.42);
+      const angle = (Math.PI * 2 * index) / beamCount + time * (0.18 + visual.motionSpeed * 0.3 + visual.arousal * 0.18);
       const beamGradient = this.context.createLinearGradient(0, 0, Math.cos(angle) * beamLength, Math.sin(angle) * beamLength);
       beamGradient.addColorStop(0, alphaHex(visual.secondaryColor, 0.52));
       beamGradient.addColorStop(1, alphaHex(visual.color, 0));
@@ -247,7 +576,7 @@ export class RealtimeCanvasRenderer {
     time: number
   ): void {
     const ringCount = Math.max(2, visual.ringCount);
-    const ringBaseAlpha = 0.12 + visual.rippleStrength * 0.22;
+    const ringBaseAlpha = 0.1 + visual.rippleStrength * 0.18 + visual.luminosity * 0.08;
 
     this.context.save();
     this.context.shadowBlur = 10 + visual.glow * 20;
@@ -439,7 +768,7 @@ export class RealtimeCanvasRenderer {
     radius: number,
     time: number
   ): void {
-    const particleCount = Math.max(10, Math.round(10 + visual.particles.density * 42));
+    const particleCount = Math.max(10, Math.round(10 + visual.particles.density * 32 + visual.arousal * 10 + visual.grit * 6));
     const orbitSpread = radius * (1.1 + visual.particles.spread);
 
     this.context.save();
@@ -451,7 +780,7 @@ export class RealtimeCanvasRenderer {
       const angle = progress * Math.PI * 2 + time * (0.55 + visual.particles.speed * 0.6);
       const orbit =
         orbitSpread * (0.64 + ((index % 7) / 6) * 0.52 + Math.sin(time + index * 0.7) * visual.particles.spread * 0.08);
-      const particleRadius = Math.max(0.9, visual.particles.size * (0.42 + (index % 3) * 0.16));
+      const particleRadius = Math.max(0.9, visual.particles.size * (0.38 + (index % 3) * 0.14 + visual.luminosity * 0.08));
       const particleX = centerX + Math.cos(angle) * orbit;
       const particleY = centerY + Math.sin(angle * (visual.geometry === "wave" ? 1.35 : 1)) * orbit * 0.76;
 
@@ -627,7 +956,7 @@ export class RealtimeCanvasRenderer {
     radius: number,
     time: number
   ): void {
-    const nodeCount = Math.max(3, Math.round(3 + visual.pulseDensity * 10));
+    const nodeCount = Math.max(3, Math.round(3 + visual.pulseDensity * 7 + visual.arousal * 5));
     const travel = radius * (0.44 + visual.pulseDensity * 0.42);
 
     this.context.save();

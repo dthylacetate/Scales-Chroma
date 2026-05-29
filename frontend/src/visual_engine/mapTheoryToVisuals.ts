@@ -21,6 +21,13 @@ interface ElementVisualProfile {
   };
 }
 
+interface MoodAxes {
+  valence: number;
+  arousal: number;
+  luminosity: number;
+  grit: number;
+}
+
 const DEFAULT_VISUALS: VisualParameters = {
   color: "#7bdff2",
   secondaryColor: "#8d99ff",
@@ -30,6 +37,10 @@ const DEFAULT_VISUALS: VisualParameters = {
   energy: 0.58,
   complexity: 0.46,
   temperature: 0.5,
+  valence: 0.56,
+  arousal: 0.58,
+  luminosity: 0.56,
+  grit: 0.28,
   symmetry: 0.52,
   depth: 0.56,
   pulseDensity: 0.48,
@@ -39,6 +50,7 @@ const DEFAULT_VISUALS: VisualParameters = {
   beamStrength: 0.34,
   grain: 0.18,
   signature: "Pulse Field",
+  sceneFamily: "neon-grid",
   activeBonuses: [],
   particles: {
     density: 0.42,
@@ -164,6 +176,10 @@ const COMBO_BONUSES = [
     rippleStrength: 0.12,
     depth: 0.16,
     symmetry: 0.12,
+    valence: 0.12,
+    luminosity: 0.18,
+    arousal: 0.04,
+    grit: -0.08,
     secondaryColor: "#8fdcff"
   }),
   combo(["lydian", "major"], "Sunwake Atlas", {
@@ -173,6 +189,10 @@ const COMBO_BONUSES = [
     energy: 0.08,
     temperature: 0.12,
     symmetry: 0.1,
+    valence: 0.1,
+    luminosity: 0.16,
+    arousal: 0.04,
+    grit: -0.06,
     secondaryColor: "#bfe6ff"
   }),
   combo(["dorian", "min7"], "Midnight Current", {
@@ -181,6 +201,10 @@ const COMBO_BONUSES = [
     complexity: 0.12,
     depth: 0.1,
     pulseDensity: 0.08,
+    valence: 0.04,
+    luminosity: 0.02,
+    arousal: 0.06,
+    grit: 0.04,
     secondaryColor: "#9af0dd"
   }),
   combo(["dorian", "ii-v-i"], "Blue Hour Run", {
@@ -190,6 +214,10 @@ const COMBO_BONUSES = [
     beamStrength: 0.1,
     depth: 0.1,
     pulseDensity: 0.12,
+    valence: 0.04,
+    luminosity: 0.06,
+    arousal: 0.08,
+    grit: 0.02,
     secondaryColor: "#7fe0c8"
   }),
   combo(["phrygian", "dominant7"], "Desert Voltage", {
@@ -199,6 +227,10 @@ const COMBO_BONUSES = [
     energy: 0.1,
     pulseDensity: 0.14,
     temperature: 0.12,
+    valence: -0.04,
+    luminosity: 0.02,
+    arousal: 0.14,
+    grit: 0.12,
     secondaryColor: "#ff9b35"
   }),
   combo(["harmonic minor", "dim7"], "Occult Fracture", {
@@ -209,6 +241,10 @@ const COMBO_BONUSES = [
     depth: 0.18,
     pulseDensity: 0.12,
     symmetry: -0.12,
+    valence: -0.1,
+    luminosity: -0.08,
+    arousal: 0.12,
+    grit: 0.18,
     backgroundColor: "#05060d"
   }),
   combo(["melodic minor", "dominant7"], "Chrome Meridian", {
@@ -219,6 +255,10 @@ const COMBO_BONUSES = [
     depth: 0.14,
     pulseDensity: 0.1,
     symmetry: 0.08,
+    valence: 0.04,
+    luminosity: 0.08,
+    arousal: 0.14,
+    grit: 0.08,
     secondaryColor: "#73f0d5"
   }),
   combo(["ii-v-i", "maj7"], "Cadence Aurora", {
@@ -227,6 +267,10 @@ const COMBO_BONUSES = [
     beamStrength: 0.18,
     depth: 0.12,
     symmetry: 0.14,
+    valence: 0.1,
+    luminosity: 0.14,
+    arousal: 0.06,
+    grit: -0.04,
     secondaryColor: "#c2b8ff"
   }),
   combo(["i-v-vi-iv", "major"], "Anthem Lift", {
@@ -236,6 +280,11 @@ const COMBO_BONUSES = [
     beamStrength: 0.12,
     temperature: 0.1,
     pulseDensity: 0.12
+    ,
+    valence: 0.12,
+    luminosity: 0.14,
+    arousal: 0.1,
+    grit: -0.04
   }),
   combo(["ionian", "i-v-vi-iv"], "Daybreak Parade", {
     softOrb: 0.18,
@@ -244,6 +293,10 @@ const COMBO_BONUSES = [
     rippleStrength: 0.08,
     temperature: 0.14,
     symmetry: 0.12,
+    valence: 0.16,
+    luminosity: 0.18,
+    arousal: 0.06,
+    grit: -0.08,
     secondaryColor: "#ffe5a8"
   }),
   combo(["pentatonic", "mixolydian"], "Roadhouse Neon", {
@@ -252,7 +305,11 @@ const COMBO_BONUSES = [
     contrast: 0.12,
     energy: 0.12,
     pulseDensity: 0.14,
-    temperature: 0.08
+    temperature: 0.08,
+    valence: 0.06,
+    luminosity: 0.08,
+    arousal: 0.14,
+    grit: 0.06
   }),
   combo(["minor", "pentatonic"], "Midnight Run", {
     wave: 0.16,
@@ -260,6 +317,10 @@ const COMBO_BONUSES = [
     rippleStrength: 0.18,
     depth: 0.12,
     pulseDensity: 0.12,
+    valence: -0.04,
+    luminosity: -0.04,
+    arousal: 0.08,
+    grit: 0.08,
     backgroundColor: "#08111e"
   }),
   combo(["mixolydian", "dominant7"], "Brass Overdrive", {
@@ -269,6 +330,10 @@ const COMBO_BONUSES = [
     energy: 0.14,
     pulseDensity: 0.14,
     temperature: 0.14,
+    valence: 0.04,
+    luminosity: 0.04,
+    arousal: 0.16,
+    grit: 0.1,
     secondaryColor: "#ffc145"
   }),
   combo(["aug", "lydian"], "Prism Flare", {
@@ -278,9 +343,100 @@ const COMBO_BONUSES = [
     beamStrength: 0.18,
     symmetry: 0.08,
     depth: 0.1,
+    valence: 0.08,
+    luminosity: 0.12,
+    arousal: 0.16,
+    grit: 0.08,
     secondaryColor: "#ff9be8"
+  }),
+  combo(["lydian", "ii-v-i"], "Skyline Halo", {
+    lattice: 0.18,
+    beamStrength: 0.16,
+    depth: 0.14,
+    symmetry: 0.12,
+    glow: 0.08,
+    valence: 0.12,
+    luminosity: 0.16,
+    arousal: 0.08,
+    grit: -0.06,
+    secondaryColor: "#a9d9ff"
+  }),
+  combo(["phrygian", "dim7"], "Ashen Rite", {
+    fracture: 0.22,
+    grain: 0.2,
+    contrast: 0.16,
+    depth: 0.12,
+    valence: -0.12,
+    luminosity: -0.08,
+    arousal: 0.14,
+    grit: 0.2,
+    backgroundColor: "#05040a"
+  }),
+  combo(["dorian", "maj7"], "Glass Current", {
+    wave: 0.18,
+    softOrb: 0.1,
+    glow: 0.12,
+    rippleStrength: 0.14,
+    valence: 0.08,
+    luminosity: 0.12,
+    arousal: 0.06,
+    grit: -0.02,
+    secondaryColor: "#b3f7ea"
+  }),
+  combo(["pentatonic", "maj7"], "Neon Lantern", {
+    lattice: 0.18,
+    softOrb: 0.12,
+    glow: 0.12,
+    beamStrength: 0.12,
+    valence: 0.12,
+    luminosity: 0.14,
+    arousal: 0.08,
+    grit: 0.02,
+    secondaryColor: "#9cf7ff"
+  }),
+  combo(["melodic minor", "maj7"], "Liquid Aurora", {
+    wave: 0.18,
+    softOrb: 0.12,
+    glow: 0.12,
+    complexity: 0.14,
+    valence: 0.08,
+    luminosity: 0.12,
+    arousal: 0.1,
+    grit: 0.02,
+    secondaryColor: "#79d8ff"
+  }),
+  combo(["mixolydian", "ii-v-i"], "Copper Skyline", {
+    lattice: 0.18,
+    beamStrength: 0.18,
+    energy: 0.12,
+    contrast: 0.1,
+    valence: 0.04,
+    luminosity: 0.06,
+    arousal: 0.14,
+    grit: 0.08,
+    secondaryColor: "#ffbd72"
   })
 ];
+
+const MOOD_LIBRARY: Record<string, MoodAxes> = {
+  major: { valence: 0.78, arousal: 0.52, luminosity: 0.8, grit: 0.16 },
+  minor: { valence: 0.36, arousal: 0.34, luminosity: 0.38, grit: 0.28 },
+  pentatonic: { valence: 0.64, arousal: 0.72, luminosity: 0.62, grit: 0.24 },
+  "harmonic minor": { valence: 0.18, arousal: 0.74, luminosity: 0.28, grit: 0.78 },
+  "melodic minor": { valence: 0.58, arousal: 0.68, luminosity: 0.56, grit: 0.42 },
+  ionian: { valence: 0.82, arousal: 0.48, luminosity: 0.82, grit: 0.14 },
+  dorian: { valence: 0.52, arousal: 0.56, luminosity: 0.48, grit: 0.22 },
+  phrygian: { valence: 0.14, arousal: 0.66, luminosity: 0.22, grit: 0.72 },
+  lydian: { valence: 0.86, arousal: 0.62, luminosity: 0.88, grit: 0.12 },
+  mixolydian: { valence: 0.68, arousal: 0.72, luminosity: 0.68, grit: 0.28 },
+  maj7: { valence: 0.8, arousal: 0.44, luminosity: 0.78, grit: 0.1 },
+  min7: { valence: 0.48, arousal: 0.34, luminosity: 0.46, grit: 0.18 },
+  dominant7: { valence: 0.42, arousal: 0.78, luminosity: 0.56, grit: 0.58 },
+  dim7: { valence: 0.08, arousal: 0.88, luminosity: 0.34, grit: 0.86 },
+  aug: { valence: 0.32, arousal: 0.92, luminosity: 0.62, grit: 0.74 },
+  "ii-v-i": { valence: 0.58, arousal: 0.54, luminosity: 0.6, grit: 0.26 },
+  "i-v-vi-iv": { valence: 0.76, arousal: 0.64, luminosity: 0.74, grit: 0.18 }
+};
 
 export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters {
   if (elements.length === 0) {
@@ -313,10 +469,15 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
       lattice: weightedAverage(weightedElements, totalWeight, (profileItem) => profileFor(profileItem).geometryWeights.lattice)
     },
     temperature: weightedAverage(weightedElements, totalWeight, (profileItem) => moodTemperature(profileItem.name)),
+    valence: weightedAverage(weightedElements, totalWeight, (profileItem) => moodFor(profileItem.name).valence),
+    arousal: weightedAverage(weightedElements, totalWeight, (profileItem) => moodFor(profileItem.name).arousal),
+    luminosity: weightedAverage(weightedElements, totalWeight, (profileItem) => moodFor(profileItem.name).luminosity),
+    grit: weightedAverage(weightedElements, totalWeight, (profileItem) => moodFor(profileItem.name).grit),
     symmetry: 0,
     depth: 0,
     pulseDensity: 0,
     signature: elements.length > 1 ? "Composite Pulse" : elements[0].name,
+    sceneFamily: "neon-grid" as VisualParameters["sceneFamily"],
     activeBonuses: [] as string[]
   };
   visual.symmetry = resolveSymmetry(visual.geometryWeights);
@@ -329,6 +490,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
   visual.energy = clamp01(visual.energy + stackBonus * 0.4);
   visual.complexity = clamp01(visual.complexity + stackBonus * 0.6);
   visual.temperature = clamp01(visual.temperature + stackBonus * 0.18);
+  visual.valence = clamp01(visual.valence + stackBonus * 0.08);
+  visual.arousal = clamp01(visual.arousal + stackBonus * 0.16);
+  visual.luminosity = clamp01(visual.luminosity + stackBonus * 0.1);
+  visual.grit = clamp01(visual.grit + stackBonus * 0.12);
   visual.symmetry = clamp01(visual.symmetry + stackBonus * 0.12);
   visual.depth = clamp01(visual.depth + stackBonus * 0.2);
   visual.pulseDensity = clamp01(visual.pulseDensity + stackBonus * 0.22);
@@ -352,6 +517,16 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
   }
 
   const geometry = dominantGeometry(visual.geometryWeights);
+  visual.sceneFamily = inferSceneFamily(
+    visual.signature,
+    visual.activeBonuses,
+    geometry,
+    visual.temperature,
+    visual.contrast,
+    visual.valence,
+    visual.luminosity,
+    visual.grit
+  );
   const animationState = dominantAnimationState(visual);
   const ringCount = Math.max(2, Math.min(8, Math.floor(2 + visual.rippleStrength * 3 + visual.complexity * 2)));
   const particles = {
@@ -371,6 +546,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     energy: round(visual.energy),
     complexity: round(visual.complexity),
     temperature: round(visual.temperature),
+    valence: round(visual.valence),
+    arousal: round(visual.arousal),
+    luminosity: round(visual.luminosity),
+    grit: round(visual.grit),
     symmetry: round(visual.symmetry),
     depth: round(visual.depth),
     pulseDensity: round(visual.pulseDensity),
@@ -380,6 +559,7 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     beamStrength: round(visual.beamStrength),
     grain: round(visual.grain),
     signature: visual.signature,
+    sceneFamily: visual.sceneFamily,
     activeBonuses: visual.activeBonuses,
     particles,
     geometry,
@@ -446,6 +626,15 @@ function profileFor(element: TheoryElement): ElementVisualProfile {
   };
 }
 
+function moodFor(elementName: string): MoodAxes {
+  return MOOD_LIBRARY[elementName.toLowerCase()] ?? {
+    valence: DEFAULT_VISUALS.valence,
+    arousal: DEFAULT_VISUALS.arousal,
+    luminosity: DEFAULT_VISUALS.luminosity,
+    grit: DEFAULT_VISUALS.grit
+  };
+}
+
 function elementWeight(element: TheoryElement, index: number, total: number): number {
   const typeWeight: Record<TheoryElement["type"], number> = {
     scale: 0.95,
@@ -475,6 +664,10 @@ function applyComboEffects(
     energy: number;
     complexity: number;
     temperature: number;
+    valence: number;
+    arousal: number;
+    luminosity: number;
+    grit: number;
     symmetry: number;
     depth: number;
     pulseDensity: number;
@@ -485,6 +678,7 @@ function applyComboEffects(
     particleDensity: number;
     geometryWeights: ElementVisualProfile["geometryWeights"];
     signature: string;
+    sceneFamily: VisualParameters["sceneFamily"];
     activeBonuses: string[];
   },
   effects: Record<string, number | string>
@@ -545,6 +739,69 @@ function dominantAnimationState(visual: {
   return "flowing";
 }
 
+function inferSceneFamily(
+  signature: string,
+  activeBonuses: string[],
+  geometry: VisualParameters["geometry"],
+  temperature: number,
+  contrast: number,
+  valence: number,
+  luminosity: number,
+  grit: number
+): VisualParameters["sceneFamily"] {
+  const text = [signature, ...activeBonuses].join(" ");
+
+  if (containsAny(text, ["Velvet", "Silk", "Tide"])) {
+    return "velvet-chamber";
+  }
+
+  if (containsAny(text, ["Metal", "Shrapnel", "Fracture", "Voltage"])) {
+    return text.includes("Occult") ? "shadow-sanctum" : "metal-foundry";
+  }
+
+  if (containsAny(text, ["Jazz", "Aurora", "Cadence", "Lattice", "Skyline"])) {
+    return "jazz-cathedral";
+  }
+
+  if (containsAny(text, ["Prism", "Chrome", "Fusion", "Flare", "Meridian"])) {
+    return "prism-array";
+  }
+
+  if (containsAny(text, ["Neon", "Roadhouse"])) {
+    return "neon-grid";
+  }
+
+  if (containsAny(text, ["Celestial", "Sunwake", "Daybreak", "Anthem"])) {
+    return "solar-garden";
+  }
+
+  if (containsAny(text, ["Midnight", "Blue Hour", "Current", "Run"])) {
+    return "nocturne-tide";
+  }
+
+  if (geometry === "fracture" && contrast > 0.72) {
+    return "metal-foundry";
+  }
+
+  if (geometry === "lattice") {
+    return temperature < 0.45 ? "jazz-cathedral" : "neon-grid";
+  }
+
+  if (geometry === "wave") {
+    return "nocturne-tide";
+  }
+
+  if (grit > 0.68 && valence < 0.28) {
+    return "shadow-sanctum";
+  }
+
+  if (luminosity > 0.72 && valence > 0.7) {
+    return "solar-garden";
+  }
+
+  return temperature >= 0.62 ? "solar-garden" : "velvet-chamber";
+}
+
 function moodTemperature(elementName: string): number {
   const name = elementName.toLowerCase();
 
@@ -569,14 +826,18 @@ function resolveDepth(visual: {
   complexity: number;
   rippleStrength: number;
   beamStrength: number;
+  luminosity: number;
+  valence: number;
 }): number {
   return clamp01(
-    0.16 +
-      visual.glow * 0.2 +
+    0.12 +
+      visual.glow * 0.18 +
       visual.contrast * 0.08 +
-      visual.complexity * 0.28 +
-      visual.rippleStrength * 0.18 +
-      visual.beamStrength * 0.16
+      visual.complexity * 0.22 +
+      visual.rippleStrength * 0.16 +
+      visual.beamStrength * 0.14 +
+      visual.luminosity * 0.12 +
+      visual.valence * 0.08
   );
 }
 
@@ -585,9 +846,17 @@ function resolvePulseDensity(visual: {
   motionSpeed: number;
   rippleStrength: number;
   contrast: number;
+  arousal: number;
+  grit: number;
 }): number {
   return clamp01(
-    0.14 + visual.energy * 0.34 + visual.motionSpeed * 0.16 + visual.rippleStrength * 0.14 + visual.contrast * 0.24
+    0.1 +
+      visual.energy * 0.28 +
+      visual.motionSpeed * 0.14 +
+      visual.rippleStrength * 0.1 +
+      visual.contrast * 0.2 +
+      visual.arousal * 0.16 +
+      visual.grit * 0.12
   );
 }
 
@@ -628,4 +897,8 @@ function clamp01(value: number): number {
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function containsAny(source: string, needles: string[]): boolean {
+  return needles.some((needle) => source.includes(needle));
 }

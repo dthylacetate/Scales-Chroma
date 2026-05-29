@@ -93,6 +93,7 @@ def test_renderer_composes_visual_parameters_from_engine_components() -> None:
     assert visual.particles["trail"] is True
     assert visual.geometry == "fracture"
     assert visual.animation_state == "tense"
+    assert visual.scene_family == "metal-foundry"
 
 
 def test_renderer_uses_combo_rules_to_amplify_stage_signature() -> None:
@@ -111,6 +112,7 @@ def test_renderer_uses_combo_rules_to_amplify_stage_signature() -> None:
     assert visual.symmetry > 0.65
     assert visual.depth > 0.6
     assert visual.geometry == "soft-orb"
+    assert visual.scene_family == "solar-garden"
 
 
 def test_renderer_supports_expanded_combo_library_for_modern_tension_blends() -> None:
@@ -127,6 +129,7 @@ def test_renderer_supports_expanded_combo_library_for_modern_tension_blends() ->
     assert visual.energy > 0.8
     assert visual.complexity > 0.7
     assert visual.pulse_density > 0.7
+    assert visual.scene_family == "prism-array"
 
 
 def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
@@ -143,6 +146,7 @@ def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
     assert visual.secondary_color == "#ff7b3d"
     assert visual.pulse_density > 0.8
     assert visual.symmetry < 0.45
+    assert visual.scene_family == "metal-foundry"
 
 
 def test_renderer_applies_neo_soul_style_unlocks_to_visual_parameters() -> None:
@@ -158,6 +162,7 @@ def test_renderer_applies_neo_soul_style_unlocks_to_visual_parameters() -> None:
     assert visual.motion_speed > 0.45
     assert visual.depth > 0.75
     assert visual.symmetry > 0.55
+    assert visual.scene_family == "velvet-chamber"
 
 
 def test_renderer_applies_fusion_style_aura_to_visual_parameters() -> None:
@@ -171,3 +176,4 @@ def test_renderer_applies_fusion_style_aura_to_visual_parameters() -> None:
     assert visual.ripple_strength > 0.9
     assert visual.beam_strength > 0.35
     assert visual.depth > 0.7
+    assert visual.scene_family == "prism-array"

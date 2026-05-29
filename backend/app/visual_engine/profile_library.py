@@ -18,6 +18,14 @@ class ElementVisualProfile:
     particle_density: float
 
 
+@dataclass(frozen=True)
+class MoodAxes:
+    valence: float
+    arousal: float
+    luminosity: float
+    grit: float
+
+
 PROFILE_LIBRARY: dict[str, ElementVisualProfile] = {
     "major": ElementVisualProfile(
         colors=ColorProfile("#f7d56b", "#ffd8a8", "#130f10", "warm"),
@@ -255,3 +263,25 @@ DEFAULT_PROFILE = ElementVisualProfile(
     grain=0.18,
     particle_density=0.42,
 )
+
+MOOD_LIBRARY: dict[str, MoodAxes] = {
+    "major": MoodAxes(valence=0.78, arousal=0.52, luminosity=0.8, grit=0.16),
+    "minor": MoodAxes(valence=0.36, arousal=0.34, luminosity=0.38, grit=0.28),
+    "pentatonic": MoodAxes(valence=0.64, arousal=0.72, luminosity=0.62, grit=0.24),
+    "harmonic minor": MoodAxes(valence=0.18, arousal=0.74, luminosity=0.28, grit=0.78),
+    "melodic minor": MoodAxes(valence=0.58, arousal=0.68, luminosity=0.56, grit=0.42),
+    "ionian": MoodAxes(valence=0.82, arousal=0.48, luminosity=0.82, grit=0.14),
+    "dorian": MoodAxes(valence=0.52, arousal=0.56, luminosity=0.48, grit=0.22),
+    "phrygian": MoodAxes(valence=0.14, arousal=0.66, luminosity=0.22, grit=0.72),
+    "lydian": MoodAxes(valence=0.86, arousal=0.62, luminosity=0.88, grit=0.12),
+    "mixolydian": MoodAxes(valence=0.68, arousal=0.72, luminosity=0.68, grit=0.28),
+    "maj7": MoodAxes(valence=0.8, arousal=0.44, luminosity=0.78, grit=0.1),
+    "min7": MoodAxes(valence=0.48, arousal=0.34, luminosity=0.46, grit=0.18),
+    "dominant7": MoodAxes(valence=0.42, arousal=0.78, luminosity=0.56, grit=0.58),
+    "dim7": MoodAxes(valence=0.08, arousal=0.88, luminosity=0.34, grit=0.86),
+    "aug": MoodAxes(valence=0.32, arousal=0.92, luminosity=0.62, grit=0.74),
+    "ii-v-i": MoodAxes(valence=0.58, arousal=0.54, luminosity=0.6, grit=0.26),
+    "i-v-vi-iv": MoodAxes(valence=0.76, arousal=0.64, luminosity=0.74, grit=0.18),
+}
+
+DEFAULT_MOOD = MoodAxes(valence=0.56, arousal=0.58, luminosity=0.56, grit=0.28)

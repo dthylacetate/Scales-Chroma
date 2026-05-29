@@ -7,7 +7,7 @@ from app.visual_engine.animation_controller import select_animation_state
 from app.visual_engine.color_mapper import map_color
 from app.visual_engine.geometry_generator import generate_geometry
 from app.visual_engine.particle_system import configure_particles
-from app.visual_engine.profile_library import DEFAULT_PROFILE, PROFILE_LIBRARY
+from app.visual_engine.profile_library import DEFAULT_MOOD, DEFAULT_PROFILE, MOOD_LIBRARY, PROFILE_LIBRARY
 from app.visual_engine.tension_analyzer import analyze_tension
 
 
@@ -21,6 +21,10 @@ class AggregateVisualState:
     energy: float
     complexity: float
     temperature: float
+    valence: float
+    arousal: float
+    luminosity: float
+    grit: float
     symmetry: float
     depth: float
     pulse_density: float
@@ -36,32 +40,39 @@ class AggregateVisualState:
     tension_intensity: float
     tension_level: int
     signature: str
+    scene_family: str
     active_bonuses: list[str]
 
 
 COMBO_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
-    ({"lydian", "maj7"}, "Celestial Bloom", {"glow": 0.12, "orb": 0.18, "beam_strength": 0.16, "ripple_strength": 0.12, "depth": 0.16, "symmetry": 0.12, "signature": "Celestial Bloom", "secondary_color": "#8fdcff"}),
-    ({"lydian", "major"}, "Sunwake Atlas", {"glow": 0.1, "orb": 0.14, "beam_strength": 0.14, "energy": 0.08, "temperature": 0.12, "symmetry": 0.1, "signature": "Sunwake Atlas", "secondary_color": "#bfe6ff"}),
-    ({"dorian", "min7"}, "Midnight Current", {"wave": 0.22, "ripple_strength": 0.2, "complexity": 0.12, "depth": 0.1, "pulse_density": 0.08, "signature": "Midnight Current", "secondary_color": "#9af0dd"}),
-    ({"dorian", "ii-v-i"}, "Blue Hour Run", {"wave": 0.18, "lattice": 0.14, "ripple_strength": 0.18, "beam_strength": 0.1, "depth": 0.1, "pulse_density": 0.12, "signature": "Blue Hour Run", "secondary_color": "#7fe0c8"}),
-    ({"phrygian", "dominant7"}, "Desert Voltage", {"fracture": 0.22, "contrast": 0.14, "beam_strength": 0.18, "energy": 0.1, "pulse_density": 0.14, "temperature": 0.12, "signature": "Desert Voltage", "secondary_color": "#ff9b35"}),
-    ({"harmonic minor", "dim7"}, "Occult Fracture", {"fracture": 0.24, "grain": 0.18, "complexity": 0.14, "glow": 0.1, "depth": 0.18, "pulse_density": 0.12, "symmetry": -0.12, "signature": "Occult Fracture", "background_color": "#05060d"}),
-    ({"melodic minor", "dominant7"}, "Chrome Meridian", {"wave": 0.16, "fracture": 0.12, "complexity": 0.16, "energy": 0.12, "depth": 0.14, "pulse_density": 0.1, "symmetry": 0.08, "signature": "Chrome Meridian", "secondary_color": "#73f0d5"}),
-    ({"ii-v-i", "maj7"}, "Cadence Aurora", {"lattice": 0.2, "ripple_strength": 0.16, "beam_strength": 0.18, "depth": 0.12, "symmetry": 0.14, "signature": "Cadence Aurora", "secondary_color": "#c2b8ff"}),
-    ({"i-v-vi-iv", "major"}, "Anthem Lift", {"orb": 0.22, "glow": 0.1, "energy": 0.12, "beam_strength": 0.12, "temperature": 0.1, "pulse_density": 0.12, "signature": "Anthem Lift"}),
-    ({"ionian", "i-v-vi-iv"}, "Daybreak Parade", {"orb": 0.18, "glow": 0.12, "beam_strength": 0.14, "ripple_strength": 0.08, "temperature": 0.14, "symmetry": 0.12, "signature": "Daybreak Parade", "secondary_color": "#ffe5a8"}),
-    ({"pentatonic", "mixolydian"}, "Roadhouse Neon", {"lattice": 0.18, "beam_strength": 0.2, "contrast": 0.12, "energy": 0.12, "pulse_density": 0.14, "temperature": 0.08, "signature": "Roadhouse Neon"}),
-    ({"minor", "pentatonic"}, "Midnight Run", {"wave": 0.16, "contrast": 0.12, "ripple_strength": 0.18, "depth": 0.12, "pulse_density": 0.12, "signature": "Midnight Run", "background_color": "#08111e"}),
-    ({"mixolydian", "dominant7"}, "Brass Overdrive", {"lattice": 0.16, "fracture": 0.12, "beam_strength": 0.18, "energy": 0.14, "pulse_density": 0.14, "temperature": 0.14, "signature": "Brass Overdrive", "secondary_color": "#ffc145"}),
-    ({"aug", "lydian"}, "Prism Flare", {"fracture": 0.16, "orb": 0.14, "glow": 0.12, "beam_strength": 0.18, "symmetry": 0.08, "depth": 0.1, "signature": "Prism Flare", "secondary_color": "#ff9be8"}),
+    ({"lydian", "maj7"}, "Celestial Bloom", {"glow": 0.12, "orb": 0.18, "beam_strength": 0.16, "ripple_strength": 0.12, "depth": 0.16, "symmetry": 0.12, "valence": 0.12, "luminosity": 0.18, "arousal": 0.04, "grit": -0.08, "signature": "Celestial Bloom", "secondary_color": "#8fdcff"}),
+    ({"lydian", "major"}, "Sunwake Atlas", {"glow": 0.1, "orb": 0.14, "beam_strength": 0.14, "energy": 0.08, "temperature": 0.12, "symmetry": 0.1, "valence": 0.1, "luminosity": 0.16, "arousal": 0.04, "grit": -0.06, "signature": "Sunwake Atlas", "secondary_color": "#bfe6ff"}),
+    ({"dorian", "min7"}, "Midnight Current", {"wave": 0.22, "ripple_strength": 0.2, "complexity": 0.12, "depth": 0.1, "pulse_density": 0.08, "valence": 0.04, "luminosity": 0.02, "arousal": 0.06, "grit": 0.04, "signature": "Midnight Current", "secondary_color": "#9af0dd"}),
+    ({"dorian", "ii-v-i"}, "Blue Hour Run", {"wave": 0.18, "lattice": 0.14, "ripple_strength": 0.18, "beam_strength": 0.1, "depth": 0.1, "pulse_density": 0.12, "valence": 0.04, "luminosity": 0.06, "arousal": 0.08, "grit": 0.02, "signature": "Blue Hour Run", "secondary_color": "#7fe0c8"}),
+    ({"phrygian", "dominant7"}, "Desert Voltage", {"fracture": 0.22, "contrast": 0.14, "beam_strength": 0.18, "energy": 0.1, "pulse_density": 0.14, "temperature": 0.12, "valence": -0.04, "luminosity": 0.02, "arousal": 0.14, "grit": 0.12, "signature": "Desert Voltage", "secondary_color": "#ff9b35"}),
+    ({"harmonic minor", "dim7"}, "Occult Fracture", {"fracture": 0.24, "grain": 0.18, "complexity": 0.14, "glow": 0.1, "depth": 0.18, "pulse_density": 0.12, "symmetry": -0.12, "valence": -0.1, "luminosity": -0.08, "arousal": 0.12, "grit": 0.18, "signature": "Occult Fracture", "background_color": "#05060d"}),
+    ({"melodic minor", "dominant7"}, "Chrome Meridian", {"wave": 0.16, "fracture": 0.12, "complexity": 0.16, "energy": 0.12, "depth": 0.14, "pulse_density": 0.1, "symmetry": 0.08, "valence": 0.04, "luminosity": 0.08, "arousal": 0.14, "grit": 0.08, "signature": "Chrome Meridian", "secondary_color": "#73f0d5"}),
+    ({"ii-v-i", "maj7"}, "Cadence Aurora", {"lattice": 0.2, "ripple_strength": 0.16, "beam_strength": 0.18, "depth": 0.12, "symmetry": 0.14, "valence": 0.1, "luminosity": 0.14, "arousal": 0.06, "grit": -0.04, "signature": "Cadence Aurora", "secondary_color": "#c2b8ff"}),
+    ({"i-v-vi-iv", "major"}, "Anthem Lift", {"orb": 0.22, "glow": 0.1, "energy": 0.12, "beam_strength": 0.12, "temperature": 0.1, "pulse_density": 0.12, "valence": 0.12, "luminosity": 0.14, "arousal": 0.1, "grit": -0.04, "signature": "Anthem Lift"}),
+    ({"ionian", "i-v-vi-iv"}, "Daybreak Parade", {"orb": 0.18, "glow": 0.12, "beam_strength": 0.14, "ripple_strength": 0.08, "temperature": 0.14, "symmetry": 0.12, "valence": 0.16, "luminosity": 0.18, "arousal": 0.06, "grit": -0.08, "signature": "Daybreak Parade", "secondary_color": "#ffe5a8"}),
+    ({"pentatonic", "mixolydian"}, "Roadhouse Neon", {"lattice": 0.18, "beam_strength": 0.2, "contrast": 0.12, "energy": 0.12, "pulse_density": 0.14, "temperature": 0.08, "valence": 0.06, "luminosity": 0.08, "arousal": 0.14, "grit": 0.06, "signature": "Roadhouse Neon"}),
+    ({"minor", "pentatonic"}, "Midnight Run", {"wave": 0.16, "contrast": 0.12, "ripple_strength": 0.18, "depth": 0.12, "pulse_density": 0.12, "valence": -0.04, "luminosity": -0.04, "arousal": 0.08, "grit": 0.08, "signature": "Midnight Run", "background_color": "#08111e"}),
+    ({"mixolydian", "dominant7"}, "Brass Overdrive", {"lattice": 0.16, "fracture": 0.12, "beam_strength": 0.18, "energy": 0.14, "pulse_density": 0.14, "temperature": 0.14, "valence": 0.04, "luminosity": 0.04, "arousal": 0.16, "grit": 0.1, "signature": "Brass Overdrive", "secondary_color": "#ffc145"}),
+    ({"aug", "lydian"}, "Prism Flare", {"fracture": 0.16, "orb": 0.14, "glow": 0.12, "beam_strength": 0.18, "symmetry": 0.08, "depth": 0.1, "valence": 0.08, "luminosity": 0.12, "arousal": 0.16, "grit": 0.08, "signature": "Prism Flare", "secondary_color": "#ff9be8"}),
+    ({"lydian", "ii-v-i"}, "Skyline Halo", {"lattice": 0.18, "beam_strength": 0.16, "depth": 0.14, "symmetry": 0.12, "glow": 0.08, "valence": 0.12, "luminosity": 0.16, "arousal": 0.08, "grit": -0.06, "signature": "Skyline Halo", "secondary_color": "#a9d9ff"}),
+    ({"phrygian", "dim7"}, "Ashen Rite", {"fracture": 0.22, "grain": 0.2, "contrast": 0.16, "depth": 0.12, "valence": -0.12, "luminosity": -0.08, "arousal": 0.14, "grit": 0.2, "signature": "Ashen Rite", "background_color": "#05040a"}),
+    ({"dorian", "maj7"}, "Glass Current", {"wave": 0.18, "orb": 0.1, "glow": 0.12, "ripple_strength": 0.14, "valence": 0.08, "luminosity": 0.12, "arousal": 0.06, "grit": -0.02, "signature": "Glass Current", "secondary_color": "#b3f7ea"}),
+    ({"pentatonic", "maj7"}, "Neon Lantern", {"lattice": 0.18, "orb": 0.12, "glow": 0.12, "beam_strength": 0.12, "valence": 0.12, "luminosity": 0.14, "arousal": 0.08, "grit": 0.02, "signature": "Neon Lantern", "secondary_color": "#9cf7ff"}),
+    ({"melodic minor", "maj7"}, "Liquid Aurora", {"wave": 0.18, "orb": 0.12, "glow": 0.12, "complexity": 0.14, "valence": 0.08, "luminosity": 0.12, "arousal": 0.1, "grit": 0.02, "signature": "Liquid Aurora", "secondary_color": "#79d8ff"}),
+    ({"mixolydian", "ii-v-i"}, "Copper Skyline", {"lattice": 0.18, "beam_strength": 0.18, "energy": 0.12, "contrast": 0.1, "valence": 0.04, "luminosity": 0.06, "arousal": 0.14, "grit": 0.08, "signature": "Copper Skyline", "secondary_color": "#ffbd72"}),
 )
 
 STYLE_AURA_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
-    ({"particle_trail", "neon_glow", "dynamic_ripple"}, "Neon Trail", {"lattice": 0.22, "beam_strength": 0.18, "ripple_strength": 0.18, "contrast": 0.1, "pulse_density": 0.18, "symmetry": 0.08, "background_color": "#061420", "secondary_color": "#59fff5"}),
-    ({"harmonic_lattice", "cadence_bloom"}, "Jazz Skyline", {"lattice": 0.26, "wave": 0.12, "beam_strength": 0.16, "ripple_strength": 0.14, "complexity": 0.12, "depth": 0.18, "symmetry": 0.18, "background_color": "#07121a", "secondary_color": "#b8c8ff"}),
-    ({"fracture_burst", "ember_strobe"}, "Metal Shrapnel", {"fracture": 0.24, "beam_strength": 0.2, "grain": 0.18, "energy": 0.1, "pulse_density": 0.22, "symmetry": -0.18, "background_color": "#120407", "secondary_color": "#ff7b3d"}),
-    ({"velvet_glow", "silk_motion"}, "Velvet Tide", {"orb": 0.18, "wave": 0.16, "glow": 0.14, "ripple_strength": 0.12, "depth": 0.18, "symmetry": 0.14, "pulse_density": -0.06, "background_color": "#170b13", "secondary_color": "#ff9fc9"}),
-    ({"prismatic_motion", "phase_rings"}, "Fusion Prism", {"wave": 0.18, "lattice": 0.2, "complexity": 0.16, "ripple_strength": 0.18, "beam_strength": 0.12, "depth": 0.16, "pulse_density": 0.16, "symmetry": 0.12, "background_color": "#08131e", "secondary_color": "#8db8ff"}),
+    ({"particle_trail", "neon_glow", "dynamic_ripple"}, "Neon Trail", {"lattice": 0.22, "beam_strength": 0.18, "ripple_strength": 0.18, "contrast": 0.1, "pulse_density": 0.18, "symmetry": 0.08, "valence": 0.04, "luminosity": 0.1, "arousal": 0.14, "grit": 0.04, "background_color": "#061420", "secondary_color": "#59fff5"}),
+    ({"harmonic_lattice", "cadence_bloom"}, "Jazz Skyline", {"lattice": 0.26, "wave": 0.12, "beam_strength": 0.16, "ripple_strength": 0.14, "complexity": 0.12, "depth": 0.18, "symmetry": 0.18, "valence": 0.1, "luminosity": 0.14, "arousal": 0.08, "grit": -0.06, "background_color": "#07121a", "secondary_color": "#b8c8ff"}),
+    ({"fracture_burst", "ember_strobe"}, "Metal Shrapnel", {"fracture": 0.24, "beam_strength": 0.2, "grain": 0.18, "energy": 0.1, "pulse_density": 0.22, "symmetry": -0.18, "valence": -0.08, "luminosity": -0.02, "arousal": 0.18, "grit": 0.2, "background_color": "#120407", "secondary_color": "#ff7b3d"}),
+    ({"velvet_glow", "silk_motion"}, "Velvet Tide", {"orb": 0.18, "wave": 0.16, "glow": 0.14, "ripple_strength": 0.12, "depth": 0.18, "symmetry": 0.14, "pulse_density": -0.06, "valence": 0.12, "luminosity": 0.08, "arousal": -0.02, "grit": -0.12, "background_color": "#170b13", "secondary_color": "#ff9fc9"}),
+    ({"prismatic_motion", "phase_rings"}, "Fusion Prism", {"wave": 0.18, "lattice": 0.2, "complexity": 0.16, "ripple_strength": 0.18, "beam_strength": 0.12, "depth": 0.16, "pulse_density": 0.16, "symmetry": 0.12, "valence": 0.08, "luminosity": 0.14, "arousal": 0.14, "grit": 0.02, "background_color": "#08131e", "secondary_color": "#8db8ff"}),
 )
 
 
@@ -92,6 +103,10 @@ def render_visual_parameters(
         energy=round(aggregate_state.energy, 2),
         complexity=round(aggregate_state.complexity, 2),
         temperature=round(aggregate_state.temperature, 2),
+        valence=round(aggregate_state.valence, 2),
+        arousal=round(aggregate_state.arousal, 2),
+        luminosity=round(aggregate_state.luminosity, 2),
+        grit=round(aggregate_state.grit, 2),
         symmetry=round(aggregate_state.symmetry, 2),
         depth=round(aggregate_state.depth, 2),
         pulse_density=round(aggregate_state.pulse_density, 2),
@@ -101,6 +116,7 @@ def render_visual_parameters(
         beam_strength=round(aggregate_state.beam_strength, 2),
         grain=round(aggregate_state.grain, 2),
         signature=aggregate_state.signature,
+        scene_family=aggregate_state.scene_family,
         active_bonuses=aggregate_state.active_bonuses,
         geometry=geometry_shape,
         animation_state=animation_state,
@@ -126,6 +142,10 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             energy=base_profile.animation.energy,
             complexity=base_profile.complexity,
             temperature=_temperature_from_mood(base_profile.colors.temperature),
+            valence=DEFAULT_MOOD.valence,
+            arousal=DEFAULT_MOOD.arousal,
+            luminosity=DEFAULT_MOOD.luminosity,
+            grit=DEFAULT_MOOD.grit,
             symmetry=_resolve_symmetry(
                 orb=base_profile.geometry.orb,
                 wave=base_profile.geometry.wave,
@@ -138,12 +158,16 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
                 complexity=base_profile.complexity,
                 ripple_strength=base_profile.ripple_strength,
                 beam_strength=base_profile.beam_strength,
+                luminosity=DEFAULT_MOOD.luminosity,
+                valence=DEFAULT_MOOD.valence,
             ),
             pulse_density=_resolve_pulse_density(
                 energy=base_profile.animation.energy,
                 motion_speed=base_profile.animation.motion_speed,
                 ripple_strength=base_profile.ripple_strength,
                 tension_intensity=base_profile.tension.intensity,
+                arousal=DEFAULT_MOOD.arousal,
+                grit=DEFAULT_MOOD.grit,
             ),
             motion_speed=base_profile.animation.motion_speed,
             ripple_strength=base_profile.ripple_strength,
@@ -157,6 +181,7 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             tension_intensity=base_profile.tension.intensity,
             tension_level=base_profile.tension.level,
             signature="Default Pulse",
+            scene_family="neon-grid",
             active_bonuses=[],
         )
 
@@ -215,6 +240,18 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
     temperature = sum(
         _temperature_from_mood(map_color(element).temperature) * weight for weight, element in weighted_profiles
     ) / total_weight
+    valence = sum(
+        MOOD_LIBRARY.get(element.name.lower(), DEFAULT_MOOD).valence * weight for weight, element in weighted_profiles
+    ) / total_weight
+    arousal = sum(
+        MOOD_LIBRARY.get(element.name.lower(), DEFAULT_MOOD).arousal * weight for weight, element in weighted_profiles
+    ) / total_weight
+    luminosity = sum(
+        MOOD_LIBRARY.get(element.name.lower(), DEFAULT_MOOD).luminosity * weight for weight, element in weighted_profiles
+    ) / total_weight
+    grit = sum(
+        MOOD_LIBRARY.get(element.name.lower(), DEFAULT_MOOD).grit * weight for weight, element in weighted_profiles
+    ) / total_weight
     tension_intensity = sum(profile.intensity * weight for profile, (weight, _) in zip(tension_snapshots, weighted_profiles)) / total_weight
     tension_level = max(snapshot.level for snapshot in tension_snapshots)
 
@@ -226,12 +263,16 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         complexity=complexity,
         ripple_strength=ripple_strength,
         beam_strength=beam_strength,
+        luminosity=luminosity,
+        valence=valence,
     )
     pulse_density = _resolve_pulse_density(
         energy=energy,
         motion_speed=motion_speed,
         ripple_strength=ripple_strength,
         tension_intensity=tension_intensity,
+        arousal=arousal,
+        grit=grit,
     )
 
     return AggregateVisualState(
@@ -243,6 +284,10 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         energy=min(1.0, energy + stack_bonus * 0.4),
         complexity=min(1.0, complexity + stack_bonus * 0.6),
         temperature=min(1.0, temperature + stack_bonus * 0.18),
+        valence=min(1.0, valence + stack_bonus * 0.08),
+        arousal=min(1.0, arousal + stack_bonus * 0.16),
+        luminosity=min(1.0, luminosity + stack_bonus * 0.1),
+        grit=min(1.0, grit + stack_bonus * 0.12),
         symmetry=min(1.0, symmetry + stack_bonus * 0.12),
         depth=min(1.0, depth + stack_bonus * 0.2),
         pulse_density=min(1.0, pulse_density + stack_bonus * 0.22),
@@ -258,6 +303,16 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         tension_intensity=tension_intensity,
         tension_level=tension_level,
         signature="Composite Pulse" if len(elements) > 1 else elements[0].name,
+        scene_family=_resolve_scene_family(
+            signature="Composite Pulse" if len(elements) > 1 else elements[0].name,
+            active_bonuses=[],
+            geometry_shape=_resolve_geometry_shape_from_weights(orb=orb, wave=wave, fracture=fracture, lattice=lattice),
+            temperature=min(1.0, temperature + stack_bonus * 0.18),
+            contrast=min(1.0, contrast + stack_bonus * 0.35),
+            valence=min(1.0, valence + stack_bonus * 0.08),
+            luminosity=min(1.0, luminosity + stack_bonus * 0.1),
+            grit=min(1.0, grit + stack_bonus * 0.12),
+        ),
         active_bonuses=[],
     )
 
@@ -281,16 +336,29 @@ def _apply_combo_bonuses(elements: list[TheoryElement], state: AggregateVisualSt
             state.active_bonuses.append(label)
             _apply_state_bonus(state, bonus)
 
+    state.scene_family = _resolve_scene_family(
+        signature=state.signature,
+        active_bonuses=state.active_bonuses,
+        geometry_shape=_resolve_geometry_shape(state),
+        temperature=state.temperature,
+        contrast=state.contrast,
+        valence=state.valence,
+        luminosity=state.luminosity,
+        grit=state.grit,
+    )
+
 
 def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str]) -> None:
     if "particle_trail" in unlocked_effects:
         state.particle_density = min(0.99, state.particle_density + 0.14)
         state.complexity = min(1.0, state.complexity + 0.08)
+        state.arousal = min(1.0, state.arousal + 0.08)
 
     if "neon_glow" in unlocked_effects:
         state.glow = min(1.0, state.glow + 0.18)
         state.contrast = min(1.0, state.contrast + 0.12)
         state.secondary_color = "#6efff2"
+        state.luminosity = min(1.0, state.luminosity + 0.12)
 
     if "dynamic_ripple" in unlocked_effects:
         state.ripple_strength = min(1.0, state.ripple_strength + 0.28)
@@ -298,6 +366,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.energy = min(1.0, state.energy + 0.08)
         state.pulse_density = min(1.0, state.pulse_density + 0.16)
         state.depth = min(1.0, state.depth + 0.08)
+        state.arousal = min(1.0, state.arousal + 0.12)
 
     if "harmonic_lattice" in unlocked_effects:
         state.lattice = max(0.92, min(1.0, state.lattice + 0.34))
@@ -307,6 +376,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.glow = min(1.0, state.glow + 0.06)
         state.symmetry = min(1.0, state.symmetry + 0.18)
         state.depth = min(1.0, state.depth + 0.1)
+        state.luminosity = min(1.0, state.luminosity + 0.12)
         state.signature = "Harmonic Lattice"
 
     if "cadence_bloom" in unlocked_effects:
@@ -315,6 +385,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.secondary_color = "#d5c2ff"
         state.depth = min(1.0, state.depth + 0.12)
         state.symmetry = min(1.0, state.symmetry + 0.08)
+        state.valence = min(1.0, state.valence + 0.08)
 
     if "fracture_burst" in unlocked_effects:
         state.fracture = max(0.94, min(1.0, state.fracture + 0.34))
@@ -327,12 +398,15 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.grain = min(1.0, state.grain + 0.12)
         state.pulse_density = min(1.0, state.pulse_density + 0.2)
         state.symmetry = max(0.0, state.symmetry - 0.18)
+        state.grit = min(1.0, state.grit + 0.18)
+        state.arousal = min(1.0, state.arousal + 0.16)
         state.signature = "Fracture Burst"
 
     if "ember_strobe" in unlocked_effects:
         state.secondary_color = "#ff7b3d"
         state.grain = min(1.0, state.grain + 0.18)
         state.beam_strength = min(1.0, state.beam_strength + 0.16)
+        state.luminosity = min(1.0, state.luminosity + 0.04)
 
     if "velvet_glow" in unlocked_effects:
         state.glow = min(1.0, state.glow + 0.2)
@@ -341,6 +415,8 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.secondary_color = "#ff9fc9"
         state.depth = min(1.0, state.depth + 0.16)
         state.symmetry = min(1.0, state.symmetry + 0.14)
+        state.valence = min(1.0, state.valence + 0.12)
+        state.grit = max(0.0, state.grit - 0.08)
         state.signature = "Velvet Glow"
 
     if "silk_motion" in unlocked_effects:
@@ -349,6 +425,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.beam_strength = min(1.0, state.beam_strength + 0.12)
         state.wave = max(0.74, state.wave)
         state.pulse_density = max(0.0, state.pulse_density - 0.04)
+        state.arousal = max(0.0, state.arousal - 0.04)
 
     if "prismatic_motion" in unlocked_effects:
         state.secondary_color = "#8db8ff"
@@ -358,6 +435,8 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.wave = max(0.68, state.wave)
         state.depth = min(1.0, state.depth + 0.12)
         state.symmetry = min(1.0, state.symmetry + 0.1)
+        state.luminosity = min(1.0, state.luminosity + 0.12)
+        state.arousal = min(1.0, state.arousal + 0.1)
         state.signature = "Prismatic Motion"
 
     if "phase_rings" in unlocked_effects:
@@ -365,6 +444,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.beam_strength = min(1.0, state.beam_strength + 0.14)
         state.glow = min(1.0, state.glow + 0.08)
         state.pulse_density = min(1.0, state.pulse_density + 0.16)
+        state.grit = max(0.0, state.grit - 0.02)
 
     _apply_style_auras(state, unlocked_effects)
 
@@ -379,13 +459,33 @@ def _apply_style_auras(state: AggregateVisualState, unlocked_effects: set[str]) 
             if not has_signature_bonus:
                 state.signature = label
 
+    state.scene_family = _resolve_scene_family(
+        signature=state.signature,
+        active_bonuses=state.active_bonuses,
+        geometry_shape=_resolve_geometry_shape(state),
+        temperature=state.temperature,
+        contrast=state.contrast,
+        valence=state.valence,
+        luminosity=state.luminosity,
+        grit=state.grit,
+    )
+
 
 def _resolve_geometry_shape(state: AggregateVisualState) -> str:
+    return _resolve_geometry_shape_from_weights(
+        orb=state.orb,
+        wave=state.wave,
+        fracture=state.fracture,
+        lattice=state.lattice,
+    )
+
+
+def _resolve_geometry_shape_from_weights(*, orb: float, wave: float, fracture: float, lattice: float) -> str:
     weights = {
-        "soft-orb": state.orb,
-        "wave": state.wave,
-        "fracture": state.fracture,
-        "lattice": state.lattice,
+        "soft-orb": orb,
+        "wave": wave,
+        "fracture": fracture,
+        "lattice": lattice,
     }
     return max(weights.items(), key=lambda item: item[1])[0]
 
@@ -440,10 +540,22 @@ def _resolve_depth(
     complexity: float,
     ripple_strength: float,
     beam_strength: float,
+    luminosity: float = 0.5,
+    valence: float = 0.5,
 ) -> float:
     return max(
         0.0,
-        min(1.0, 0.16 + glow * 0.2 + contrast * 0.08 + complexity * 0.28 + ripple_strength * 0.18 + beam_strength * 0.16),
+        min(
+            1.0,
+            0.12
+            + glow * 0.18
+            + contrast * 0.08
+            + complexity * 0.22
+            + ripple_strength * 0.16
+            + beam_strength * 0.14
+            + luminosity * 0.12
+            + valence * 0.08,
+        ),
     )
 
 
@@ -453,11 +565,78 @@ def _resolve_pulse_density(
     motion_speed: float,
     ripple_strength: float,
     tension_intensity: float,
+    arousal: float = 0.5,
+    grit: float = 0.3,
 ) -> float:
     return max(
         0.0,
-        min(1.0, 0.14 + energy * 0.34 + motion_speed * 0.16 + ripple_strength * 0.14 + tension_intensity * 0.24),
+        min(
+            1.0,
+            0.1
+            + energy * 0.28
+            + motion_speed * 0.14
+            + ripple_strength * 0.1
+            + tension_intensity * 0.2
+            + arousal * 0.16
+            + grit * 0.12,
+        ),
     )
+
+
+def _resolve_scene_family(
+    *,
+    signature: str,
+    active_bonuses: list[str],
+    geometry_shape: str,
+    temperature: float,
+    contrast: float,
+    valence: float,
+    luminosity: float,
+    grit: float,
+) -> str:
+    text = " ".join([signature, *active_bonuses])
+
+    if _contains_any(text, ["Velvet", "Silk", "Tide"]):
+        return "velvet-chamber"
+
+    if _contains_any(text, ["Metal", "Shrapnel", "Fracture", "Voltage"]):
+        return "metal-foundry" if "Occult" not in text else "shadow-sanctum"
+
+    if _contains_any(text, ["Jazz", "Aurora", "Cadence", "Lattice", "Skyline"]):
+        return "jazz-cathedral"
+
+    if _contains_any(text, ["Prism", "Chrome", "Fusion", "Flare", "Meridian"]):
+        return "prism-array"
+
+    if _contains_any(text, ["Neon", "Roadhouse"]):
+        return "neon-grid"
+
+    if _contains_any(text, ["Celestial", "Sunwake", "Daybreak", "Anthem"]):
+        return "solar-garden"
+
+    if _contains_any(text, ["Midnight", "Blue Hour", "Current", "Run"]):
+        return "nocturne-tide"
+
+    if geometry_shape == "fracture" and contrast > 0.72:
+        return "metal-foundry"
+
+    if geometry_shape == "lattice":
+        return "jazz-cathedral" if temperature < 0.45 else "neon-grid"
+
+    if geometry_shape == "wave":
+        return "nocturne-tide"
+
+    if grit > 0.68 and valence < 0.28:
+        return "shadow-sanctum"
+
+    if luminosity > 0.72 and valence > 0.7:
+        return "solar-garden"
+
+    return "solar-garden" if temperature >= 0.62 else "velvet-chamber"
+
+
+def _contains_any(source: str, needles: list[str]) -> bool:
+    return any(needle in source for needle in needles)
 
 
 def _blend_hexes(weighted_hexes: list[tuple[str, float]]) -> str:

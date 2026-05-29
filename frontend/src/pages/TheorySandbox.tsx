@@ -56,6 +56,12 @@ const VISUAL_BONUS_COPY: Record<string, string> = {
   "Midnight Run": "Minor 与 Pentatonic 会得到更冷、更贴地的夜跑节奏。",
   "Brass Overdrive": "Mixolydian 与 Dominant7 会把晶格、铜色张力和驱动感推高。",
   "Prism Flare": "Aug 与 Lydian 会制造更闪、更炸裂的棱镜爆光。",
+  "Skyline Halo": "Lydian 与 II-V-I 让舞台同时打开天空感和和声拱顶。",
+  "Ashen Rite": "Phrygian 与 Dim7 会把场景压向更冷、更仪式化的阴影深处。",
+  "Glass Current": "Dorian 与 Maj7 让流动感里带上一层玻璃般的柔亮反射。",
+  "Neon Lantern": "五声音阶与 Maj7 会把街头霓虹和暖色灯笼感叠到一起。",
+  "Liquid Aurora": "Melodic Minor 与 Maj7 会把流体、辉光和现代和声拉得更顺滑。",
+  "Copper Skyline": "Mixolydian 与 II-V-I 会把铜色推进和都市晶格同时拉高。",
   "Neon Trail": "五声音阶成长路线会把粒子拖尾和霓虹对比拉高。",
   "Jazz Skyline": "Jazz 成长路线会让舞台更像层层展开的和声天际线。",
   "Metal Shrapnel": "Metal 成长路线会把碎裂、噪点和爆裂光束推到前台。",
@@ -506,6 +512,8 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           ) : null}
           <Readout label="Element" value={activeElement.name} />
           <Readout label="Signature" value={visual.signature} />
+          <Readout label="Scene" value={sceneFamilyLabel(visual.sceneFamily)} />
+          <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
           <Readout label="Geometry" value={visual.geometry} />
@@ -514,11 +522,14 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Energy" value={visual.energy.toFixed(2)} />
           <Readout label="Complexity" value={visual.complexity.toFixed(2)} />
           <Readout label="Temperature" value={visual.temperature.toFixed(2)} />
+          <Readout label="Valence" value={visual.valence.toFixed(2)} />
+          <Readout label="Arousal" value={visual.arousal.toFixed(2)} />
+          <Readout label="Luminosity" value={visual.luminosity.toFixed(2)} />
+          <Readout label="Grit" value={visual.grit.toFixed(2)} />
           <Readout label="Symmetry" value={visual.symmetry.toFixed(2)} />
           <Readout label="Depth" value={visual.depth.toFixed(2)} />
           <Readout label="Pulse" value={visual.pulseDensity.toFixed(2)} />
           <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
-          <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
           {visual.activeBonuses.length > 0 ? (
             <div className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
               <div className="text-xs uppercase text-stone-400">Active Bonuses</div>
@@ -1026,7 +1037,7 @@ function StageReadingPanel({
 function ReadingLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-white/5 bg-white/5 px-2 py-1.5 text-xs text-stone-300">
-      <span className="font-medium text-stone-100">{label}</span>
+      <span className="font-medium text-stone-100">{label}：</span>
       <span className="ml-2">{value}</span>
     </div>
   );
@@ -1170,18 +1181,26 @@ function buildStageReading(
   drivers: string;
 } {
   const warmth = visual.temperature >= 0.62 ? "偏暖" : visual.temperature <= 0.38 ? "偏冷" : "冷暖平衡";
-  const intensity = visual.contrast >= 0.7 ? "张力明显" : visual.glow >= 0.76 ? "柔亮扩散" : "相对克制";
-  const mood = `${warmth}，${intensity}。`;
+  const valence = visual.valence >= 0.7 ? "情绪更明朗" : visual.valence <= 0.3 ? "情绪更阴影化" : "情绪保持暧昧";
+  const intensity =
+    visual.arousal >= 0.72
+      ? "推进感很强"
+      : visual.contrast >= 0.7
+        ? "张力明显"
+        : visual.glow >= 0.76
+          ? "柔亮扩散"
+          : "相对克制";
+  const mood = `${warmth}，${valence}，${intensity}。`;
 
   const space =
-    visual.depth >= 0.72
-      ? `空间层次很深，${visual.symmetry >= 0.68 ? "而且镜像感很强，像完整搭起一个舞台空间。" : "但保留了不完全对称的漂移感。"}`
+    visual.depth >= 0.72 || visual.luminosity >= 0.74
+      ? `层次很深，${visual.symmetry >= 0.68 ? "而且镜像感很强，像完整搭起一个舞台空间。" : "但保留了不完全对称的漂移感。"}`
       : visual.symmetry >= 0.72
-        ? "空间更规整，对称骨架清晰，舞台会更像被设计过的礼堂或晶格场。"
-        : "空间更贴近前景，结构没有完全锁死，会更像即兴生成的场域。";
+        ? "更规整，对称骨架清晰，舞台会更像被设计过的礼堂或晶格场。"
+        : "更贴近前景，结构没有完全锁死，会更像即兴生成的场域。";
 
   const motion =
-    visual.pulseDensity >= 0.72
+    visual.pulseDensity >= 0.72 || visual.arousal >= 0.76
       ? `脉冲密度很高，配合 ${animationLabel(visual.animationState)} 会显得更推进、更有压迫感。`
       : visual.rippleStrength >= 0.7
         ? "波纹和相位更突出，整体更像连续流体在呼吸。"
@@ -1192,12 +1211,28 @@ function buildStageReading(
     activeBonuses.length > 0 ? `；当前额外加成是 ${activeBonuses.join("、")}` : "；当前还没有触发额外组合加成";
 
   return {
-    summary: `当前舞台由 ${primaryDrivers} 主导，呈现出 ${signatureTone(visual)} 的读感。`,
+    summary: `当前舞台由 ${primaryDrivers} 主导，正在形成 ${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)} 读感。`,
     mood,
     space,
     motion,
-    drivers: `${primaryDrivers}${bonusText}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}。`
   };
+}
+
+function moodAxisLabel(axis: "valence" | "arousal" | "luminosity" | "grit", value: number): string {
+  if (axis === "valence") {
+    return value >= 0.72 ? "高明度情绪" : value <= 0.3 ? "低明度情绪" : "中性情绪";
+  }
+
+  if (axis === "arousal") {
+    return value >= 0.72 ? "高唤醒" : value <= 0.32 ? "低唤醒" : "中段唤醒";
+  }
+
+  if (axis === "luminosity") {
+    return value >= 0.72 ? "高发光空间" : value <= 0.32 ? "低照度空间" : "中照度空间";
+  }
+
+  return value >= 0.68 ? "高颗粒粗粝度" : value <= 0.24 ? "低颗粒粗粝度" : "中颗粒粗粝度";
 }
 
 function animationLabel(animationState: VisualParameters["animationState"]): string {
@@ -1210,6 +1245,27 @@ function animationLabel(animationState: VisualParameters["animationState"]): str
       return "平静动画";
     default:
       return "流动动画";
+  }
+}
+
+function sceneFamilyLabel(sceneFamily: VisualParameters["sceneFamily"]): string {
+  switch (sceneFamily) {
+    case "solar-garden":
+      return "日光穹庭";
+    case "velvet-chamber":
+      return "丝绒厅堂";
+    case "metal-foundry":
+      return "金属熔炉";
+    case "jazz-cathedral":
+      return "和声教堂";
+    case "prism-array":
+      return "棱镜阵列";
+    case "nocturne-tide":
+      return "夜潮剧场";
+    case "shadow-sanctum":
+      return "影纹祭坛";
+    default:
+      return "霓虹网格";
   }
 }
 

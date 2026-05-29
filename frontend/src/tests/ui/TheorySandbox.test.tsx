@@ -405,8 +405,9 @@ describe("TheorySandbox", () => {
       expect(screen.getByText("Stage Reading")).toBeInTheDocument();
     });
     expect(screen.getByText(/当前舞台由 Ionian 主导/)).toBeInTheDocument();
-    expect(screen.getByText("偏暖，柔亮扩散。")).toBeInTheDocument();
-    expect(screen.getByText(/空间层次很深/)).toBeInTheDocument();
+    expect(screen.getByText("偏暖，情绪保持暧昧，柔亮扩散。")).toBeInTheDocument();
+    expect(screen.getByText(/层次很深/)).toBeInTheDocument();
+    expect(screen.getByText("日光穹庭")).toBeInTheDocument();
   });
 
   it("loads and displays yearly practice heatmap entries", async () => {
