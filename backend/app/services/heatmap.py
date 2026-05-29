@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -50,5 +50,16 @@ def get_yearly_heatmap(session: Session, user_id: int, year: int) -> YearlyHeatm
     return YearlyHeatmapResult(
         user_id=user_id,
         year=year,
-        days=list(daily_totals.values()),
+        days=[
+            daily_totals.get(
+                day.isoformat(),
+                HeatmapDayResult(date=day.isoformat(), duration_minutes=0, exp=0),
+            )
+            for day in _iter_year_days(start_date, end_date)
+        ],
     )
+
+
+def _iter_year_days(start_date: date, end_date: date) -> list[date]:
+    day_count = (end_date - start_date).days
+    return [start_date + timedelta(days=offset) for offset in range(day_count)]

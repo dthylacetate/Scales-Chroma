@@ -19,6 +19,7 @@ interface PracticeRecordResponse {
   exp_earned: number;
   total_exp?: number;
   level?: number;
+  unlocked_effects?: string[];
 }
 
 export interface PracticeRecordResult {
@@ -32,6 +33,7 @@ export interface PracticeRecordResult {
   expEarned: number;
   totalExp: number;
   level: number;
+  unlockedEffects: string[];
 }
 
 export async function createPracticeRecord({
@@ -76,6 +78,7 @@ function normalizePracticeRecordResponse(response: PracticeRecordResponse): Prac
     notes: response.notes,
     expEarned: response.exp_earned,
     totalExp: response.total_exp ?? response.exp_earned,
-    level: response.level ?? 1
+    level: response.level ?? 1,
+    unlockedEffects: response.unlocked_effects ?? []
   };
 }

@@ -349,6 +349,13 @@ export function TheorySandbox({ apiBaseUrl, userId }: TheorySandboxProps) {
                   <span>Total {practiceResult.totalExp} EXP</span>
                   <span>Level {practiceResult.level}</span>
                 </div>
+                {practiceResult.unlockedEffects.length > 0 ? (
+                  <div className="mt-1 grid gap-1 border-t border-[#ffd166]/20 pt-2 text-xs text-[#b9fff7]">
+                    {practiceResult.unlockedEffects.map((effectName) => (
+                      <span key={effectName}>Unlocked {effectName}</span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null}
             {practiceError ? <div className="text-sm text-[#ff8fa3]">{practiceError}</div> : null}
@@ -543,18 +550,14 @@ function HeatmapPanel({ heatmap }: { heatmap: YearlyHeatmap }) {
         <Flame aria-hidden="true" className="size-4 text-[#5bd0c7]" />
         <h2 className="text-base font-semibold tracking-normal">Heatmap</h2>
       </div>
-      <div className="grid grid-cols-7 gap-1" aria-label="年度练习热力图">
-        {activeDays.length > 0
-          ? activeDays.map((day) => (
-              <div
-                key={day.date}
-                className="aspect-square rounded-sm border border-[#5bd0c7]/20 bg-[#2b4f48]"
-                title={`${day.date}: ${day.durationMinutes} min, ${day.exp} EXP`}
-              />
-            ))
-          : Array.from({ length: 7 }, (_, index) => (
-              <div key={index} className="aspect-square rounded-sm border border-[#3f3144] bg-[#151217]" />
-            ))}
+      <div className="grid max-h-32 grid-cols-[repeat(31,minmax(0,1fr))] gap-0.5 overflow-hidden" aria-label="年度练习热力图">
+        {heatmap.days.map((day) => (
+          <div
+            key={day.date}
+            className={`aspect-square rounded-sm border ${heatmapCellClass(day.exp)}`}
+            title={`${day.date}: ${day.durationMinutes} min, ${day.exp} EXP`}
+          />
+        ))}
       </div>
       {activeDays.slice(-3).map((day) => (
         <div
@@ -567,4 +570,20 @@ function HeatmapPanel({ heatmap }: { heatmap: YearlyHeatmap }) {
       ))}
     </section>
   );
+}
+
+function heatmapCellClass(exp: number): string {
+  if (exp >= 90) {
+    return "border-[#5bd0c7]/50 bg-[#5bd0c7]";
+  }
+
+  if (exp >= 45) {
+    return "border-[#5bd0c7]/40 bg-[#2b8f7f]";
+  }
+
+  if (exp > 0) {
+    return "border-[#5bd0c7]/30 bg-[#2b4f48]";
+  }
+
+  return "border-[#3f3144] bg-[#151217]";
 }

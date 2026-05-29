@@ -26,6 +26,7 @@ class PracticeRecordCreateResponse(BaseModel):
     exp_earned: int
     total_exp: int
     level: int
+    unlocked_effects: list[str]
 
 
 @router.post("", response_model=PracticeRecordCreateResponse, status_code=status.HTTP_201_CREATED)
@@ -50,4 +51,5 @@ def create_practice_record(
         exp_earned=result.exp_earned,
         total_exp=result.total_exp,
         level=result.level,
+        unlocked_effects=result.unlocked_effects,
     )

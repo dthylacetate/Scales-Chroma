@@ -24,6 +24,7 @@ class PracticeRecordResult:
     exp_earned: int
     total_exp: int
     level: int
+    unlocked_effects: list[str]
 
 
 def create_practice_record(
@@ -74,7 +75,7 @@ def create_practice_record(
     user.level = level_from_total_exp(user.total_exp)
 
     session.flush()
-    apply_practice_unlocks(session=session, user_id=user.id)
+    unlocked_effects = apply_practice_unlocks(session=session, user_id=user.id)
 
     session.commit()
     session.refresh(record)
@@ -90,4 +91,5 @@ def create_practice_record(
         exp_earned=exp_earned,
         total_exp=user.total_exp,
         level=user.level,
+        unlocked_effects=[effect.effect_name for effect in unlocked_effects],
     )
