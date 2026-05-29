@@ -5,13 +5,14 @@ if (!playwrightRoot) {
 }
 
 const { chromium } = await import(`file://${playwrightRoot}/playwright/index.mjs`);
+const appUrl = process.env.APP_URL ?? "http://127.0.0.1:8000/";
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
 const username = `smoke-${Date.now()}`;
 
 try {
-  await page.goto("http://127.0.0.1:8000/", { waitUntil: "networkidle" });
+  await page.goto(appUrl, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "切换到注册" }).click();
   await page.getByLabel("用户名").fill(username);
   await page.getByLabel("邮箱").fill(`${username}@example.com`);
@@ -26,6 +27,7 @@ try {
   await page.getByRole("button", { name: /Maj7/ }).dragTo(stage);
   await page.getByText("日光穹庭", { exact: true }).waitFor();
   const solarText = await page.locator("body").innerText();
+  const solarValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-solar.png", fullPage: true });
 
   await clearComposition(page);
@@ -33,6 +35,7 @@ try {
   await page.getByRole("button", { name: /Harmonic Minor/ }).dragTo(stage);
   await page.getByRole("button", { name: /Dim7/ }).dragTo(stage);
   await page.getByText("影纹祭坛", { exact: true }).waitFor();
+  const shadowValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-shadow.png", fullPage: true });
 
   const pageText = await page.locator("body").innerText();
@@ -40,6 +43,7 @@ try {
     JSON.stringify(
       {
         username,
+        appUrl,
         hasSolar: solarText.includes("日光穹庭"),
         hasShadow: pageText.includes("影纹祭坛"),
         hasStageReading: pageText.includes("STAGE READING") || pageText.includes("Stage Reading"),
@@ -47,7 +51,9 @@ try {
           pageText.includes("VALENCE") &&
           pageText.includes("AROUSAL") &&
           pageText.includes("LUMINOSITY") &&
-          pageText.includes("GRIT")
+          pageText.includes("GRIT"),
+        solarValence,
+        shadowValence
       },
       null,
       2

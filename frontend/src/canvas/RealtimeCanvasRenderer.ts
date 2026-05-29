@@ -254,6 +254,273 @@ export class RealtimeCanvasRenderer {
       this.context.stroke();
     }
 
+    this.drawSceneFamilyArchitecture(visual, width, height, centerX, centerY, radius, horizonY, time);
+    this.context.restore();
+  }
+
+  private drawSceneFamilyArchitecture(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    horizonY: number,
+    time: number
+  ): void {
+    switch (visual.sceneFamily) {
+      case "solar-garden":
+        this.drawSolarGardenArchitecture(visual, centerX, centerY, radius, horizonY, time);
+        break;
+      case "velvet-chamber":
+        this.drawVelvetChamberArchitecture(visual, width, height, centerX, centerY, radius);
+        break;
+      case "metal-foundry":
+        this.drawMetalFoundryArchitecture(visual, width, centerX, centerY, radius, horizonY);
+        break;
+      case "jazz-cathedral":
+        this.drawJazzCathedralArchitecture(visual, centerX, centerY, radius, horizonY, time);
+        break;
+      case "prism-array":
+        this.drawPrismArrayArchitecture(visual, centerX, centerY, radius, horizonY, time);
+        break;
+      case "nocturne-tide":
+        this.drawNocturneTideArchitecture(visual, width, centerX, centerY, radius, horizonY, time);
+        break;
+      case "shadow-sanctum":
+        this.drawShadowSanctumArchitecture(visual, centerX, centerY, radius, horizonY, time);
+        break;
+      default:
+        this.drawNeonGridArchitecture(visual, width, height, centerX, radius, horizonY);
+        break;
+    }
+  }
+
+  private drawSolarGardenArchitecture(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    horizonY: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.color, 0.14 + visual.luminosity * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.luminosity * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const terraceY = horizonY - radius * (0.1 + index * 0.14);
+      const terraceWidth = radius * (1.8 - index * 0.22);
+      this.context.beginPath();
+      this.context.moveTo(centerX - terraceWidth / 2, terraceY);
+      this.context.lineTo(centerX + terraceWidth / 2, terraceY);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 3; index += 1) {
+      const angle = time * 0.2 + index * 0.7;
+      this.context.beginPath();
+      this.context.moveTo(centerX, horizonY);
+      this.context.lineTo(centerX + Math.cos(angle) * radius * 1.18, centerY - radius * (0.8 + index * 0.08));
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawVelvetChamberArchitecture(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number
+  ): void {
+    this.context.save();
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.05 + visual.glow * 0.06);
+    this.context.beginPath();
+    this.context.ellipse(centerX, centerY + radius * 0.92, radius * 1.26, radius * 0.24, 0, 0, Math.PI * 2);
+    this.context.fill();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.glow * 1.6);
+    this.context.beginPath();
+    this.context.moveTo(radius * 0.18, height * 0.08);
+    this.context.lineTo(radius * 0.18, height * 0.86);
+    this.context.moveTo(width - radius * 0.18, height * 0.08);
+    this.context.lineTo(width - radius * 0.18, height * 0.86);
+    this.context.stroke();
+    this.context.restore();
+  }
+
+  private drawMetalFoundryArchitecture(
+    visual: VisualParameters,
+    width: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    horizonY: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.grit * 0.08);
+    this.context.lineWidth = Math.max(1.2, 1.2 + visual.grit * 1.8);
+    const gantryY = centerY - radius * 0.86;
+    this.context.beginPath();
+    this.context.moveTo(centerX - radius * 1.26, gantryY);
+    this.context.lineTo(centerX + radius * 1.26, gantryY);
+    this.context.stroke();
+    for (let index = 0; index < 5; index += 1) {
+      const progress = index / 4;
+      const x = centerX - radius * 1.12 + progress * radius * 2.24;
+      this.context.beginPath();
+      this.context.moveTo(x, gantryY);
+      this.context.lineTo(x, horizonY - radius * 0.08);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 7; index += 1) {
+      const x = ((index + 1) / 8) * width;
+      this.context.beginPath();
+      this.context.moveTo(x - radius * 0.04, horizonY + radius * 0.12);
+      this.context.lineTo(x + radius * 0.04, horizonY + radius * 0.2);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawJazzCathedralArchitecture(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    horizonY: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.symmetry * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.symmetry * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const span = radius * (0.94 + index * 0.14);
+      this.context.beginPath();
+      this.context.moveTo(centerX - span, horizonY);
+      this.context.quadraticCurveTo(centerX, centerY - radius * (1 + index * 0.08) + Math.sin(time * 0.4 + index) * radius * 0.03, centerX + span, horizonY);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawPrismArrayArchitecture(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    horizonY: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.translate(centerX, centerY + radius * 0.12);
+    this.context.rotate(Math.sin(time * 0.5) * 0.05);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.luminosity * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const topY = -radius * (1.02 - index * 0.1);
+      const baseY = horizonY - (centerY + radius * 0.12) + index * radius * 0.08;
+      const halfWidth = radius * (0.18 + index * 0.12);
+      this.context.beginPath();
+      this.context.moveTo(0, topY);
+      this.context.lineTo(-halfWidth, baseY);
+      this.context.lineTo(halfWidth, baseY);
+      this.context.closePath();
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawNocturneTideArchitecture(
+    visual: VisualParameters,
+    width: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    horizonY: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.rippleStrength * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.rippleStrength * 1.8);
+    for (let index = 0; index < 3; index += 1) {
+      const y = horizonY + radius * (0.08 + index * 0.12);
+      this.context.beginPath();
+      for (let step = 0; step <= 14; step += 1) {
+        const progress = step / 14;
+        const x = progress * width;
+        const waveY = y + Math.sin(progress * Math.PI * 5 + time * (0.8 + index * 0.12)) * radius * 0.02;
+        if (step === 0) {
+          this.context.moveTo(x, waveY);
+        } else {
+          this.context.lineTo(x, waveY);
+        }
+      }
+      this.context.stroke();
+    }
+    this.context.beginPath();
+    this.context.moveTo(centerX, horizonY);
+    this.context.lineTo(centerX, centerY - radius * 0.76);
+    this.context.stroke();
+    this.context.restore();
+  }
+
+  private drawShadowSanctumArchitecture(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    horizonY: number,
+    time: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.grit * 0.1);
+    this.context.lineWidth = Math.max(1, 1 + visual.grit * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const angle = time * 0.04 + index * (Math.PI / 2);
+      const outerX = centerX + Math.cos(angle) * radius * 1.24;
+      const outerY = centerY + Math.sin(angle) * radius * 0.96;
+      this.context.beginPath();
+      this.context.moveTo(centerX, horizonY - radius * 0.12);
+      this.context.lineTo(outerX, outerY);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 3; index += 1) {
+      const ringRadius = radius * (0.9 + index * 0.18);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY + radius * 0.06, ringRadius, 0, Math.PI * 2);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawNeonGridArchitecture(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    radius: number,
+    horizonY: number
+  ): void {
+    this.context.save();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.beamStrength * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 1.4);
+    const lineCount = 9;
+    for (let index = 0; index < lineCount; index += 1) {
+      const progress = index / (lineCount - 1);
+      const x = progress * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(centerX + (x - centerX) * 0.08, horizonY);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 6; index += 1) {
+      const y = horizonY + index * radius * 0.1;
+      this.context.beginPath();
+      this.context.moveTo(0, y);
+      this.context.lineTo(width, y);
+      this.context.stroke();
+    }
     this.context.restore();
   }
 

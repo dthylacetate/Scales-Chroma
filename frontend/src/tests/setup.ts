@@ -9,6 +9,7 @@ const canvasContext = {
   lineTo: vi.fn(),
   moveTo: vi.fn(),
   arc: vi.fn(),
+  ellipse: vi.fn(),
   quadraticCurveTo: vi.fn(),
   fill: vi.fn(),
   stroke: vi.fn(),

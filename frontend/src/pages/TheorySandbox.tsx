@@ -514,6 +514,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Signature" value={visual.signature} />
           <Readout label="Scene" value={sceneFamilyLabel(visual.sceneFamily)} />
           <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
+          <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
           <Readout label="Geometry" value={visual.geometry} />
@@ -1031,6 +1032,71 @@ function StageReadingPanel({
         <ReadingLine label="来源" value={reading.drivers} />
       </div>
     </section>
+  );
+}
+
+function MoodAxesPanel({ visual }: { visual: VisualParameters }) {
+  return (
+    <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
+      <div className="text-xs uppercase text-stone-400">Mood Axes</div>
+      <div className="mt-3 grid gap-2">
+        <MoodAxisRow
+          accent="#ffd166"
+          label="Valence"
+          value={visual.valence}
+          note={moodAxisLabel("valence", visual.valence)}
+        />
+        <MoodAxisRow
+          accent="#ff8fa3"
+          label="Arousal"
+          value={visual.arousal}
+          note={moodAxisLabel("arousal", visual.arousal)}
+        />
+        <MoodAxisRow
+          accent="#8fdcff"
+          label="Luminosity"
+          value={visual.luminosity}
+          note={moodAxisLabel("luminosity", visual.luminosity)}
+        />
+        <MoodAxisRow
+          accent="#c7a6ff"
+          label="Grit"
+          value={visual.grit}
+          note={moodAxisLabel("grit", visual.grit)}
+        />
+      </div>
+    </section>
+  );
+}
+
+function MoodAxisRow({
+  label,
+  value,
+  note,
+  accent
+}: {
+  label: string;
+  value: number;
+  note: string;
+  accent: string;
+}) {
+  return (
+    <div className="rounded-md border border-white/5 bg-white/5 px-2 py-2">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-medium text-stone-100">{label}</span>
+        <span className="text-stone-300">{value.toFixed(2)}</span>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#140f16]">
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${Math.max(6, Math.round(value * 100))}%`,
+            background: `linear-gradient(90deg, ${accent}66 0%, ${accent} 100%)`
+          }}
+        />
+      </div>
+      <div className="mt-2 text-[11px] text-stone-400">{note}</div>
+    </div>
   );
 }
 

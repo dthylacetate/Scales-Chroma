@@ -21,6 +21,8 @@ describe("TheorySandbox", () => {
     expect(screen.getByRole("button", { name: /Maj7/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Phrygian/ })).toBeInTheDocument();
     expect(screen.getByLabelText("实时音乐视觉舞台")).toBeInTheDocument();
+    expect(screen.getByText("Mood Axes")).toBeInTheDocument();
+    expect(screen.getAllByText("Valence").length).toBeGreaterThan(0);
   });
 
   it("renders the complete planned theory element library", () => {

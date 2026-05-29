@@ -39,6 +39,9 @@ def test_sandbox_render_maps_theory_elements_to_visual_parameters() -> None:
     assert payload["animation_state"] == "flowing"
     assert payload["signature"] == "Maj7"
     assert payload["scene_family"] == "solar-garden"
+    assert payload["valence"] > 0.75
+    assert payload["luminosity"] > 0.7
+    assert payload["grit"] < 0.2
     assert payload["ring_count"] >= 2
 
 
@@ -118,6 +121,8 @@ def test_sandbox_render_returns_combo_bonus_metadata_for_valid_compositions() ->
     assert payload["scene_family"] == "solar-garden"
     assert "Celestial Bloom" in payload["active_bonuses"]
     assert payload["beam_strength"] > 0.5
+    assert payload["valence"] > 0.9
+    assert payload["luminosity"] > 0.9
 
 
 def test_sandbox_render_returns_growth_aura_metadata_for_unlocked_style_tracks() -> None:
@@ -155,6 +160,7 @@ def test_sandbox_render_returns_growth_aura_metadata_for_unlocked_style_tracks()
     assert payload["scene_family"] == "velvet-chamber"
     assert payload["secondary_color"] == "#ff9fc9"
     assert payload["glow"] > 0.9
+    assert payload["grit"] < 0.15
 
 
 def create_test_session() -> Session:

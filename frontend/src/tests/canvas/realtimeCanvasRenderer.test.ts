@@ -182,6 +182,7 @@ function createMockContext() {
     lineTo: vi.fn(),
     moveTo: vi.fn(),
     arc: vi.fn(),
+    ellipse: vi.fn(),
     stroke: vi.fn(),
     fill: vi.fn(),
     save: vi.fn(),
