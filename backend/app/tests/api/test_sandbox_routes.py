@@ -202,6 +202,41 @@ def test_sandbox_render_returns_scene_cascade_for_rich_three_part_stacks() -> No
     assert payload["beam_strength"] > 0.7
 
 
+def test_sandbox_render_supports_non_persistent_growth_preview() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(
+            session,
+            username="preview-player",
+            email="preview@example.com",
+        )
+        response = client.post(
+            "/sandbox/render",
+            headers=headers,
+            json={
+                "elements": [
+                    {"id": "lydian", "type": "mode", "name": "Lydian"},
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                    {"id": "ii-v-i", "type": "progression", "name": "II-V-I"},
+                ],
+                "preview_growth_imprint": "neo-soul-veil",
+            },
+        )
+        unlocked_effect_count = session.query(UnlockedEffect).count()
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["growth_imprint"] == "neo-soul-veil"
+    assert payload["growth_imprint_intensity"] >= 0.88
+    assert payload["scene_cascade"] == "aurora-dais"
+    assert "Silken Halo" in payload["active_bonuses"]
+    assert unlocked_effect_count == 0
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

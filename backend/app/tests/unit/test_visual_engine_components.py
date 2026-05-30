@@ -275,3 +275,20 @@ def test_renderer_lets_growth_tracks_recolor_scene_cascades() -> None:
     assert jazz_visual.geometry == "lattice"
     assert base_visual.geometry == "soft-orb"
     assert jazz_visual.secondary_color == "#b8c8ff"
+
+
+def test_renderer_can_preview_a_growth_imprint_without_real_unlocks() -> None:
+    visual = render_visual_parameters(
+        [
+            TheoryElement(id="lydian", type="mode", name="Lydian"),
+            TheoryElement(id="maj7", type="chord", name="Maj7"),
+            TheoryElement(id="ii-v-i", type="progression", name="II-V-I"),
+        ],
+        preview_growth_imprint="neo-soul-veil",
+    )
+
+    assert visual.growth_imprint == "neo-soul-veil"
+    assert visual.growth_imprint_intensity >= 0.88
+    assert visual.scene_cascade == "aurora-dais"
+    assert "Silken Halo" in visual.active_bonuses
+    assert visual.glow > 0.9

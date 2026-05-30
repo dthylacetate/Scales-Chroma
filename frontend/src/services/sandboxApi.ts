@@ -53,16 +53,19 @@ interface RenderSandboxVisualInput {
   elements: TheoryElement[];
   authToken?: string;
   apiBaseUrl?: string;
+  previewGrowthImprint?: Exclude<VisualParameters["growthImprint"], "neutral">;
 }
 
 export async function renderSandboxVisual({
   elements,
   authToken,
-  apiBaseUrl = ""
+  apiBaseUrl = "",
+  previewGrowthImprint
 }: RenderSandboxVisualInput): Promise<VisualParameters> {
   const response = await fetch(`${apiBaseUrl}/sandbox/render`, {
     body: JSON.stringify({
-      elements
+      elements,
+      preview_growth_imprint: previewGrowthImprint
     }),
     headers: createAuthHeaders(authToken, true),
     method: "POST"

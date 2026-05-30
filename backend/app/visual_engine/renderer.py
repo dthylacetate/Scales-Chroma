@@ -172,8 +172,10 @@ GROWTH_CASCADE_RULES: tuple[tuple[str, str, str, float, dict[str, float]], ...] 
 def render_visual_parameters(
     elements: list[TheoryElement],
     unlocked_effects: list[str] | None = None,
+    preview_growth_imprint: str | None = None,
 ) -> VisualParameters:
     unlocks = set(unlocked_effects or [])
+    unlocks.update(_preview_effects_for_growth_imprint(preview_growth_imprint))
     aggregate_state = _aggregate_visual_state(elements)
     _apply_combo_bonuses(elements, aggregate_state)
     _apply_theory_synergies(elements, aggregate_state)
@@ -181,6 +183,7 @@ def render_visual_parameters(
     growth_imprint, growth_imprint_intensity = _resolve_growth_imprint(elements, unlocks, aggregate_state.active_bonuses)
     aggregate_state.growth_imprint = growth_imprint
     aggregate_state.growth_imprint_intensity = growth_imprint_intensity
+    _apply_preview_growth_imprint(aggregate_state, preview_growth_imprint)
     scene_cascade, scene_cascade_intensity = _resolve_scene_cascade(elements, aggregate_state)
     aggregate_state.scene_cascade = scene_cascade
     aggregate_state.scene_cascade_intensity = scene_cascade_intensity
@@ -894,6 +897,37 @@ def _resolve_growth_imprint(
     return best_style, round(max(0.0, min(1.0, best_score)), 2)
 
 
+def _preview_effects_for_growth_imprint(preview_growth_imprint: str | None) -> set[str]:
+    if not preview_growth_imprint or preview_growth_imprint == "neutral":
+        return set()
+
+    return set(GROWTH_IMPRINT_RULES.get(preview_growth_imprint, {}).get("effects", set()))
+
+
+def _preview_aura_bonus(preview_growth_imprint: str) -> dict[str, float | str] | None:
+    preview_effects = _preview_effects_for_growth_imprint(preview_growth_imprint)
+
+    for effect_names, _, bonus_values in STYLE_AURA_RULES:
+        if effect_names == preview_effects:
+            return bonus_values
+
+    return None
+
+
+def _apply_preview_growth_imprint(state: AggregateVisualState, preview_growth_imprint: str | None) -> None:
+    if not preview_growth_imprint or preview_growth_imprint == "neutral":
+        return
+
+    state.growth_imprint = preview_growth_imprint
+    state.growth_imprint_intensity = max(state.growth_imprint_intensity, 0.88)
+    bonus_values = _preview_aura_bonus(preview_growth_imprint)
+
+    if bonus_values is None:
+        return
+
+    _apply_scaled_bonus(state, bonus_values, 0.72)
+
+
 def _resolve_scene_cascade(
     elements: list[TheoryElement],
     state: AggregateVisualState,
@@ -973,10 +1007,14 @@ def _apply_growth_cascade_resonance(state: AggregateVisualState) -> None:
 
 def _apply_scaled_bonus(
     state: AggregateVisualState,
-    bonus: dict[str, float],
+    bonus: dict[str, float | str],
     scale: float,
 ) -> None:
     for key, value in bonus.items():
+        if isinstance(value, str):
+            setattr(state, key, value)
+            continue
+
         current_value = getattr(state, key)
         setattr(state, key, max(0.0, min(1.0, current_value + value * scale)))
 

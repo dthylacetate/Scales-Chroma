@@ -122,6 +122,62 @@ describe("TheorySandbox", () => {
     );
   });
 
+  it("lets users preview a different growth lens without changing saved progression", async () => {
+    const fetchMock = createAuthenticatedFetchMock({
+      visualResponses: [
+        {
+          color: "#62d2a2",
+          secondary_color: "#9af0dd",
+          background_color: "#081018",
+          glow: 0.72,
+          growth_imprint: "neutral",
+          growth_imprint_intensity: 0,
+          particles: {
+            density: 0.58,
+            trail: false
+          },
+          geometry: "wave",
+          animation_state: "flowing"
+        },
+        {
+          color: "#ffd1f0",
+          secondary_color: "#ff9fc9",
+          background_color: "#170b13",
+          glow: 0.94,
+          growth_imprint: "neo-soul-veil",
+          growth_imprint_intensity: 0.92,
+          scene_cascade: "aurora-dais",
+          scene_cascade_intensity: 0.91,
+          particles: {
+            density: 0.74,
+            trail: false
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        }
+      ]
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Growth Lens Preview")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Neo Soul/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText("预览镜头：Neo Soul 幕纱")).toBeInTheDocument();
+    });
+
+    const sandboxBodies = fetchMock.mock.calls
+      .filter(([url]) => url === "http://api.test/sandbox/render")
+      .map(([, init]) => JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
+
+    expect(sandboxBodies.some((body) => body.preview_growth_imprint === "neo-soul-veil")).toBe(true);
+  });
+
   it("records a practice session and shows earned exp", async () => {
     const fetchMock = createAuthenticatedFetchMock({
       practiceHistory: [
@@ -311,7 +367,7 @@ describe("TheorySandbox", () => {
     await waitFor(() => {
       expect(screen.getByText("Growth")).toBeInTheDocument();
     });
-    expect(screen.getByText("Jazz")).toBeInTheDocument();
+    expect(screen.getAllByText("Jazz").length).toBeGreaterThan(0);
     expect(screen.getAllByText("II-V-I").length).toBeGreaterThan(1);
     expect(screen.getByText("Lv 2")).toBeInTheDocument();
   });

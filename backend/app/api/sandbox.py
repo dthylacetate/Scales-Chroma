@@ -18,4 +18,8 @@ def render_sandbox(
     current_user: User = Depends(get_current_user),
 ) -> VisualParameters:
     unlocked_effects = get_unlocked_effect_names(session=session, user_id=current_user.id)
-    return render_visual_parameters(payload.elements, unlocked_effects=unlocked_effects)
+    return render_visual_parameters(
+        payload.elements,
+        unlocked_effects=unlocked_effects,
+        preview_growth_imprint=payload.preview_growth_imprint,
+    )

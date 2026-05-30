@@ -42,12 +42,14 @@ describe("sandbox API service", () => {
     const visual = await renderSandboxVisual({
       apiBaseUrl: "http://localhost:8000",
       authToken: "token-123",
-      elements
+      elements,
+      previewGrowthImprint: "jazz-lattice"
     });
 
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/sandbox/render", {
       body: JSON.stringify({
-        elements
+        elements,
+        preview_growth_imprint: "jazz-lattice"
       }),
       headers: {
         Authorization: "Bearer token-123",

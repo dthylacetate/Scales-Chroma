@@ -109,6 +109,50 @@
 
 - 后端：`87 passed, 1 warning`
 
+## 最新一轮：Growth Lens Preview 不落库成长预览
+
+这一轮补的不是新的持久化成长规则，而是一个更适合演示和调参的“预览镜头”。
+
+目标：
+
+- 不必真的练满某一路线，也能直接比较同一组乐理积木在不同 Growth 轨迹下会怎样改写舞台。
+- 预览必须是临时的，不能污染真实用户解锁数据。
+
+实现方式：
+
+- 后端 `SandboxRenderRequest` 新增 `preview_growth_imprint`。
+- `/sandbox/render` 会把这个字段作为临时成长镜头，只参与本次渲染，不写入数据库。
+- `render_visual_parameters(...)` 会先把对应路线的 Growth 特效临时加入，再强制把本次渲染推到目标成长印记上。
+- 这样 `Scene Cascade`、`Growth Imprint`、右侧解释面板和 Canvas 渲染层都会一起跟着变，不只是改一个标签。
+
+这一轮重点测试：
+
+- 后端单元测试：
+  - `test_renderer_can_preview_a_growth_imprint_without_real_unlocks`
+  - 验证没有真实解锁时，`preview_growth_imprint="neo-soul-veil"` 仍然能把同一个 `Lydian + Maj7 + II-V-I` 推向 `Silken Halo`
+- 后端 API 测试：
+  - `test_sandbox_render_supports_non_persistent_growth_preview`
+  - 验证 `/sandbox/render` 能接收 `preview_growth_imprint`
+  - 验证响应中的 `growth_imprint` 与 `active_bonuses` 正确变化
+  - 验证数据库里的 `unlocked_effects` 条数保持不变，确保没有把预览写成真实成长
+- 前端 service 测试：
+  - 验证 `renderSandboxVisual(...)` 会把 `preview_growth_imprint` 正确写进请求体
+- 前端 UI 测试：
+  - 验证点击 `Growth Lens Preview` 的不同按钮后，页面会重新请求 `/sandbox/render`
+  - 验证舞台左上角会出现新的“预览镜头”提示
+
+本轮验证结果：
+
+- 后端：`89 passed, 1 warning`
+- 前端：`60 passed`
+- 前端 build：通过
+
+额外说明：
+
+- 这轮尝试过用 in-app browser 和本地 Playwright 再补一层真实页面烟测。
+- 当前环境对本地地址和浏览器进程都有运行限制，所以这轮没有新增可复现的浏览器自动化截图。
+- 不过接口、渲染、UI 交互和不落库约束已经被自动化测试完整锁住，这轮功能风险是可控的。
+
 烟测补充说明：
 
 - 本地浏览器链路已经真实跑到注册、练习记录、连续 `/sandbox/render` 请求和截图落盘。

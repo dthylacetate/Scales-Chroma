@@ -5,6 +5,16 @@ from pydantic import BaseModel, Field
 from app.schemas.theory import TheoryElement
 
 
+GrowthImprintName = Literal[
+    "neutral",
+    "pentatonic-drive",
+    "jazz-lattice",
+    "metal-forge",
+    "neo-soul-veil",
+    "fusion-phase",
+]
+
+
 class VisualParameters(BaseModel):
     color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
     secondary_color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
@@ -45,14 +55,7 @@ class VisualParameters(BaseModel):
         "neon-grid",
         "shadow-sanctum",
     ]
-    growth_imprint: Literal[
-        "neutral",
-        "pentatonic-drive",
-        "jazz-lattice",
-        "metal-forge",
-        "neo-soul-veil",
-        "fusion-phase",
-    ]
+    growth_imprint: GrowthImprintName
     growth_imprint_intensity: float = Field(ge=0.0, le=1.0)
     scene_cascade: Literal[
         "neutral",
@@ -73,3 +76,4 @@ class VisualParameters(BaseModel):
 
 class SandboxRenderRequest(BaseModel):
     elements: list[TheoryElement] = Field(min_length=1)
+    preview_growth_imprint: GrowthImprintName | None = None

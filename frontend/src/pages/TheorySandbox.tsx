@@ -92,6 +92,19 @@ const THEORY_SYNERGY_COPY: Record<string, string> = {
   "Silken Resolve": "柔和和弦与缓行波面会让舞台的终止更像贴近身体的呼吸。"
 };
 
+const GROWTH_PREVIEW_OPTIONS: Array<{
+  id: "actual" | Exclude<VisualParameters["growthImprint"], "neutral">;
+  label: string;
+  hint: string;
+}> = [
+  { id: "actual", label: "真实成长", hint: "使用当前账号已经解锁的真实成长轨迹。" },
+  { id: "jazz-lattice", label: "Jazz", hint: "预览和声窗格、教堂纵深和秩序感。" },
+  { id: "neo-soul-veil", label: "Neo Soul", hint: "预览丝绒幕纱、柔波和包裹式光层。" },
+  { id: "metal-forge", label: "Metal", hint: "预览熔炉切面、碎片雨和压顶结构。" },
+  { id: "fusion-phase", label: "Fusion", hint: "预览相位环、折射回路和棱镜走廊。" },
+  { id: "pentatonic-drive", label: "Pentatonic", hint: "预览霓虹推进线、巡航节点和速度场。" }
+];
+
 interface TheorySandboxProps {
   apiBaseUrl?: string;
   authToken?: string;
@@ -129,6 +142,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
   const [compositionDeletingId, setCompositionDeletingId] = useState<number | null>(null);
   const [compositionError, setCompositionError] = useState<string | null>(null);
   const [visualRefreshKey, setVisualRefreshKey] = useState(0);
+  const [previewGrowthImprint, setPreviewGrowthImprint] = useState<"actual" | Exclude<VisualParameters["growthImprint"], "neutral">>("actual");
   const activeElement = composition.at(-1) ?? selected;
   const activeElements = useMemo(() => (composition.length > 0 ? composition : [selected]), [composition, selected]);
   const localVisual = useMemo(() => mapTheoryToVisuals(activeElements), [activeElements]);
@@ -147,7 +161,8 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
     renderSandboxVisual({
       apiBaseUrl,
       authToken,
-      elements: activeElements
+      elements: activeElements,
+      previewGrowthImprint: previewGrowthImprint === "actual" ? undefined : previewGrowthImprint
     })
       .then((enhancedVisual) => {
         if (!cancelled) {
@@ -163,7 +178,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
     return () => {
       cancelled = true;
     };
-  }, [activeElements, apiBaseUrl, authToken, localVisual, visualRefreshKey]);
+  }, [activeElements, apiBaseUrl, authToken, localVisual, previewGrowthImprint, visualRefreshKey]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -397,6 +412,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                 <Activity aria-hidden="true" className="size-4" />
                 <span className="font-medium">{visual.signature}</span>
               </div>
+              {previewGrowthImprint !== "actual" ? (
+                <div className="text-xs text-[#ffe29a]">预览镜头：{growthImprintLabel(previewGrowthImprint)}</div>
+              ) : null}
               <div className="flex flex-wrap gap-1 text-[11px] text-stone-300">
                 {activeElements.map((element, index) => (
                   <span key={`${element.id}-${index}`} className="rounded-sm border border-white/10 bg-white/5 px-1.5 py-0.5">
@@ -521,6 +539,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                 </button>
               ) : null}
             </div>
+          ) : null}
+          {apiBaseUrl && authToken ? (
+            <GrowthLensPreviewPanel previewGrowthImprint={previewGrowthImprint} onChange={setPreviewGrowthImprint} />
           ) : null}
           <Readout label="Element" value={activeElement.name} />
           <Readout label="Signature" value={visual.signature} />
@@ -1046,6 +1067,45 @@ function StageReadingPanel({
         <ReadingLine label="空间" value={reading.space} />
         <ReadingLine label="运动" value={reading.motion} />
         <ReadingLine label="来源" value={reading.drivers} />
+      </div>
+    </section>
+  );
+}
+
+function GrowthLensPreviewPanel({
+  previewGrowthImprint,
+  onChange
+}: {
+  previewGrowthImprint: "actual" | Exclude<VisualParameters["growthImprint"], "neutral">;
+  onChange: (nextValue: "actual" | Exclude<VisualParameters["growthImprint"], "neutral">) => void;
+}) {
+  const activeOption = GROWTH_PREVIEW_OPTIONS.find((option) => option.id === previewGrowthImprint) ?? GROWTH_PREVIEW_OPTIONS[0];
+
+  return (
+    <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
+      <div className="text-xs uppercase text-stone-400">Growth Lens Preview</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{activeOption.label}</div>
+      <div className="mt-1 text-xs text-stone-400">{activeOption.hint}</div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {GROWTH_PREVIEW_OPTIONS.map((option) => {
+          const active = option.id === previewGrowthImprint;
+          return (
+            <button
+              key={option.id}
+              aria-pressed={active}
+              className={`rounded-md border px-2 py-2 text-left text-xs transition ${
+                active
+                  ? "border-[#ffd166] bg-[#2a2023] text-[#ffe29a]"
+                  : "border-[#3f3144] bg-[#151217] text-stone-300 hover:border-[#5bd0c7]"
+              }`}
+              type="button"
+              onClick={() => onChange(option.id)}
+            >
+              <div className="font-medium">{option.label}</div>
+              <div className="mt-1 text-[11px] opacity-80">{option.hint}</div>
+            </button>
+          );
+        })}
       </div>
     </section>
   );
