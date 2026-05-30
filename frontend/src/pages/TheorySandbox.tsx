@@ -19,6 +19,7 @@ import {
 } from "../services/progressionApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
+import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
 
@@ -426,6 +427,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStageSetpiece(visual) ? (
                 <div className="text-[11px] text-stone-200">Setpiece: {getStageSetpiece(visual)?.label}</div>
               ) : null}
+              {getStageDirectorCue(visual) ? (
+                <div className="text-[11px] text-[#ffd9a8]">Cue: {getStageDirectorCue(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -556,6 +560,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <TheorySynergyPanel visual={visual} />
           <SceneCascadePanel visual={visual} />
           <StageSetpiecePanel visual={visual} />
+          <StageDirectorCuePanel visual={visual} />
           <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
@@ -1265,6 +1270,26 @@ function StageSetpiecePanel({ visual }: { visual: VisualParameters }) {
         <ReadingLine label="装置骨架" value={setpiece.rig} />
         <ReadingLine label="灯光调度" value={setpiece.lighting} />
         <ReadingLine label="体感变化" value={setpiece.impact} />
+      </div>
+    </section>
+  );
+}
+
+function StageDirectorCuePanel({ visual }: { visual: VisualParameters }) {
+  const cue = getStageDirectorCue(visual);
+
+  if (!cue) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#4d3725] bg-[#231a18] p-3">
+      <div className="text-xs uppercase text-stone-400">Stage Director Cue</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{cue.label}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="节奏推进" value={cue.rhythm} />
+        <ReadingLine label="运动调度" value={cue.motion} />
+        <ReadingLine label="舞台体感" value={cue.impact} />
       </div>
     </section>
   );

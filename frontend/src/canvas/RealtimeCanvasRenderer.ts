@@ -1,4 +1,5 @@
 import type { VisualParameters } from "../types/theory";
+import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 
 export interface CanvasFrameScheduler {
@@ -131,6 +132,7 @@ export class RealtimeCanvasRenderer {
     this.drawSceneCascadeLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageSetpieceLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageLightingCueLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStageDirectorCueLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -907,6 +909,274 @@ export class RealtimeCanvasRenderer {
     }
 
     this.context.restore();
+  }
+
+  private drawStageDirectorCueLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const cue = getStageDirectorCue(visual);
+
+    if (!cue) {
+      return;
+    }
+
+    this.context.save();
+
+    switch (cue.kind) {
+      case "cathedral-descent":
+        this.drawCathedralDescentCue(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "silk-breath":
+        this.drawSilkBreathCue(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "arcade-sway":
+        this.drawArcadeSwayCue(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "forge-hammer":
+        this.drawForgeHammerCue(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-scan":
+        this.drawPrismScanCue(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "runway-chase":
+        this.drawRunwayChaseCue(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "altar-eclipse":
+        this.drawAltarEclipseCue(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
+  private drawCathedralDescentCue(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const groupPulse = 0.5 + 0.5 * Math.sin(time * (0.8 + visual.motionSpeed * 0.4));
+
+    for (let index = 0; index < 6; index += 1) {
+      const progress = index / 5;
+      const beamHeight = height * (0.26 + progress * 0.32 + groupPulse * 0.04);
+      const beamWidth = radius * (0.05 + progress * 0.02);
+      const x = centerX - radius * 0.92 + progress * radius * 1.84;
+      const alpha = 0.06 + visual.glow * 0.08 + progress * 0.05 + groupPulse * 0.04;
+      const gradient = this.context.createLinearGradient(x, 0, x, beamHeight);
+
+      gradient.addColorStop(0, alphaHex(visual.secondaryColor, alpha * 0.9));
+      gradient.addColorStop(0.55, alphaHex(visual.color, alpha));
+      gradient.addColorStop(1, alphaHex(visual.secondaryColor, 0));
+      this.context.fillStyle = gradient;
+      this.context.fillRect(x - beamWidth / 2, 0, beamWidth, beamHeight);
+    }
+
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.01);
+    for (let index = 0; index < 3; index += 1) {
+      const ringRadius = radius * (0.42 + index * 0.22 + groupPulse * 0.02);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY - radius * 0.92 + index * radius * 0.16, ringRadius, Math.PI * 1.05, Math.PI * 1.95);
+      this.context.stroke();
+    }
+  }
+
+  private drawSilkBreathCue(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const breath = 0.5 + 0.5 * Math.sin(time * (1.2 + visual.motionSpeed * 0.6));
+
+    for (const direction of [-1, 1]) {
+      const veilGradient = this.context.createLinearGradient(
+        centerX + direction * radius * 0.6,
+        centerY - radius * 1.2,
+        centerX + direction * radius * 1.18,
+        centerY + radius * 1.16
+      );
+      veilGradient.addColorStop(0, alphaHex(visual.secondaryColor, 0));
+      veilGradient.addColorStop(0.4, alphaHex(visual.secondaryColor, 0.08 + breath * 0.06));
+      veilGradient.addColorStop(1, alphaHex(visual.color, 0.18 + visual.glow * 0.08));
+      this.context.fillStyle = veilGradient;
+      this.context.beginPath();
+      this.context.moveTo(centerX + direction * radius * 0.28, centerY - radius * 1.08);
+      this.context.bezierCurveTo(
+        centerX + direction * radius * (0.72 + breath * 0.08),
+        centerY - radius * 0.44,
+        centerX + direction * radius * (0.98 + breath * 0.06),
+        centerY + radius * 0.42,
+        centerX + direction * radius * 0.44,
+        centerY + radius * 1.18
+      );
+      this.context.lineTo(centerX + direction * radius * 0.18, centerY + radius * 1.18);
+      this.context.closePath();
+      this.context.fill();
+    }
+
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + breath * 0.08);
+    this.context.lineWidth = Math.max(1.2, radius * 0.012);
+    this.context.beginPath();
+    this.context.ellipse(centerX, centerY + radius * 0.06, radius * (0.74 + breath * 0.05), radius * (0.5 + breath * 0.04), 0, 0, Math.PI * 2);
+    this.context.stroke();
+  }
+
+  private drawArcadeSwayCue(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const sway = Math.sin(time * (1.1 + visual.swing * 1.6));
+    this.context.strokeStyle = alphaHex(visual.color, 0.14 + visual.swing * 0.1);
+    this.context.lineWidth = Math.max(1.4, radius * 0.013);
+
+    for (let index = 0; index < 5; index += 1) {
+      const progress = index / 4;
+      const y = centerY + radius * (0.68 + progress * 0.12);
+      const waveOffset = sway * radius * (0.08 + progress * 0.02);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 1.12, y);
+      this.context.quadraticCurveTo(centerX, y - waveOffset, centerX + radius * 1.12, y);
+      this.context.stroke();
+    }
+
+    for (let index = 0; index < 9; index += 1) {
+      const progress = index / 8;
+      const x = centerX - radius * 1.04 + progress * radius * 2.08;
+      const flare = 0.2 + 0.8 * Math.max(0, Math.sin(time * 1.3 + progress * Math.PI));
+      this.context.fillStyle = alphaHex(visual.secondaryColor, 0.12 + flare * 0.08);
+      this.context.beginPath();
+      this.context.arc(x, centerY + radius * 0.84 + sway * radius * 0.03, radius * (0.02 + flare * 0.014), 0, Math.PI * 2);
+      this.context.fill();
+    }
+  }
+
+  private drawForgeHammerCue(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const strike = Math.pow(Math.max(0, Math.sin(time * (1.6 + visual.attack * 2.1))), 3);
+    const laneWidth = radius * 0.16;
+
+    for (const x of [centerX - radius * 0.38, centerX, centerX + radius * 0.38]) {
+      const beamGradient = this.context.createLinearGradient(x, centerY - radius * 1.3, x, centerY + radius * 0.48);
+      beamGradient.addColorStop(0, alphaHex(visual.secondaryColor, 0));
+      beamGradient.addColorStop(0.45, alphaHex(visual.secondaryColor, 0.08 + strike * 0.12));
+      beamGradient.addColorStop(1, alphaHex(visual.color, 0.18 + strike * 0.2));
+      this.context.fillStyle = beamGradient;
+      this.context.fillRect(x - laneWidth / 2, centerY - radius * 1.2, laneWidth, radius * (1.52 + strike * 0.14));
+    }
+
+    this.context.fillStyle = alphaHex(visual.color, 0.18 + strike * 0.18);
+    this.context.fillRect(centerX - radius * 0.88, centerY + radius * 0.82, radius * 1.76, radius * (0.06 + strike * 0.04));
+  }
+
+  private drawPrismScanCue(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const scan = (time * (0.24 + visual.motionSpeed * 0.08)) % 1;
+    const sweepX = centerX - radius * 1.2 + scan * radius * 2.4;
+    const setLineDash = this.context.setLineDash?.bind(this.context);
+
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.01);
+    setLineDash?.([radius * 0.06, radius * 0.04]);
+    for (let index = 0; index < 5; index += 1) {
+      const offset = index * radius * 0.16;
+      this.context.beginPath();
+      this.context.moveTo(sweepX - radius * 0.42, centerY - radius * 1.18 + offset);
+      this.context.lineTo(sweepX + radius * 0.22, centerY + radius * 1.06 - offset * 0.42);
+      this.context.stroke();
+    }
+    setLineDash?.([]);
+  }
+
+  private drawRunwayChaseCue(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const progress = (time * (0.44 + visual.motionSpeed * 0.14)) % 1;
+
+    for (const direction of [-1, 1]) {
+      for (let index = 0; index < 8; index += 1) {
+        const step = (progress + index / 8) % 1;
+        const x = centerX + direction * radius * (0.2 + step * 0.94);
+        const y = centerY + radius * (0.88 - step * 1.08);
+        const size = radius * (0.018 + (1 - step) * 0.018);
+        this.context.fillStyle = alphaHex(visual.secondaryColor, 0.08 + (1 - step) * 0.14);
+        this.context.beginPath();
+        this.context.arc(x, y, size, 0, Math.PI * 2);
+        this.context.fill();
+      }
+    }
+
+    this.context.strokeStyle = alphaHex(visual.color, 0.12 + visual.energy * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.009);
+    this.context.beginPath();
+    this.context.moveTo(centerX - radius * 1.18, centerY + radius * 0.92);
+    this.context.lineTo(centerX - radius * 0.14, centerY - radius * 1.04);
+    this.context.moveTo(centerX + radius * 1.18, centerY + radius * 0.92);
+    this.context.lineTo(centerX + radius * 0.14, centerY - radius * 1.04);
+    this.context.stroke();
+  }
+
+  private drawAltarEclipseCue(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const sweep = (time * (0.16 + visual.motionSpeed * 0.08)) % 1;
+    const startAngle = sweep * Math.PI * 2;
+    const endAngle = startAngle + Math.PI * (0.44 + visual.gravity * 0.18);
+
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + visual.grit * 0.1);
+    this.context.lineWidth = Math.max(1.6, radius * 0.015);
+    this.context.beginPath();
+    this.context.arc(centerX, centerY + radius * 0.02, radius * 1.04, startAngle, endAngle);
+    this.context.stroke();
+
+    this.context.fillStyle = alphaHex(visual.backgroundColor, 0.08 + visual.grit * 0.08);
+    this.context.beginPath();
+    this.context.arc(centerX, centerY + radius * 0.02, radius * (0.58 + visual.gravity * 0.14), 0, Math.PI * 2);
+    this.context.fill();
   }
 
   private drawAuroraDaisCascade(

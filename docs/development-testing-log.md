@@ -248,6 +248,66 @@
 - 当前 `/tmp/scales-stage-default.png` 与 `/tmp/scales-stage-growth.png` 已成功生成，可直接对照默认舞台与 Neo Soul 成长舞台的差异。
 - 更激进的三元组合无头浏览器自动化在当前环境下仍然会遇到浏览器进程权限限制，但代码级与接口级验证已经完整覆盖了这轮改动的核心约束。
 
+## 最新一轮：Stage Director Cue 导演调度层
+
+上一轮把大型 setpiece 的骨架和灯光 cue 都接起来之后，这一轮继续处理“为什么它们还像是同一个 show 只是换灯了”。
+
+目标：
+
+- 让大型舞台分叉再多一层“导演式节奏语言”，把不同 Growth 轨迹的运动方式继续拉开。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageDirectorCues.ts`
+- 用 `getStageSetpiece(...)` 作为入口，把 setpiece 继续映射到不同的 director cue
+- `TheorySandbox` 新增 `Stage Director Cue` 面板
+- 舞台左上角角标新增 `Cue: ...`
+- `RealtimeCanvasRenderer` 新增 `drawStageDirectorCueLayer(...)`
+
+当前已接入的导演 cue 家族：
+
+- `Cathedral Descent`
+  - 适用于 `Choir Vault / Aurora Dais / Blue Cloister`
+  - 体现成组下压的礼堂式调度
+- `Silk Breath`
+  - 适用于 `Silken Halo`
+  - 体现双侧幕纱与光环一起呼吸
+- `Arcade Sway`
+  - 适用于 `Rose Arcade / Velvet Arcade`
+  - 体现脚灯与回廊侧洗缓慢摆移
+- `Forge Hammer`
+  - 适用于 `Forge Throne`
+  - 体现重击式下压和热口爆闪
+- `Prism Scan`
+  - 适用于 `Phase Cloister / Prism Vortex`
+  - 体现折返扫描与相位交通
+- `Runway Chase`
+  - 适用于 `Neon Causeway / Tide Runway`
+  - 体现边灯追光与纵深冲刺
+- `Altar Eclipse`
+  - 适用于 `Eclipse Altar`
+  - 体现压暗后沿圆环回亮的仪式性推进
+
+对应验证：
+
+- 新增 `frontend/src/tests/canvas/stageDirectorCues.test.ts`
+  - 验证 `Choir Vault` 会映射到 `Cathedral Descent`
+  - 验证 `Neon Causeway` 会映射到 `Runway Chase`
+  - 验证无 setpiece 时返回 `null`
+- 更新 `TheorySandbox.test.tsx`
+  - 验证右侧出现 `Stage Director Cue`
+  - 验证舞台角标出现 `Cue: Cathedral Descent`
+  - 验证 cue 文案真实渲染
+- 前端整模块测试
+  - `67 passed`
+- 前端 build
+  - 通过
+
+这一轮的价值：
+
+- 现在不同 Growth 分叉不只是“舞台结构不同、灯不同”，连节奏推进和运动调度都不同。
+- 这让大型舞台人格更接近真正的演出系统，而不是一组静态视觉皮肤。
+
 ## 当前测试结构
 
 ### 后端

@@ -227,9 +227,13 @@ describe("TheorySandbox", () => {
     });
 
     expect(screen.getAllByText("Choir Vault").length).toBeGreaterThan(0);
+    expect(screen.getByText("Stage Director Cue")).toBeInTheDocument();
+    expect(screen.getAllByText("Cathedral Descent").length).toBeGreaterThan(0);
     expect(screen.getByText(/顶部吊架、纵向窗格、拱形合唱廊/)).toBeInTheDocument();
     expect(screen.getByText(/顶部冷色吊灯和下压式礼堂光柱会持续往中心汇聚/)).toBeInTheDocument();
     expect(screen.getByText(/Setpiece: Choir Vault/)).toBeInTheDocument();
+    expect(screen.getByText(/Cue: Cathedral Descent/)).toBeInTheDocument();
+    expect(screen.getByText(/成组下压，像礼堂灯柱一层层往中心落/)).toBeInTheDocument();
   });
 
   it("records a practice session and shows earned exp", async () => {
