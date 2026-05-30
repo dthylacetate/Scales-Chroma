@@ -22,6 +22,7 @@ import type { TheoryElement, VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
+import { getStagePhraseHooks } from "../visual_engine/stagePhraseHooks";
 import { getStagePhraseTrajectory } from "../visual_engine/stagePhraseTrajectories";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
@@ -456,6 +457,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStagePhraseTrajectory(visual) ? (
                 <div className="text-[11px] text-[#ffd7c2]">Trajectory: {getStagePhraseTrajectory(visual)?.label}</div>
               ) : null}
+              {visual.phraseHooks.length > 0 ? <div className="text-[11px] text-[#f6e1a2]">Hooks: {visual.phraseHooks.length}</div> : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -583,6 +585,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
           <StageClimatePanel visual={visual} />
           <StagePhraseTrajectoryPanel visual={visual} />
+          <PhraseHooksPanel visual={visual} />
           <GrowthImprintPanel visual={visual} />
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
@@ -1237,6 +1240,42 @@ function StagePhraseTrajectoryPanel({ visual }: { visual: VisualParameters }) {
   );
 }
 
+function PhraseHooksPanel({ visual }: { visual: VisualParameters }) {
+  const hooks = getStagePhraseHooks(visual);
+
+  if (hooks.length === 0 || visual.phraseHookEnergy <= 0.05) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#4d4120] bg-[#231f16] p-3">
+      <div className="text-xs uppercase text-stone-400">Phrase Hooks</div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div className="text-sm font-medium text-stone-100">{hooks.length} Bridge{hooks.length > 1 ? "s" : ""}</div>
+        <div className="text-sm font-semibold text-[#ffd166]">{Math.round(visual.phraseHookEnergy * 100)}%</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#17140c]">
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${Math.max(6, Math.round(visual.phraseHookEnergy * 100))}%`,
+            background: "linear-gradient(90deg, rgba(255, 209, 102, 0.38) 0%, rgba(255, 209, 102, 1) 100%)"
+          }}
+        />
+      </div>
+      <div className="mt-3 grid gap-2">
+        {hooks.map((hook) => (
+          <div key={hook.label} className="rounded-md border border-white/5 bg-white/5 px-2 py-1.5 text-xs text-stone-300">
+            <div className="font-medium text-stone-100">{hook.label}</div>
+            <div className="mt-1">{hook.bridge}</div>
+            <div className="mt-1 text-stone-400">{hook.impact}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
   const reading = buildGrowthImprintReading(visual);
 
@@ -1672,6 +1711,10 @@ function buildStageReading(
     visual.phraseTrajectory !== "neutral"
       ? `；当前顺序已经形成 ${phraseTrajectoryLabel(visual.phraseTrajectory)}，强度 ${Math.round(visual.phraseTrajectoryIntensity * 100)}%`
       : "；当前顺序还没有形成独立推进轨迹";
+  const hookText =
+    visual.phraseHooks.length > 0
+      ? `；相邻模块之间已经长出 ${visual.phraseHooks.join("、")} 这些桥接动作`
+      : "；相邻模块之间还没有长出独立桥接动作";
   const cascadeText =
     visual.sceneCascade !== "neutral"
       ? `；当前还触发了 ${sceneCascadeLabel(visual.sceneCascade)}，强度 ${Math.round(visual.sceneCascadeIntensity * 100)}%`
@@ -1682,7 +1725,7 @@ function buildStageReading(
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
   };
 }
 

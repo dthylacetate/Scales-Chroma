@@ -30,6 +30,8 @@ const visual: VisualParameters = {
   growthImprintIntensity: 0.82,
   phraseTrajectory: "lift-arc",
   phraseTrajectoryIntensity: 0.84,
+  phraseHooks: ["Skyline Rise", "Cadence Sweep"],
+  phraseHookEnergy: 0.78,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.88,
   openness: 0.82,
@@ -395,6 +397,31 @@ describe("RealtimeCanvasRenderer", () => {
     const context = canvas.getContext("2d");
     expect(context?.bezierCurveTo).toHaveBeenCalled();
     expect(context?.fillRect).toHaveBeenCalled();
+  });
+
+  it("draws phrase hook bridge motifs when adjacent modules have bridge hooks", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      phraseHooks: ["Skyline Rise", "Cadence Sweep"],
+      phraseHookEnergy: 0.8
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.quadraticCurveTo).toHaveBeenCalled();
   });
 
   it("draws foreground motion rigs for stage personalities with near-camera machinery", () => {

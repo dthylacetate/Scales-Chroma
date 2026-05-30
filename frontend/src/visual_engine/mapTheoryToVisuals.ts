@@ -70,6 +70,8 @@ const DEFAULT_VISUALS: VisualParameters = {
   growthImprintIntensity: 0,
   phraseTrajectory: "neutral",
   phraseTrajectoryIntensity: 0,
+  phraseHooks: [],
+  phraseHookEnergy: 0,
   sceneCascade: "neutral",
   sceneCascadeIntensity: 0,
   activeBonuses: [],
@@ -631,6 +633,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     sceneFamily: "neon-grid" as VisualParameters["sceneFamily"],
     growthImprint: "neutral" as VisualParameters["growthImprint"],
     growthImprintIntensity: 0,
+    phraseTrajectory: "neutral" as VisualParameters["phraseTrajectory"],
+    phraseTrajectoryIntensity: 0,
+    phraseHooks: [] as string[],
+    phraseHookEnergy: 0,
     sceneCascade: "neutral" as VisualParameters["sceneCascade"],
     sceneCascadeIntensity: 0,
     activeBonuses: [] as string[],
@@ -696,6 +702,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
   const sceneCascade = inferSceneCascade(elements, names, visual);
   visual.sceneCascade = sceneCascade.cascade;
   visual.sceneCascadeIntensity = sceneCascade.intensity;
+  const phraseTrajectory = inferPhraseTrajectory(elements, visual);
+  visual.phraseTrajectory = phraseTrajectory.trajectory;
+  visual.phraseTrajectoryIntensity = phraseTrajectory.intensity;
+  applyPhraseHooks(elements, visual);
   const animationState = dominantAnimationState(visual);
   const ringCount = Math.max(2, Math.min(8, Math.floor(2 + visual.rippleStrength * 3 + visual.complexity * 2)));
   const particles = {
@@ -739,8 +749,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     sceneFamily: visual.sceneFamily,
     growthImprint: "neutral",
     growthImprintIntensity: 0,
-    phraseTrajectory: "neutral",
-    phraseTrajectoryIntensity: 0,
+    phraseTrajectory: visual.phraseTrajectory,
+    phraseTrajectoryIntensity: round(visual.phraseTrajectoryIntensity),
+    phraseHooks: visual.phraseHooks,
+    phraseHookEnergy: round(visual.phraseHookEnergy),
     sceneCascade: visual.sceneCascade,
     sceneCascadeIntensity: round(visual.sceneCascadeIntensity),
     activeBonuses: visual.activeBonuses,
@@ -1142,6 +1154,128 @@ function inferSceneCascade(
     cascade,
     intensity: round(intensity)
   };
+}
+
+function inferPhraseTrajectory(
+  elements: TheoryElement[],
+  visual: {
+    cadencePull: number;
+    luminosity: number;
+    blendCohesion: number;
+    swing: number;
+    motionSpeed: number;
+    energy: number;
+    complexity: number;
+    attack: number;
+    modalTension: number;
+    gravity: number;
+    depth: number;
+  }
+): { trajectory: VisualParameters["phraseTrajectory"]; intensity: number } {
+  if (elements.length < 2) {
+    return { trajectory: "neutral", intensity: 0 };
+  }
+
+  const names = elements.map((element) => element.name.toLowerCase());
+  const firstName = names[0];
+  const lastName = names[names.length - 1];
+  const firstType = elements[0]?.type;
+  const lastType = elements[elements.length - 1]?.type;
+
+  if (["lydian", "ionian", "major", "maj7"].includes(firstName) && ["ii-v-i", "maj7", "major", "dominant7"].includes(lastName) && visual.cadencePull > 0.72) {
+    return { trajectory: "lift-arc", intensity: round(Math.min(1, 0.72 + visual.cadencePull * 0.18 + visual.luminosity * 0.08)) };
+  }
+
+  if (["dorian", "min7", "major", "ii-v-i"].includes(firstName) && ["maj7", "min7", "ii-v-i"].includes(lastName) && visual.blendCohesion > 0.62) {
+    return { trajectory: "velvet-drift", intensity: round(Math.min(1, 0.68 + visual.blendCohesion * 0.16 + visual.swing * 0.12)) };
+  }
+
+  if (["pentatonic", "mixolydian", "major", "i-v-vi-iv"].includes(firstName) && ["dominant7", "ii-v-i", "i-v-vi-iv"].includes(lastName) && visual.motionSpeed > 0.66) {
+    return { trajectory: "runway-drive", intensity: round(Math.min(1, 0.72 + visual.motionSpeed * 0.16 + visual.energy * 0.12)) };
+  }
+
+  if (["melodic minor", "lydian", "maj7", "dominant7"].includes(firstName) && ["aug", "dominant7", "lydian"].includes(lastName) && visual.complexity > 0.72) {
+    return { trajectory: "prism-climb", intensity: round(Math.min(1, 0.7 + visual.complexity * 0.14 + visual.attack * 0.12)) };
+  }
+
+  if (["harmonic minor", "phrygian", "dim7", "minor"].includes(firstName) && ["dominant7", "dim7", "aug"].includes(lastName) && visual.modalTension > 0.72) {
+    return { trajectory: "forge-drop", intensity: round(Math.min(1, 0.74 + visual.modalTension * 0.14 + visual.gravity * 0.1)) };
+  }
+
+  if ((firstType === "progression" || ["dominant7", "dim7", "aug"].includes(firstName)) && (["harmonic minor", "phrygian", "minor", "dim7"].includes(lastName) || lastType === "scale")) {
+    return { trajectory: "shadow-sink", intensity: round(Math.min(1, 0.68 + visual.depth * 0.12 + visual.modalTension * 0.12 + visual.gravity * 0.1)) };
+  }
+
+  return { trajectory: "neutral", intensity: 0 };
+}
+
+function applyPhraseHooks(
+  elements: TheoryElement[],
+  visual: {
+    phraseTrajectoryIntensity: number;
+    phraseHooks: string[];
+    phraseHookEnergy: number;
+    beamStrength: number;
+    glow: number;
+    openness: number;
+    symmetry: number;
+    cadencePull: number;
+    gravity: number;
+    depth: number;
+    rippleStrength: number;
+    swing: number;
+    blendCohesion: number;
+    motionSpeed: number;
+    energy: number;
+    pulseDensity: number;
+    modalTension: number;
+    contrast: number;
+    grain: number;
+    grit: number;
+    complexity: number;
+    attack: number;
+    geometryWeights: ElementVisualProfile["geometryWeights"];
+  }
+): void {
+  const hookBonuses: Record<string, Record<string, number>> = {
+    "Skyline Rise": { beamStrength: 0.08, glow: 0.06, openness: 0.08, symmetry: 0.06 },
+    "Cadence Sweep": { beamStrength: 0.08, cadencePull: 0.1, gravity: 0.06, depth: 0.06 },
+    "Velvet Link": { wave: 0.1, rippleStrength: 0.08, swing: 0.1, blendCohesion: 0.08 },
+    "Runway Spark": { motionSpeed: 0.1, energy: 0.08, beamStrength: 0.08, pulseDensity: 0.08 },
+    "Collapse Gate": { fracture: 0.1, modalTension: 0.1, gravity: 0.08, contrast: 0.06 },
+    "Ritual Notch": { grain: 0.1, contrast: 0.08, depth: 0.08, grit: 0.08 },
+    "Prism Ladder": { lattice: 0.1, complexity: 0.08, attack: 0.08, motionSpeed: 0.06 }
+  };
+  const pairLabels: Record<string, string> = {
+    "lydian:maj7": "Skyline Rise",
+    "maj7:ii-v-i": "Cadence Sweep",
+    "dorian:min7": "Velvet Link",
+    "pentatonic:mixolydian": "Runway Spark",
+    "dominant7:harmonic minor": "Collapse Gate",
+    "harmonic minor:dim7": "Ritual Notch",
+    "melodic minor:aug": "Prism Ladder"
+  };
+
+  let hits = 0;
+  for (let index = 0; index < elements.length - 1; index += 1) {
+    const key = `${elements[index]?.name.toLowerCase()}:${elements[index + 1]?.name.toLowerCase()}`;
+    const label = pairLabels[key];
+
+    if (!label) {
+      continue;
+    }
+
+    hits += 1;
+    visual.phraseHooks.push(label);
+    const scale = 0.24 + index * 0.04 + visual.phraseTrajectoryIntensity * 0.18;
+    applySceneCascadeEnhancements(visual, hookBonuses[label] ?? {}, scale);
+  }
+
+  if (hits > 0) {
+    visual.phraseHookEnergy = clamp01(0.22 + hits * 0.18 + visual.phraseTrajectoryIntensity * 0.22 + 0.16);
+    visual.depth = clamp01(visual.depth + hits * 0.02);
+    visual.motionSpeed = clamp01(visual.motionSpeed + hits * 0.02);
+  }
 }
 
 function applySceneCascadeEnhancements(

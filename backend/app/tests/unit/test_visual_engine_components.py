@@ -366,3 +366,18 @@ def test_renderer_uses_element_order_to_shape_phrase_trajectory() -> None:
     assert dark_sink.phrase_trajectory_intensity > 0.75
     assert dark_sink.depth > 0.8
     assert bright_arc.phrase_trajectory != dark_sink.phrase_trajectory
+
+
+def test_renderer_derives_phrase_hooks_from_adjacent_module_bridges() -> None:
+    visual = render_visual_parameters(
+        [
+            TheoryElement(id="lydian", type="mode", name="Lydian"),
+            TheoryElement(id="maj7", type="chord", name="Maj7"),
+            TheoryElement(id="ii-v-i", type="progression", name="II-V-I"),
+        ]
+    )
+
+    assert "Skyline Rise" in visual.phrase_hooks
+    assert "Cadence Sweep" in visual.phrase_hooks
+    assert visual.phrase_hook_energy > 0.7
+    assert visual.beam_strength > 0.8

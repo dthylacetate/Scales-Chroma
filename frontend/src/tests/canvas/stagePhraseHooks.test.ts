@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { VisualParameters } from "../../types/theory";
-import { getStageTakeoverMode } from "../../visual_engine/stageTakeoverModes";
+import { getStagePhraseHooks } from "../../visual_engine/stagePhraseHooks";
 
 const baseVisual: VisualParameters = {
   color: "#ffd166",
@@ -38,8 +38,8 @@ const baseVisual: VisualParameters = {
   growthImprintIntensity: 0.88,
   phraseTrajectory: "lift-arc",
   phraseTrajectoryIntensity: 0.86,
-  phraseHooks: ["Skyline Rise"],
-  phraseHookEnergy: 0.6,
+  phraseHooks: ["Skyline Rise", "Cadence Sweep"],
+  phraseHookEnergy: 0.78,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.94,
   activeBonuses: ["Aurora Choir"],
@@ -55,38 +55,22 @@ const baseVisual: VisualParameters = {
   animationState: "flowing"
 };
 
-describe("stage takeover modes", () => {
-  it("resolves a takeover mode from a growth-split cathedral stage", () => {
-    const takeover = getStageTakeoverMode({
-      ...baseVisual,
-      activeBonuses: ["Aurora Choir", "Choir Vault"]
-    });
+describe("stage phrase hooks", () => {
+  it("maps phrase hook labels into readable bridge descriptors", () => {
+    const hooks = getStagePhraseHooks(baseVisual);
 
-    expect(takeover?.label).toBe("Cathedral Iris");
-    expect(takeover?.trigger).toContain("礼堂");
-    expect(takeover?.gesture).toContain("开闸");
+    expect(hooks).toHaveLength(2);
+    expect(hooks[0]?.label).toBe("Skyline Rise");
+    expect(hooks[1]?.label).toBe("Cadence Sweep");
   });
 
-  it("resolves runway takeovers for pentatonic acceleration branches", () => {
-    const takeover = getStageTakeoverMode({
+  it("returns only known phrase hooks", () => {
+    const hooks = getStagePhraseHooks({
       ...baseVisual,
-      sceneCascade: "tide-runway",
-      growthImprint: "pentatonic-drive",
-      activeBonuses: ["Neon Causeway"]
+      phraseHooks: ["Skyline Rise", "Unknown Hook"]
     });
 
-    expect(takeover?.label).toBe("Runway Rush");
-    expect(takeover?.impact).toContain("起跑");
-  });
-
-  it("returns null when the stage has no setpiece takeover identity", () => {
-    const takeover = getStageTakeoverMode({
-      ...baseVisual,
-      sceneCascade: "neutral",
-      sceneCascadeIntensity: 0,
-      activeBonuses: []
-    });
-
-    expect(takeover).toBeNull();
+    expect(hooks).toHaveLength(1);
+    expect(hooks[0]?.label).toBe("Skyline Rise");
   });
 });

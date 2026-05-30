@@ -2,6 +2,7 @@ import type { VisualParameters } from "../types/theory";
 import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
+import { getStagePhraseHooks } from "../visual_engine/stagePhraseHooks";
 import { getStagePhraseTrajectory } from "../visual_engine/stagePhraseTrajectories";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
@@ -132,6 +133,7 @@ export class RealtimeCanvasRenderer {
     this.drawAtmosphereLayers(visual, width, height, centerX, centerY, radius, time);
     this.drawStageClimateLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStagePhraseTrajectoryLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStagePhraseHooksLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
@@ -184,6 +186,11 @@ export class RealtimeCanvasRenderer {
     const cascadeShift = fromVisual.sceneCascade !== toVisual.sceneCascade ? 0.26 : 0;
     const setpieceShift = getStageSetpiece(fromVisual)?.kind !== getStageSetpiece(toVisual)?.kind ? 0.18 : 0;
     const trajectoryShift = getStagePhraseTrajectory(fromVisual)?.kind !== getStagePhraseTrajectory(toVisual)?.kind ? 0.14 : 0;
+    const hookShift =
+      Math.abs(fromVisual.phraseHooks.length - toVisual.phraseHooks.length) > 0 ||
+      Math.abs(fromVisual.phraseHookEnergy - toVisual.phraseHookEnergy) > 0.04
+        ? 0.1
+        : 0;
     const motionShift = getStageMotionRig(fromVisual)?.kind !== getStageMotionRig(toVisual)?.kind ? 0.12 : 0;
     const projectionShift = getStageProjectionScript(fromVisual)?.kind !== getStageProjectionScript(toVisual)?.kind ? 0.12 : 0;
     const takeoverShift = getStageTakeoverMode(fromVisual)?.kind !== getStageTakeoverMode(toVisual)?.kind ? 0.12 : 0;
@@ -193,7 +200,7 @@ export class RealtimeCanvasRenderer {
       0,
       Math.min(
         1,
-        0.12 + sceneShift + signatureShift + growthShift + cascadeShift + setpieceShift + trajectoryShift + motionShift + projectionShift + takeoverShift + energyShift + tensionShift
+        0.12 + sceneShift + signatureShift + growthShift + cascadeShift + setpieceShift + trajectoryShift + hookShift + motionShift + projectionShift + takeoverShift + energyShift + tensionShift
       )
     );
   }
@@ -749,6 +756,83 @@ export class RealtimeCanvasRenderer {
         this.drawShadowSinkTrajectory(centerX, centerY, radius);
         break;
     }
+
+    this.context.restore();
+  }
+
+  private drawStagePhraseHooksLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const hooks = getStagePhraseHooks(visual);
+
+    if (hooks.length === 0 || visual.phraseHookEnergy <= 0.04) {
+      return;
+    }
+
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + visual.phraseHookEnergy * 2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.phraseHookEnergy * 0.14);
+    this.context.fillStyle = alphaHex(visual.color, 0.08 + visual.phraseHookEnergy * 0.08);
+
+    hooks.forEach((hook, index) => {
+      const offset = (index - (hooks.length - 1) / 2) * radius * 0.22;
+      const anchorX = centerX + offset;
+      const anchorY = centerY + radius * (-0.18 + index * 0.1);
+
+      switch (hook.kind) {
+        case "skyline-rise":
+          this.context.beginPath();
+          this.context.moveTo(anchorX - radius * 0.18, anchorY + radius * 0.18);
+          this.context.quadraticCurveTo(anchorX, anchorY - radius * 0.28, anchorX + radius * 0.18, anchorY + radius * 0.02);
+          this.context.stroke();
+          break;
+        case "cadence-sweep":
+          this.context.beginPath();
+          this.context.moveTo(anchorX - radius * 0.22, anchorY - radius * 0.08);
+          this.context.quadraticCurveTo(anchorX + radius * 0.08, anchorY - radius * 0.16, anchorX + radius * 0.26, anchorY + radius * 0.06);
+          this.context.stroke();
+          break;
+        case "velvet-link":
+          this.context.beginPath();
+          this.context.ellipse(anchorX, anchorY, radius * 0.14, radius * 0.05, 0, 0, Math.PI * 2);
+          this.context.stroke();
+          break;
+        case "runway-spark":
+          this.context.beginPath();
+          this.context.moveTo(anchorX - radius * 0.18, anchorY + radius * 0.12);
+          this.context.lineTo(anchorX + radius * 0.04, anchorY - radius * 0.08);
+          this.context.lineTo(anchorX + radius * 0.18, anchorY + radius * 0.08);
+          this.context.stroke();
+          break;
+        case "collapse-gate":
+          this.context.beginPath();
+          this.context.moveTo(anchorX - radius * 0.14, anchorY - radius * 0.16);
+          this.context.lineTo(anchorX - radius * 0.14, anchorY + radius * 0.16);
+          this.context.lineTo(anchorX + radius * 0.14, anchorY + radius * 0.16);
+          this.context.lineTo(anchorX + radius * 0.14, anchorY - radius * 0.16);
+          this.context.stroke();
+          break;
+        case "ritual-notch":
+          this.context.fillRect(anchorX - radius * 0.08, anchorY - radius * 0.08, radius * 0.16, radius * 0.16);
+          break;
+        case "prism-ladder":
+          for (let step = 0; step < 3; step += 1) {
+            const stepX = anchorX - radius * 0.1 + step * radius * 0.08;
+            const stepY = anchorY + radius * 0.1 - step * radius * 0.1;
+            this.context.beginPath();
+            this.context.moveTo(stepX, stepY);
+            this.context.lineTo(stepX + radius * 0.08, stepY - radius * 0.06);
+            this.context.stroke();
+          }
+          break;
+      }
+    });
 
     this.context.restore();
   }
@@ -4315,6 +4399,7 @@ function interpolateVisuals(
   const discrete = <T,>(from: T, to: T, threshold = 0.5): T => (progress >= threshold ? to : from);
   const mergedBonuses = progress >= 0.45 ? toVisual.activeBonuses : fromVisual.activeBonuses;
   const mergedSynergies = progress >= 0.45 ? toVisual.activeSynergies : fromVisual.activeSynergies;
+  const mergedPhraseHooks = progress >= 0.45 ? toVisual.phraseHooks : fromVisual.phraseHooks;
 
   return {
     color: mixHex(fromVisual.color, toVisual.color, progress),
@@ -4351,6 +4436,8 @@ function interpolateVisuals(
     growthImprintIntensity: numeric(fromVisual.growthImprintIntensity, toVisual.growthImprintIntensity),
     phraseTrajectory: discrete(fromVisual.phraseTrajectory, toVisual.phraseTrajectory, 0.48),
     phraseTrajectoryIntensity: numeric(fromVisual.phraseTrajectoryIntensity, toVisual.phraseTrajectoryIntensity),
+    phraseHooks: mergedPhraseHooks,
+    phraseHookEnergy: numeric(fromVisual.phraseHookEnergy, toVisual.phraseHookEnergy),
     sceneCascade: discrete(fromVisual.sceneCascade, toVisual.sceneCascade, 0.48),
     sceneCascadeIntensity: numeric(fromVisual.sceneCascadeIntensity, toVisual.sceneCascadeIntensity),
     activeBonuses: mergedBonuses,

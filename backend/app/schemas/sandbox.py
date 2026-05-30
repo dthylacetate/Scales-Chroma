@@ -69,6 +69,8 @@ class VisualParameters(BaseModel):
     growth_imprint_intensity: float = Field(ge=0.0, le=1.0)
     phrase_trajectory: PhraseTrajectoryName
     phrase_trajectory_intensity: float = Field(ge=0.0, le=1.0)
+    phrase_hooks: list[str]
+    phrase_hook_energy: float = Field(ge=0.0, le=1.0)
     scene_cascade: Literal[
         "neutral",
         "aurora-dais",

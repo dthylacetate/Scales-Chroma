@@ -551,6 +551,62 @@
 - 它把“拖拽顺序”从弱影响变成了能被用户直接感知的主导因素。
 - 这会让乐理沙盘更像真正可以编排的舞台，而不是把几个模块丢进去之后只能看它们静态叠加。
 
+## 最新一轮：Phrase Hooks 相邻桥接层
+
+上一轮把“整句轨迹”做出来之后，这一轮继续处理一个更细的层级：同一组模块不只是整句往哪走不同，**相邻两个模块是怎么接过去的**也应该不同。
+
+目标：
+
+- 让拖拽顺序不只体现在一句大轨迹上，也体现在局部桥接动作上。
+- 让用户重新排列模块时，不只是舞台主弧线改变，连局部节点之间的过桥手势都能变。
+
+实现方式：
+
+- 后端 `VisualParameters` 新增 `phrase_hooks` 与 `phrase_hook_energy`
+- `renderer.py` 新增 `PHRASE_HOOK_RULES` 与 `_apply_phrase_hooks(...)`
+- 这层会检查相邻模块对，比如：
+  - `Lydian -> Maj7`
+  - `Maj7 -> II-V-I`
+  - `Pentatonic -> Mixolydian`
+  - `Dominant7 -> Harmonic Minor`
+- 前端新增 `frontend/src/visual_engine/stagePhraseHooks.ts`
+- `RealtimeCanvasRenderer` 新增 `drawStagePhraseHooksLayer(...)`
+- `TheorySandbox` 右侧新增 `Phrase Hooks` 面板，舞台左上角新增 `Hooks: ...`
+
+当前已接入的桥接动作：
+
+- `Skyline Rise`
+- `Cadence Sweep`
+- `Velvet Link`
+- `Runway Spark`
+- `Collapse Gate`
+- `Ritual Notch`
+- `Prism Ladder`
+
+对应测试：
+
+- 后端单元测试：
+  - 验证 `Lydian -> Maj7 -> II-V-I` 会同时长出 `Skyline Rise` 与 `Cadence Sweep`
+- 后端 API 测试：
+  - 验证 `/sandbox/render` 会返回 `phrase_hooks` 与 `phrase_hook_energy`
+- 前端 helper 测试：
+  - 新增 `stagePhraseHooks.test.ts`
+- 前端 Canvas 测试：
+  - 验证桥接层会真的触发曲线或桥接节点绘制
+- 前端 UI 测试：
+  - 验证右侧 `Phrase Hooks` 面板和左上角 `Hooks: ...` 会同时出现
+
+本轮验证结果：
+
+- 后端：`95 passed, 1 warning`
+- 前端：`94 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 现在拖拽顺序的反馈不再只靠一句总走势，而是连局部连接处都有可感知变化。
+- 这会让用户在拖、换、重排模块时，更像真的在“编排一句舞台动作”，而不是只换一条曲线。
+
 - 新增 `frontend/src/visual_engine/stageDirectorCues.ts`
 - 用 `getStageSetpiece(...)` 作为入口，把 setpiece 继续映射到不同的 director cue
 - `TheorySandbox` 新增 `Stage Director Cue` 面板

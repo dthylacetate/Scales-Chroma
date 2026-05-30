@@ -38,6 +38,8 @@ const baseVisual: VisualParameters = {
   growthImprintIntensity: 0.88,
   phraseTrajectory: "lift-arc",
   phraseTrajectoryIntensity: 0.86,
+  phraseHooks: ["Skyline Rise"],
+  phraseHookEnergy: 0.6,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.94,
   activeBonuses: ["Aurora Choir"],

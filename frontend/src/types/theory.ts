@@ -49,6 +49,8 @@ export interface VisualParameters {
   growthImprintIntensity: number;
   phraseTrajectory: "neutral" | "lift-arc" | "velvet-drift" | "forge-drop" | "prism-climb" | "runway-drive" | "shadow-sink";
   phraseTrajectoryIntensity: number;
+  phraseHooks: string[];
+  phraseHookEnergy: number;
   sceneCascade:
     | "neutral"
     | "aurora-dais"

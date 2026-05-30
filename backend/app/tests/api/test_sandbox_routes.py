@@ -266,6 +266,8 @@ def test_sandbox_render_returns_phrase_trajectory_for_order_sensitive_stacks() -
     payload = response.json()
     assert payload["phrase_trajectory"] == "runway-drive"
     assert payload["phrase_trajectory_intensity"] > 0.75
+    assert "Runway Spark" in payload["phrase_hooks"]
+    assert payload["phrase_hook_energy"] > 0.45
     assert payload["motion_speed"] > 0.8
 
 
