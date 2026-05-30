@@ -542,6 +542,59 @@
 - 这层被我显式限制为至少双元素以上才会触发，避免“单个元素 + 一个解锁”被误判成大型系统性交互。
 - 那个 warning 仍然是已有的 `StarletteDeprecationWarning`，不是这轮引入的新问题。
 
+## 最新一轮：Synergy Glyph 协同徽记层
+
+上一轮把 emergent synergy 真正做进后端之后，数据层已经能说出“这堆参数现在像什么人格”，但舞台上还没有对应的视觉符号。
+
+目标：
+
+- 让 `Horizon Bloom / Abyss Pressure / Slipstream Pocket / Prism Surge` 这些系统性交互不只出现在列表里，而是直接长成舞台徽记。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageSynergyGlyphs.ts`
+- 用 `activeSynergies` 作为入口，优先挑 emergent synergy，缺省再回退到 `Cadential Lift / Radiant Voicing`
+- `TheorySandbox` 新增 `Synergy Glyph` 面板
+- 舞台左上角角标新增 `Glyph: ...`
+- `RealtimeCanvasRenderer` 新增 `drawSynergyGlyphLayer(...)`
+
+当前已接入的 glyph 家族：
+
+- `Horizon Bloom`
+  - 体现中轴与地平线之间的日冕开叶
+- `Abyss Pressure`
+  - 体现压缩环、下坠裂口和深井张力
+- `Slipstream Pocket`
+  - 体现追风 sweep、切线轨迹和推进气流
+- `Prism Surge`
+  - 体现折线门框、三棱骨架和 surge 扫描
+- `Cadence Spine`
+  - 作为普通终止协同的回退 glyph
+- `Radiant Fan`
+  - 作为普通明亮协同的回退 glyph
+
+对应验证：
+
+- 新增 `frontend/src/tests/canvas/stageSynergyGlyphs.test.ts`
+  - 验证 `Horizon Bloom` 会优先于 `Cadential Lift`
+  - 验证普通协同会回退到 `Cadence Spine`
+  - 验证无 synergy 时返回 `null`
+- 更新 `TheorySandbox.test.tsx`
+  - 验证右侧出现 `Synergy Glyph`
+  - 验证舞台角标出现 `Glyph: Horizon Bloom`
+  - 验证 glyph 文案真实渲染
+- 更新 `realtimeCanvasRenderer.test.ts`
+  - 验证 emergent synergy 激活时会进入 Canvas 绘制
+- 前端整模块测试
+  - `83 passed`
+- 前端 build
+  - 通过
+
+这一轮的价值：
+
+- 现在后端新长出来的系统性交互，前端不只是“看见一个标签”，而是真的能看到一套舞台徽记。
+- 这让“参数化映射引擎”终于更像一个完整闭环，而不是后端很聪明、前端只能显示文本。
+
 ## 当前测试结构
 
 ### 后端

@@ -23,6 +23,7 @@ import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
+import { getStageSynergyGlyph } from "../visual_engine/stageSynergyGlyphs";
 import { getStageTakeoverMode } from "../visual_engine/stageTakeoverModes";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
 
@@ -94,7 +95,11 @@ const THEORY_SYNERGY_COPY: Record<string, string> = {
   "Groove Pocket": "摆动型调式与七和弦会把舞台推向更明显的律动口袋。",
   "Shadow Magnet": "暗色调式与高张力和弦互相吸引，会把舞台压向阴影与摩擦。",
   "Color Convergence": "当音阶、调式、和弦、进行同时出现，颜色和空间会更容易融合成完整结构。",
-  "Silken Resolve": "柔和和弦与缓行波面会让舞台的终止更像贴近身体的呼吸。"
+  "Silken Resolve": "柔和和弦与缓行波面会让舞台的终止更像贴近身体的呼吸。",
+  "Horizon Bloom": "高开放度与高终止牵引会把舞台推向日冕式的地平线绽放。",
+  "Abyss Pressure": "高摩擦与高重力会把舞台压成向内坍缩的深井张力。",
+  "Slipstream Pocket": "高摆动与高速度会形成被舞台收编的整股推进气流。",
+  "Prism Surge": "高复杂度与强 beam 会把棱镜人格继续推成系统级扩容。 "
 };
 
 const GROWTH_PREVIEW_OPTIONS: Array<{
@@ -442,6 +447,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStageTakeoverMode(visual) ? (
                 <div className="text-[11px] text-[#f0c6ff]">Takeover: {getStageTakeoverMode(visual)?.label}</div>
               ) : null}
+              {getStageSynergyGlyph(visual) ? (
+                <div className="text-[11px] text-[#d8ff9c]">Glyph: {getStageSynergyGlyph(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -570,6 +578,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <GrowthImprintPanel visual={visual} />
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
+          <StageSynergyGlyphPanel visual={visual} />
           <SceneCascadePanel visual={visual} />
           <StageSetpiecePanel visual={visual} />
           <StageDirectorCuePanel visual={visual} />
@@ -1234,6 +1243,25 @@ function TheorySynergyPanel({ visual }: { visual: VisualParameters }) {
           ))}
         </div>
       ) : null}
+    </section>
+  );
+}
+
+function StageSynergyGlyphPanel({ visual }: { visual: VisualParameters }) {
+  const glyph = getStageSynergyGlyph(visual);
+
+  if (!glyph) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#415024] bg-[#1d2318] p-3">
+      <div className="text-xs uppercase text-stone-400">Synergy Glyph</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{glyph.label}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="徽记图样" value={glyph.pattern} />
+        <ReadingLine label="舞台体感" value={glyph.impact} />
+      </div>
     </section>
   );
 }

@@ -3,6 +3,7 @@ import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
+import { getStageSynergyGlyph } from "../visual_engine/stageSynergyGlyphs";
 import { getStageTakeoverMode } from "../visual_engine/stageTakeoverModes";
 
 export interface CanvasFrameScheduler {
@@ -132,6 +133,7 @@ export class RealtimeCanvasRenderer {
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawTheoryTraitLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawTheorySynergyLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawSynergyGlyphLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneCascadeLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageSetpieceLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageLightingCueLayer(visual, width, height, centerX, centerY, radius, time);
@@ -939,6 +941,180 @@ export class RealtimeCanvasRenderer {
     }
 
     this.context.restore();
+  }
+
+  private drawSynergyGlyphLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const glyph = getStageSynergyGlyph(visual);
+
+    if (!glyph) {
+      return;
+    }
+
+    this.context.save();
+
+    switch (glyph.kind) {
+      case "horizon-bloom":
+        this.drawHorizonBloomGlyph(visual, centerX, centerY, radius, time);
+        break;
+      case "abyss-pressure":
+        this.drawAbyssPressureGlyph(visual, centerX, centerY, radius, time);
+        break;
+      case "slipstream-pocket":
+        this.drawSlipstreamPocketGlyph(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-surge":
+        this.drawPrismSurgeGlyph(visual, centerX, centerY, radius, time);
+        break;
+      case "cadence-spine":
+        this.drawCadenceSpineGlyph(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "radiant-fan":
+        this.drawRadiantFanGlyph(visual, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
+  private drawHorizonBloomGlyph(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.synergyResonance * 0.1);
+    this.context.lineWidth = Math.max(1.4, radius * 0.012);
+    for (let index = 0; index < 6; index += 1) {
+      const angle = Math.PI * (1.08 + index * 0.14);
+      this.context.beginPath();
+      this.context.moveTo(centerX, centerY + radius * 0.08);
+      this.context.lineTo(
+        centerX + Math.cos(angle + time * 0.04) * radius * 1.12,
+        centerY + Math.sin(angle + time * 0.04) * radius * 0.82
+      );
+      this.context.stroke();
+    }
+    this.context.beginPath();
+    this.context.arc(centerX, centerY + radius * 0.06, radius * 0.78, Math.PI * 1.04, Math.PI * 1.96);
+    this.context.stroke();
+  }
+
+  private drawAbyssPressureGlyph(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.modalTension * 0.1);
+    this.context.lineWidth = Math.max(1.3, radius * 0.011);
+    for (let index = 0; index < 4; index += 1) {
+      const ringRadius = radius * (0.46 + index * 0.14);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY + radius * 0.08, ringRadius, 0, Math.PI * 2);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 5; index += 1) {
+      const angle = time * 0.05 + index * ((Math.PI * 2) / 5);
+      this.context.beginPath();
+      this.context.moveTo(centerX + Math.cos(angle) * radius * 0.24, centerY + radius * 0.08 + Math.sin(angle) * radius * 0.24);
+      this.context.lineTo(centerX + Math.cos(angle) * radius * 0.86, centerY + radius * 0.08 + Math.sin(angle) * radius * 0.86);
+      this.context.stroke();
+    }
+  }
+
+  private drawSlipstreamPocketGlyph(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.swing * 0.1);
+    this.context.lineWidth = Math.max(1.4, radius * 0.012);
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY + radius * (0.16 + index * 0.18);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 1.08, y);
+      this.context.quadraticCurveTo(centerX, y - radius * (0.12 + Math.sin(time * 0.8 + index) * 0.03), centerX + radius * 1.08, y);
+      this.context.stroke();
+    }
+  }
+
+  private drawPrismSurgeGlyph(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.beamStrength * 0.1);
+    this.context.lineWidth = Math.max(1.3, radius * 0.011);
+    for (let index = 0; index < 3; index += 1) {
+      const scale = 0.48 + index * 0.18;
+      this.context.save();
+      this.context.translate(centerX, centerY + radius * 0.02);
+      this.context.rotate(time * 0.08 + index * 0.18);
+      this.context.beginPath();
+      this.context.moveTo(0, -radius * scale);
+      this.context.lineTo(radius * scale * 0.86, radius * scale * 0.52);
+      this.context.lineTo(-radius * scale * 0.86, radius * scale * 0.52);
+      this.context.closePath();
+      this.context.stroke();
+      this.context.restore();
+    }
+  }
+
+  private drawCadenceSpineGlyph(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.color, 0.12 + visual.cadencePull * 0.12);
+    this.context.lineWidth = Math.max(1.3, radius * 0.011);
+    for (let index = 0; index < 5; index += 1) {
+      const x = centerX - radius * 0.82 + index * radius * 0.41;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(centerX, centerY + radius * 0.14);
+      this.context.stroke();
+    }
+  }
+
+  private drawRadiantFanGlyph(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.glow * 0.1);
+    this.context.lineWidth = Math.max(1.4, radius * 0.012);
+    for (let index = 0; index < 5; index += 1) {
+      const angle = Math.PI * (1.18 + index * 0.08);
+      this.context.beginPath();
+      this.context.moveTo(centerX, centerY + radius * 0.12);
+      this.context.lineTo(
+        centerX + Math.cos(angle - time * 0.03) * radius * 1.04,
+        centerY + Math.sin(angle - time * 0.03) * radius * 0.76
+      );
+      this.context.stroke();
+    }
   }
 
   private drawSceneCascadeLayer(
