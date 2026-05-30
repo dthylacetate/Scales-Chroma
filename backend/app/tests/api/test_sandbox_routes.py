@@ -169,6 +169,39 @@ def test_sandbox_render_returns_growth_aura_metadata_for_unlocked_style_tracks()
     assert payload["growth_imprint_intensity"] > 0.9
 
 
+def test_sandbox_render_returns_scene_cascade_for_rich_three_part_stacks() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(
+            session,
+            username="cascade-player",
+            email="cascade@example.com",
+        )
+        response = client.post(
+            "/sandbox/render",
+            headers=headers,
+            json={
+                "elements": [
+                    {"id": "lydian", "type": "mode", "name": "Lydian"},
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                    {"id": "ii-v-i", "type": "progression", "name": "II-V-I"},
+                ],
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["signature"] == "Aurora Choir"
+    assert payload["scene_cascade"] == "aurora-dais"
+    assert payload["scene_cascade_intensity"] > 0.9
+    assert payload["depth"] > 0.8
+    assert payload["beam_strength"] > 0.7
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

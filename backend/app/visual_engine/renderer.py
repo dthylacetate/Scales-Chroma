@@ -51,6 +51,8 @@ class AggregateVisualState:
     scene_family: str
     growth_imprint: str
     growth_imprint_intensity: float
+    scene_cascade: str
+    scene_cascade_intensity: float
     active_bonuses: list[str]
     active_synergies: list[str]
 
@@ -105,6 +107,11 @@ COMBO_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
     ({"pentatonic", "maj7"}, "Neon Lantern", {"lattice": 0.18, "orb": 0.12, "glow": 0.12, "beam_strength": 0.12, "valence": 0.12, "luminosity": 0.14, "arousal": 0.08, "grit": 0.02, "signature": "Neon Lantern", "secondary_color": "#9cf7ff"}),
     ({"melodic minor", "maj7"}, "Liquid Aurora", {"wave": 0.18, "orb": 0.12, "glow": 0.12, "complexity": 0.14, "valence": 0.08, "luminosity": 0.12, "arousal": 0.1, "grit": 0.02, "signature": "Liquid Aurora", "secondary_color": "#79d8ff"}),
     ({"mixolydian", "ii-v-i"}, "Copper Skyline", {"lattice": 0.18, "beam_strength": 0.18, "energy": 0.12, "contrast": 0.1, "valence": 0.04, "luminosity": 0.06, "arousal": 0.14, "grit": 0.08, "signature": "Copper Skyline", "secondary_color": "#ffbd72"}),
+    ({"lydian", "maj7", "ii-v-i"}, "Aurora Choir", {"orb": 0.12, "lattice": 0.16, "glow": 0.14, "beam_strength": 0.22, "ripple_strength": 0.14, "depth": 0.18, "symmetry": 0.18, "valence": 0.12, "luminosity": 0.16, "arousal": 0.08, "grit": -0.08, "openness": 0.12, "cadence_pull": 0.14, "blend_cohesion": 0.08, "signature": "Aurora Choir", "secondary_color": "#d7d0ff"}),
+    ({"dorian", "min7", "ii-v-i"}, "Blue Velvet Arcade", {"wave": 0.2, "lattice": 0.14, "glow": 0.08, "ripple_strength": 0.18, "beam_strength": 0.16, "depth": 0.18, "symmetry": 0.08, "valence": 0.06, "luminosity": 0.08, "arousal": 0.1, "grit": 0.02, "swing": 0.16, "gravity": 0.12, "cadence_pull": 0.08, "blend_cohesion": 0.12, "signature": "Blue Velvet Arcade", "secondary_color": "#9cefe2"}),
+    ({"harmonic minor", "dim7", "dominant7"}, "Ritual Crucible", {"fracture": 0.24, "grain": 0.22, "contrast": 0.18, "glow": 0.08, "depth": 0.18, "pulse_density": 0.16, "symmetry": -0.18, "valence": -0.12, "luminosity": -0.1, "arousal": 0.16, "grit": 0.2, "attack": 0.16, "gravity": 0.18, "modal_tension": 0.14, "signature": "Ritual Crucible", "background_color": "#04040b"}),
+    ({"melodic minor", "dominant7", "aug"}, "Prism Engine", {"wave": 0.14, "fracture": 0.14, "lattice": 0.18, "complexity": 0.2, "energy": 0.16, "depth": 0.18, "pulse_density": 0.16, "symmetry": 0.12, "valence": 0.08, "luminosity": 0.12, "arousal": 0.16, "grit": 0.08, "attack": 0.12, "swing": 0.14, "beam_strength": 0.18, "blend_cohesion": 0.12, "signature": "Prism Engine", "secondary_color": "#80dfff"}),
+    ({"pentatonic", "mixolydian", "dominant7"}, "Voltage Causeway", {"lattice": 0.18, "fracture": 0.12, "beam_strength": 0.22, "contrast": 0.14, "energy": 0.18, "pulse_density": 0.18, "motion_speed": 0.12, "temperature": 0.1, "valence": 0.06, "luminosity": 0.08, "arousal": 0.18, "grit": 0.1, "swing": 0.14, "attack": 0.08, "signature": "Voltage Causeway", "secondary_color": "#ffd06b"}),
 )
 
 STYLE_AURA_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
@@ -143,6 +150,14 @@ GROWTH_IMPRINT_RULES: dict[str, dict[str, set[str]]] = {
     },
 }
 
+SCENE_CASCADE_RULES: tuple[tuple[set[str], str, float, dict[str, float]], ...] = (
+    ({"lydian", "maj7", "ii-v-i"}, "aurora-dais", 0.98, {"depth": 0.18, "beam_strength": 0.18, "symmetry": 0.16, "glow": 0.12, "luminosity": 0.14, "openness": 0.1, "blend_cohesion": 0.12}),
+    ({"dorian", "min7", "ii-v-i"}, "velvet-arcade", 0.92, {"depth": 0.16, "ripple_strength": 0.18, "beam_strength": 0.12, "wave": 0.14, "swing": 0.14, "blend_cohesion": 0.14, "gravity": 0.08}),
+    ({"harmonic minor", "dim7", "dominant7"}, "eclipse-altar", 0.96, {"fracture": 0.16, "contrast": 0.16, "grain": 0.18, "depth": 0.16, "modal_tension": 0.14, "gravity": 0.12, "grit": 0.14}),
+    ({"melodic minor", "dominant7", "aug"}, "prism-vortex", 0.94, {"wave": 0.12, "lattice": 0.16, "complexity": 0.16, "depth": 0.16, "beam_strength": 0.14, "motion_speed": 0.12, "blend_cohesion": 0.12}),
+    ({"pentatonic", "mixolydian", "dominant7"}, "tide-runway", 0.9, {"wave": 0.12, "lattice": 0.14, "energy": 0.14, "ripple_strength": 0.16, "pulse_density": 0.14, "motion_speed": 0.12, "swing": 0.12}),
+)
+
 
 def render_visual_parameters(
     elements: list[TheoryElement],
@@ -156,6 +171,9 @@ def render_visual_parameters(
     growth_imprint, growth_imprint_intensity = _resolve_growth_imprint(elements, unlocks, aggregate_state.active_bonuses)
     aggregate_state.growth_imprint = growth_imprint
     aggregate_state.growth_imprint_intensity = growth_imprint_intensity
+    scene_cascade, scene_cascade_intensity = _resolve_scene_cascade(elements, aggregate_state)
+    aggregate_state.scene_cascade = scene_cascade
+    aggregate_state.scene_cascade_intensity = scene_cascade_intensity
     particles = configure_particles(
         density_seed=aggregate_state.particle_density,
         energy=aggregate_state.energy,
@@ -199,6 +217,8 @@ def render_visual_parameters(
         scene_family=aggregate_state.scene_family,
         growth_imprint=aggregate_state.growth_imprint,
         growth_imprint_intensity=round(aggregate_state.growth_imprint_intensity, 2),
+        scene_cascade=aggregate_state.scene_cascade,
+        scene_cascade_intensity=round(aggregate_state.scene_cascade_intensity, 2),
         active_bonuses=aggregate_state.active_bonuses,
         active_synergies=aggregate_state.active_synergies,
         geometry=geometry_shape,
@@ -275,6 +295,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             scene_family="neon-grid",
             growth_imprint="neutral",
             growth_imprint_intensity=0.0,
+            scene_cascade="neutral",
+            scene_cascade_intensity=0.0,
             active_bonuses=[],
             active_synergies=[],
         )
@@ -433,6 +455,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         ),
         growth_imprint="neutral",
         growth_imprint_intensity=0.0,
+        scene_cascade="neutral",
+        scene_cascade_intensity=0.0,
         active_bonuses=[],
         active_synergies=[],
     )
@@ -857,6 +881,68 @@ def _resolve_growth_imprint(
             best_score = score
 
     return best_style, round(max(0.0, min(1.0, best_score)), 2)
+
+
+def _resolve_scene_cascade(
+    elements: list[TheoryElement],
+    state: AggregateVisualState,
+) -> tuple[str, float]:
+    if not elements:
+        return "neutral", 0.0
+
+    element_names = {element.name.casefold() for element in elements}
+    bonus_text = " ".join([state.signature, *state.active_bonuses, *state.active_synergies])
+    selected_cascade = "neutral"
+    selected_intensity = 0.0
+    selected_bonus: dict[str, float] | None = None
+
+    for required, cascade, base_intensity, cascade_bonus in SCENE_CASCADE_RULES:
+        if required <= element_names:
+            selected_cascade = cascade
+            selected_intensity = min(1.0, base_intensity + min(0.08, len(state.active_synergies) * 0.02))
+            selected_bonus = cascade_bonus
+
+    if selected_cascade == "neutral":
+        if state.growth_imprint == "metal-forge" and "Shadow Magnet" in state.active_synergies:
+            selected_cascade = "forge-ritual"
+            selected_intensity = 0.82
+            selected_bonus = {"fracture": 0.14, "beam_strength": 0.12, "grain": 0.14, "contrast": 0.1, "attack": 0.12, "gravity": 0.08}
+        elif state.growth_imprint == "fusion-phase" and _contains_any(bonus_text, ["Prism", "Chrome", "Meridian", "Engine"]):
+            selected_cascade = "prism-vortex"
+            selected_intensity = 0.78
+            selected_bonus = {"wave": 0.1, "lattice": 0.12, "depth": 0.12, "beam_strength": 0.1, "motion_speed": 0.1}
+        elif state.growth_imprint == "neo-soul-veil" and _contains_any(bonus_text, ["Velvet", "Glass", "Current", "Choir"]):
+            selected_cascade = "velvet-arcade"
+            selected_intensity = 0.76
+            selected_bonus = {"wave": 0.1, "glow": 0.1, "depth": 0.12, "symmetry": 0.08, "blend_cohesion": 0.1}
+        elif state.growth_imprint == "jazz-lattice" and _contains_any(bonus_text, ["Aurora", "Cadence", "Lattice", "Skyline"]):
+            selected_cascade = "aurora-dais"
+            selected_intensity = 0.78
+            selected_bonus = {"beam_strength": 0.12, "depth": 0.12, "symmetry": 0.12, "blend_cohesion": 0.1}
+        elif state.growth_imprint == "pentatonic-drive" and _contains_any(bonus_text, ["Roadhouse", "Neon", "Voltage", "Run"]):
+            selected_cascade = "tide-runway"
+            selected_intensity = 0.74
+            selected_bonus = {"energy": 0.1, "ripple_strength": 0.12, "pulse_density": 0.12, "motion_speed": 0.1, "swing": 0.1}
+        elif state.scene_family == "shadow-sanctum" and state.modal_tension > 0.78:
+            selected_cascade = "eclipse-altar"
+            selected_intensity = 0.7
+            selected_bonus = {"contrast": 0.1, "depth": 0.1, "gravity": 0.08, "grit": 0.08}
+
+    if selected_bonus:
+        scale = 0.22 + selected_intensity * 0.48
+        _apply_scaled_bonus(state, selected_bonus, scale)
+
+    return selected_cascade, round(max(0.0, min(1.0, selected_intensity)), 2)
+
+
+def _apply_scaled_bonus(
+    state: AggregateVisualState,
+    bonus: dict[str, float],
+    scale: float,
+) -> None:
+    for key, value in bonus.items():
+        current_value = getattr(state, key)
+        setattr(state, key, max(0.0, min(1.0, current_value + value * scale)))
 
 
 def _blend_hexes(weighted_hexes: list[tuple[str, float]]) -> str:

@@ -54,6 +54,16 @@ class VisualParameters(BaseModel):
         "fusion-phase",
     ]
     growth_imprint_intensity: float = Field(ge=0.0, le=1.0)
+    scene_cascade: Literal[
+        "neutral",
+        "aurora-dais",
+        "velvet-arcade",
+        "forge-ritual",
+        "prism-vortex",
+        "tide-runway",
+        "eclipse-altar",
+    ]
+    scene_cascade_intensity: float = Field(ge=0.0, le=1.0)
     active_bonuses: list[str]
     active_synergies: list[str]
     particles: dict[str, float | bool]

@@ -28,6 +28,8 @@ const visual: VisualParameters = {
   sceneFamily: "jazz-cathedral",
   growthImprint: "jazz-lattice",
   growthImprintIntensity: 0.82,
+  sceneCascade: "aurora-dais",
+  sceneCascadeIntensity: 0.88,
   openness: 0.82,
   attack: 0.34,
   swing: 0.68,
@@ -228,6 +230,33 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.arc).toHaveBeenCalled();
     expect(context?.lineTo).toHaveBeenCalled();
     expect(context?.quadraticCurveTo).toHaveBeenCalled();
+  });
+
+  it("draws a dedicated scene cascade layer for large-scale triadic stage events", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      sceneCascade: "prism-vortex",
+      sceneCascadeIntensity: 0.94
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.rotate).toHaveBeenCalled();
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
   });
 });
 

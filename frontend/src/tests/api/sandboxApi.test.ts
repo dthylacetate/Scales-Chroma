@@ -17,6 +17,8 @@ describe("sandbox API service", () => {
         scene_family: "solar-garden",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.86,
+        scene_cascade: "aurora-dais",
+        scene_cascade_intensity: 0.91,
         openness: 0.81,
         attack: 0.32,
         swing: 0.66,
@@ -60,6 +62,8 @@ describe("sandbox API service", () => {
     expect(visual.sceneFamily).toBe("solar-garden");
     expect(visual.growthImprint).toBe("jazz-lattice");
     expect(visual.growthImprintIntensity).toBe(0.86);
+    expect(visual.sceneCascade).toBe("aurora-dais");
+    expect(visual.sceneCascadeIntensity).toBe(0.91);
     expect(visual.openness).toBe(0.81);
     expect(visual.attack).toBe(0.32);
     expect(visual.swing).toBe(0.66);

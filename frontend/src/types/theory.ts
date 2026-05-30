@@ -47,6 +47,15 @@ export interface VisualParameters {
     | "shadow-sanctum";
   growthImprint: "neutral" | "pentatonic-drive" | "jazz-lattice" | "metal-forge" | "neo-soul-veil" | "fusion-phase";
   growthImprintIntensity: number;
+  sceneCascade:
+    | "neutral"
+    | "aurora-dais"
+    | "velvet-arcade"
+    | "forge-ritual"
+    | "prism-vortex"
+    | "tide-runway"
+    | "eclipse-altar";
+  sceneCascadeIntensity: number;
   activeBonuses: string[];
   activeSynergies: string[];
   particles: {

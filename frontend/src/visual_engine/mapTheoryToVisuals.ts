@@ -68,6 +68,8 @@ const DEFAULT_VISUALS: VisualParameters = {
   sceneFamily: "neon-grid",
   growthImprint: "neutral",
   growthImprintIntensity: 0,
+  sceneCascade: "neutral",
+  sceneCascadeIntensity: 0,
   activeBonuses: [],
   activeSynergies: [],
   particles: {
@@ -446,6 +448,94 @@ const COMBO_BONUSES = [
     arousal: 0.14,
     grit: 0.08,
     secondaryColor: "#ffbd72"
+  }),
+  combo(["lydian", "maj7", "ii-v-i"], "Aurora Choir", {
+    softOrb: 0.12,
+    lattice: 0.16,
+    glow: 0.14,
+    beamStrength: 0.22,
+    rippleStrength: 0.14,
+    depth: 0.18,
+    symmetry: 0.18,
+    valence: 0.12,
+    luminosity: 0.16,
+    arousal: 0.08,
+    grit: -0.08,
+    openness: 0.12,
+    cadencePull: 0.14,
+    blendCohesion: 0.08,
+    secondaryColor: "#d7d0ff"
+  }),
+  combo(["dorian", "min7", "ii-v-i"], "Blue Velvet Arcade", {
+    wave: 0.2,
+    lattice: 0.14,
+    glow: 0.08,
+    rippleStrength: 0.18,
+    beamStrength: 0.16,
+    depth: 0.18,
+    symmetry: 0.08,
+    valence: 0.06,
+    luminosity: 0.08,
+    arousal: 0.1,
+    grit: 0.02,
+    swing: 0.16,
+    gravity: 0.12,
+    cadencePull: 0.08,
+    blendCohesion: 0.12,
+    secondaryColor: "#9cefe2"
+  }),
+  combo(["harmonic minor", "dim7", "dominant7"], "Ritual Crucible", {
+    fracture: 0.24,
+    grain: 0.22,
+    contrast: 0.18,
+    glow: 0.08,
+    depth: 0.18,
+    pulseDensity: 0.16,
+    symmetry: -0.18,
+    valence: -0.12,
+    luminosity: -0.1,
+    arousal: 0.16,
+    grit: 0.2,
+    attack: 0.16,
+    gravity: 0.18,
+    modalTension: 0.14,
+    backgroundColor: "#04040b"
+  }),
+  combo(["melodic minor", "dominant7", "aug"], "Prism Engine", {
+    wave: 0.14,
+    fracture: 0.14,
+    lattice: 0.18,
+    complexity: 0.2,
+    energy: 0.16,
+    depth: 0.18,
+    pulseDensity: 0.16,
+    symmetry: 0.12,
+    valence: 0.08,
+    luminosity: 0.12,
+    arousal: 0.16,
+    grit: 0.08,
+    attack: 0.12,
+    swing: 0.14,
+    beamStrength: 0.18,
+    blendCohesion: 0.12,
+    secondaryColor: "#80dfff"
+  }),
+  combo(["pentatonic", "mixolydian", "dominant7"], "Voltage Causeway", {
+    lattice: 0.18,
+    fracture: 0.12,
+    beamStrength: 0.22,
+    contrast: 0.14,
+    energy: 0.18,
+    pulseDensity: 0.18,
+    motionSpeed: 0.12,
+    temperature: 0.1,
+    valence: 0.06,
+    luminosity: 0.08,
+    arousal: 0.18,
+    grit: 0.1,
+    swing: 0.14,
+    attack: 0.08,
+    secondaryColor: "#ffd06b"
   })
 ];
 
@@ -537,6 +627,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     pulseDensity: 0,
     signature: elements.length > 1 ? "Composite Pulse" : elements[0].name,
     sceneFamily: "neon-grid" as VisualParameters["sceneFamily"],
+    growthImprint: "neutral" as VisualParameters["growthImprint"],
+    growthImprintIntensity: 0,
+    sceneCascade: "neutral" as VisualParameters["sceneCascade"],
+    sceneCascadeIntensity: 0,
     activeBonuses: [] as string[],
     activeSynergies: [] as string[]
   };
@@ -597,6 +691,9 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     visual.luminosity,
     visual.grit
   );
+  const sceneCascade = inferSceneCascade(elements, names, visual);
+  visual.sceneCascade = sceneCascade.cascade;
+  visual.sceneCascadeIntensity = sceneCascade.intensity;
   const animationState = dominantAnimationState(visual);
   const ringCount = Math.max(2, Math.min(8, Math.floor(2 + visual.rippleStrength * 3 + visual.complexity * 2)));
   const particles = {
@@ -640,6 +737,8 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     sceneFamily: visual.sceneFamily,
     growthImprint: "neutral",
     growthImprintIntensity: 0,
+    sceneCascade: visual.sceneCascade,
+    sceneCascadeIntensity: round(visual.sceneCascadeIntensity),
     activeBonuses: visual.activeBonuses,
     activeSynergies: visual.activeSynergies,
     particles,
@@ -880,6 +979,202 @@ function applyTheorySynergies(
   if (visual.activeSynergies.length > 1) {
     visual.synergyResonance = clamp01(visual.synergyResonance + 0.08);
     visual.blendCohesion = clamp01(visual.blendCohesion + 0.08);
+  }
+}
+
+function inferSceneCascade(
+  elements: TheoryElement[],
+  names: Set<string>,
+  visual: {
+    signature: string;
+    sceneFamily: VisualParameters["sceneFamily"];
+    activeBonuses: string[];
+    activeSynergies: string[];
+    growthImprint: VisualParameters["growthImprint"];
+    growthImprintIntensity: number;
+    glow: number;
+    contrast: number;
+    energy: number;
+    complexity: number;
+    depth: number;
+    pulseDensity: number;
+    motionSpeed: number;
+    rippleStrength: number;
+    beamStrength: number;
+    grain: number;
+    openness: number;
+    attack: number;
+    swing: number;
+    gravity: number;
+    modalTension: number;
+    blendCohesion: number;
+    symmetry: number;
+    geometryWeights: ElementVisualProfile["geometryWeights"];
+  }
+): { cascade: VisualParameters["sceneCascade"]; intensity: number } {
+  const text = [visual.signature, ...visual.activeBonuses, ...visual.activeSynergies].join(" ");
+  const elementCount = elements.length;
+  let cascade: VisualParameters["sceneCascade"] = "neutral";
+  let intensity = 0;
+  let enhancements: Record<string, number> | null = null;
+
+  if (names.has("lydian") && names.has("maj7") && names.has("ii-v-i")) {
+    cascade = "aurora-dais";
+    intensity = 0.98;
+    enhancements = {
+      depth: 0.18,
+      beamStrength: 0.18,
+      symmetry: 0.16,
+      glow: 0.12,
+      luminosity: 0.14,
+      openness: 0.1,
+      blendCohesion: 0.12
+    };
+  } else if (names.has("dorian") && names.has("min7") && names.has("ii-v-i")) {
+    cascade = "velvet-arcade";
+    intensity = 0.92;
+    enhancements = {
+      depth: 0.16,
+      rippleStrength: 0.18,
+      beamStrength: 0.12,
+      wave: 0.14,
+      swing: 0.14,
+      blendCohesion: 0.14,
+      gravity: 0.08
+    };
+  } else if (names.has("harmonic minor") && names.has("dim7") && names.has("dominant7")) {
+    cascade = "eclipse-altar";
+    intensity = 0.96;
+    enhancements = {
+      fracture: 0.16,
+      contrast: 0.16,
+      grain: 0.18,
+      depth: 0.16,
+      modalTension: 0.14,
+      gravity: 0.12,
+      grit: 0.14
+    };
+  } else if (names.has("melodic minor") && names.has("dominant7") && names.has("aug")) {
+    cascade = "prism-vortex";
+    intensity = 0.94;
+    enhancements = {
+      wave: 0.12,
+      lattice: 0.16,
+      complexity: 0.16,
+      depth: 0.16,
+      beamStrength: 0.14,
+      motionSpeed: 0.12,
+      blendCohesion: 0.12
+    };
+  } else if (names.has("pentatonic") && names.has("mixolydian") && names.has("dominant7")) {
+    cascade = "tide-runway";
+    intensity = 0.9;
+    enhancements = {
+      wave: 0.12,
+      lattice: 0.14,
+      energy: 0.14,
+      rippleStrength: 0.16,
+      pulseDensity: 0.14,
+      motionSpeed: 0.12,
+      swing: 0.12
+    };
+  } else if (containsAny(text, ["Shadow Magnet", "Fracture", "Voltage"]) && visual.growthImprint === "metal-forge") {
+    cascade = "forge-ritual";
+    intensity = 0.82;
+    enhancements = {
+      fracture: 0.14,
+      beamStrength: 0.12,
+      grain: 0.14,
+      contrast: 0.1,
+      attack: 0.12,
+      gravity: 0.08
+    };
+  } else if (containsAny(text, ["Velvet", "Glass", "Current"]) && visual.growthImprint === "neo-soul-veil") {
+    cascade = "velvet-arcade";
+    intensity = 0.76;
+    enhancements = {
+      wave: 0.1,
+      glow: 0.1,
+      depth: 0.12,
+      symmetry: 0.08,
+      blendCohesion: 0.1
+    };
+  } else if (containsAny(text, ["Aurora", "Cadence", "Lattice", "Skyline"]) && elementCount >= 3) {
+    cascade = "aurora-dais";
+    intensity = 0.78;
+    enhancements = {
+      beamStrength: 0.12,
+      depth: 0.12,
+      symmetry: 0.12,
+      blendCohesion: 0.1
+    };
+  } else if (containsAny(text, ["Prism", "Chrome", "Meridian", "Engine"]) && elementCount >= 3) {
+    cascade = "prism-vortex";
+    intensity = 0.78;
+    enhancements = {
+      depth: 0.12,
+      beamStrength: 0.1,
+      motionSpeed: 0.1,
+      blendCohesion: 0.1
+    };
+  } else if (containsAny(text, ["Roadhouse", "Neon", "Run"]) && elementCount >= 3) {
+    cascade = "tide-runway";
+    intensity = 0.74;
+    enhancements = {
+      energy: 0.1,
+      rippleStrength: 0.12,
+      pulseDensity: 0.12,
+      motionSpeed: 0.1,
+      swing: 0.1
+    };
+  }
+
+  if (enhancements) {
+    const scale = 0.22 + intensity * 0.48;
+    applySceneCascadeEnhancements(visual, enhancements, scale);
+  }
+
+  return {
+    cascade,
+    intensity: round(intensity)
+  };
+}
+
+function applySceneCascadeEnhancements(
+  visual: {
+    glow: number;
+    contrast: number;
+    energy: number;
+    complexity: number;
+    depth: number;
+    pulseDensity: number;
+    motionSpeed: number;
+    rippleStrength: number;
+    beamStrength: number;
+    grain: number;
+    openness: number;
+    attack: number;
+    swing: number;
+    gravity: number;
+    modalTension: number;
+    blendCohesion: number;
+    symmetry: number;
+    geometryWeights: ElementVisualProfile["geometryWeights"];
+  },
+  enhancements: Record<string, number>,
+  scale: number
+): void {
+  for (const [key, value] of Object.entries(enhancements)) {
+    if (key in visual.geometryWeights) {
+      const geometryKey = key as keyof ElementVisualProfile["geometryWeights"];
+      visual.geometryWeights[geometryKey] = clamp01(visual.geometryWeights[geometryKey] + value * scale);
+      continue;
+    }
+
+    const currentValue = visual[key as keyof typeof visual];
+    if (typeof currentValue === "number") {
+      visual[key as keyof typeof visual] = clamp01(currentValue + value * scale) as never;
+    }
   }
 }
 

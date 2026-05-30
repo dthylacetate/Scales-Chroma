@@ -102,6 +102,7 @@ export class RealtimeCanvasRenderer {
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawTheoryTraitLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawTheorySynergyLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawSceneCascadeLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -654,6 +655,252 @@ export class RealtimeCanvasRenderer {
     }
 
     this.context.restore();
+  }
+
+  private drawSceneCascadeLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    if (visual.sceneCascade === "neutral" || visual.sceneCascadeIntensity <= 0.08) {
+      return;
+    }
+
+    this.context.save();
+
+    switch (visual.sceneCascade) {
+      case "aurora-dais":
+        this.drawAuroraDaisCascade(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "velvet-arcade":
+        this.drawVelvetArcadeCascade(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "forge-ritual":
+        this.drawForgeRitualCascade(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-vortex":
+        this.drawPrismVortexCascade(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "tide-runway":
+        this.drawTideRunwayCascade(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "eclipse-altar":
+        this.drawEclipseAltarCascade(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
+  private drawAuroraDaisCascade(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.sceneCascadeIntensity;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + intensity * 0.12);
+    this.context.lineWidth = Math.max(1.2, 1.2 + intensity * 2.2);
+    for (let index = 0; index < 5; index += 1) {
+      const archRadius = radius * (0.92 + index * 0.14);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY - radius * 0.16, archRadius, Math.PI * 1.04, Math.PI * 1.96);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 6; index += 1) {
+      const progress = index / 5;
+      const x = centerX - radius * 1.1 + progress * radius * 2.2;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.quadraticCurveTo(
+        centerX + Math.sin(time * 0.7 + index) * radius * 0.12,
+        centerY + radius * 0.1,
+        centerX + (x - centerX) * 0.16,
+        centerY - radius * 1.02
+      );
+      this.context.stroke();
+    }
+  }
+
+  private drawVelvetArcadeCascade(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.sceneCascadeIntensity;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + intensity * 0.12);
+    this.context.lineWidth = Math.max(1, 1 + intensity * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY - radius * (0.64 - index * 0.16);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 1.24, y);
+      this.context.quadraticCurveTo(
+        centerX,
+        y - radius * (0.18 + Math.sin(time * 0.8 + index) * 0.04),
+        centerX + radius * 1.24,
+        y
+      );
+      this.context.stroke();
+    }
+    for (let index = 0; index < 7; index += 1) {
+      const x = ((index + 1) / 8) * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(x + Math.sin(time * 0.6 + index) * radius * 0.06, centerY - radius * 0.92);
+      this.context.stroke();
+    }
+  }
+
+  private drawForgeRitualCascade(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.sceneCascadeIntensity;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + intensity * 0.14);
+    this.context.lineWidth = Math.max(1.4, 1.4 + intensity * 2);
+    this.context.beginPath();
+    this.context.moveTo(centerX - radius * 1.28, centerY - radius * 0.92);
+    this.context.lineTo(centerX + radius * 1.28, centerY - radius * 0.92);
+    this.context.lineTo(centerX + radius * 0.88, centerY - radius * 0.44);
+    this.context.lineTo(centerX - radius * 0.88, centerY - radius * 0.44);
+    this.context.closePath();
+    this.context.stroke();
+    for (let index = 0; index < 6; index += 1) {
+      const x = centerX - radius * 1.06 + (index / 5) * radius * 2.12;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 0.92);
+      this.context.lineTo(x + Math.sin(time * 0.8 + index) * radius * 0.08, centerY + radius * 0.86);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 9; index += 1) {
+      const sparkX = centerX + Math.sin(time * 1.1 + index * 0.9) * radius * 1.18;
+      const sparkY = centerY + radius * (0.12 + ((index % 4) / 4) * 0.84);
+      this.context.fillStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.22);
+      this.context.fillRect(sparkX, sparkY, 3, 10 + intensity * 12);
+    }
+  }
+
+  private drawPrismVortexCascade(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.sceneCascadeIntensity;
+    this.context.translate(centerX, centerY);
+    this.context.rotate(time * (0.12 + intensity * 0.12));
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + intensity * 0.12);
+    this.context.lineWidth = Math.max(1, 1 + intensity * 1.8);
+    for (let index = 0; index < 5; index += 1) {
+      const triRadius = radius * (0.44 + index * 0.18);
+      this.context.beginPath();
+      for (let corner = 0; corner < 3; corner += 1) {
+        const angle = -Math.PI / 2 + (corner / 3) * Math.PI * 2;
+        const x = Math.cos(angle) * triRadius;
+        const y = Math.sin(angle) * triRadius;
+        if (corner === 0) {
+          this.context.moveTo(x, y);
+        } else {
+          this.context.lineTo(x, y);
+        }
+      }
+      this.context.closePath();
+      this.context.stroke();
+    }
+    this.context.setTransform(this.devicePixelRatio, 0, 0, this.devicePixelRatio, 0, 0);
+    this.context.strokeStyle = alphaHex(visual.color, 0.12 + intensity * 0.08);
+    for (let index = 0; index < 6; index += 1) {
+      const y = centerY - radius * 0.86 + index * radius * 0.26;
+      this.context.beginPath();
+      this.context.moveTo(radius * 0.2, y);
+      this.context.lineTo(width - radius * 0.2, y + Math.sin(time * 0.6 + index) * radius * 0.06);
+      this.context.stroke();
+    }
+  }
+
+  private drawTideRunwayCascade(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.sceneCascadeIntensity;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + intensity * 0.12);
+    this.context.lineWidth = Math.max(1, 1 + intensity * 1.8);
+    for (let index = 0; index < 10; index += 1) {
+      const progress = index / 9;
+      const x = progress * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(centerX + (x - centerX) * 0.12, centerY + radius * 0.06);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 5; index += 1) {
+      const y = centerY + radius * (0.18 + index * 0.14);
+      this.context.beginPath();
+      for (let step = 0; step <= 16; step += 1) {
+        const progress = step / 16;
+        const x = progress * width;
+        const waveY = y + Math.sin(progress * Math.PI * 6 + time * (1 + index * 0.08)) * radius * 0.024;
+        if (step === 0) {
+          this.context.moveTo(x, waveY);
+        } else {
+          this.context.lineTo(x, waveY);
+        }
+      }
+      this.context.stroke();
+    }
+  }
+
+  private drawEclipseAltarCascade(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const intensity = visual.sceneCascadeIntensity;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + intensity * 0.14);
+    this.context.lineWidth = Math.max(1.2, 1.2 + intensity * 2);
+    for (let index = 0; index < 4; index += 1) {
+      const ringRadius = radius * (0.72 + index * 0.2);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY - radius * 0.18, ringRadius, 0, Math.PI * 2);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 8; index += 1) {
+      const angle = time * 0.12 + index * (Math.PI / 4);
+      this.context.beginPath();
+      this.context.moveTo(centerX, centerY + radius * 0.12);
+      this.context.lineTo(centerX + Math.cos(angle) * radius * 1.28, centerY + Math.sin(angle) * radius * 1.02);
+      this.context.stroke();
+    }
+    this.context.fillStyle = alphaHex(visual.backgroundColor, 0.28 + intensity * 0.14);
+    this.context.fillRect(centerX - radius * 0.34, centerY + radius * 0.64, radius * 0.68, height * 0.1);
   }
 
   private drawSolarGardenAccent(

@@ -7,7 +7,10 @@ if (!playwrightRoot) {
 const { chromium } = await import(`file://${playwrightRoot}/playwright/index.mjs`);
 const appUrl = process.env.APP_URL ?? "http://127.0.0.1:8000/";
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  executablePath: process.env.CHROME_BIN || undefined,
+  headless: true
+});
 const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
 const username = `smoke-${Date.now()}`;
 
@@ -35,6 +38,7 @@ try {
   await page.getByText("Growth Imprint", { exact: true }).waitFor();
   await page.getByText("Harmonic Traits", { exact: true }).waitFor();
   await page.getByText("Theory Synergy", { exact: true }).waitFor();
+  await page.getByText("Scene Cascade", { exact: true }).waitFor();
   await page.getByText("Neo Soul 幕纱", { exact: true }).waitFor();
   const growthText = await page.locator("body").innerText();
   const hasGrowthImprint = true;
@@ -45,8 +49,11 @@ try {
 
   await page.getByRole("button", { name: "Lydian mode", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "Maj7 chord", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "II-V-I progression", exact: true }).dragTo(stage);
   await page.getByText("日光穹庭", { exact: true }).waitFor();
+  await page.getByText("Aurora Dais", { exact: true }).waitFor();
   const hasSolar = true;
+  const hasCascade = true;
   const solarText = await page.locator("body").innerText();
   const solarValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-solar.png", fullPage: true });
@@ -70,6 +77,7 @@ try {
         hasNeoSoulImprint,
         hasHarmonicTraits,
         hasTheorySynergy,
+        hasCascade,
         hasSolar,
         hasShadow,
         hasStageReading: pageText.includes("STAGE READING") || pageText.includes("Stage Reading"),

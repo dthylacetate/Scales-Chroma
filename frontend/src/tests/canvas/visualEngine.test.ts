@@ -74,4 +74,20 @@ describe("visual engine theory mapping", () => {
     expect(visual.pulseDensity).toBeGreaterThan(0.7);
     expect(visual.sceneFamily).toBe("prism-array");
   });
+
+  it("elevates three-part theory stacks into scene cascades with large-scale stage identity", () => {
+    const visual = mapTheoryToVisuals([
+      { id: "lydian-c", type: "mode", name: "Lydian" },
+      { id: "maj7-c", type: "chord", name: "Maj7" },
+      { id: "ii-v-i-c", type: "progression", name: "II-V-I" }
+    ]);
+
+    expect(visual.signature).toBe("Aurora Choir");
+    expect(visual.activeBonuses).toContain("Aurora Choir");
+    expect(visual.sceneCascade).toBe("aurora-dais");
+    expect(visual.sceneCascadeIntensity).toBeGreaterThan(0.9);
+    expect(visual.depth).toBeGreaterThan(0.8);
+    expect(visual.beamStrength).toBeGreaterThan(0.7);
+    expect(visual.blendCohesion).toBeGreaterThan(0.7);
+  });
 });

@@ -231,3 +231,21 @@ def test_renderer_exposes_systemic_synergy_metrics_for_progression_and_chord_ali
     assert visual.cadence_pull > 0.7
     assert visual.blend_cohesion > 0.58
     assert "Cadential Lift" in visual.active_synergies
+
+
+def test_renderer_escalates_three_way_combinations_into_scene_cascades() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="lydian", type="mode", name="Lydian"),
+            TheoryElement(id="maj7", type="chord", name="Maj7"),
+            TheoryElement(id="ii-v-i", type="progression", name="II-V-I"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert visual.signature == "Aurora Choir"
+    assert "Aurora Choir" in visual.active_bonuses
+    assert visual.scene_cascade == "aurora-dais"
+    assert visual.scene_cascade_intensity > 0.9
+    assert visual.depth > 0.8
+    assert visual.beam_strength > 0.7

@@ -78,6 +78,8 @@ describe("TheorySandbox", () => {
         signature: "Blue Hour Run",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.84,
+        scene_cascade: "velvet-arcade",
+        scene_cascade_intensity: 0.79,
         openness: 0.76,
         attack: 0.38,
         swing: 0.7,
@@ -109,6 +111,7 @@ describe("TheorySandbox", () => {
 
     expect(screen.getByText("On")).toBeInTheDocument();
     expect(screen.getAllByText("Blue Hour Run").length).toBeGreaterThan(1);
+    expect(screen.getByText("Velvet Arcade")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "http://api.test/sandbox/render",
       expect.objectContaining({
@@ -792,6 +795,8 @@ interface TheorySandboxFetchOptions {
     grain?: number;
     growth_imprint?: string;
     growth_imprint_intensity?: number;
+    scene_cascade?: string;
+    scene_cascade_intensity?: number;
     openness?: number;
     attack?: number;
     swing?: number;
@@ -831,6 +836,8 @@ interface TheorySandboxFetchOptions {
     grain?: number;
     growth_imprint?: string;
     growth_imprint_intensity?: number;
+    scene_cascade?: string;
+    scene_cascade_intensity?: number;
     openness?: number;
     attack?: number;
     swing?: number;

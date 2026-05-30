@@ -34,6 +34,8 @@ interface SandboxRenderResponse {
   scene_family?: VisualParameters["sceneFamily"];
   growth_imprint?: VisualParameters["growthImprint"];
   growth_imprint_intensity?: number;
+  scene_cascade?: VisualParameters["sceneCascade"];
+  scene_cascade_intensity?: number;
   active_bonuses?: string[];
   active_synergies?: string[];
   particles: {
@@ -122,6 +124,22 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
     growthImprintIntensity:
       response.growth_imprint_intensity ??
       inferGrowthImprintIntensity(response.signature ?? "Pulse Field", response.active_bonuses ?? []),
+    sceneCascade:
+      response.scene_cascade ??
+      inferSceneCascade(
+        response.signature ?? "Pulse Field",
+        response.active_bonuses ?? [],
+        response.active_synergies ?? [],
+        response.growth_imprint ?? inferGrowthImprint(response.signature ?? "Pulse Field", response.active_bonuses ?? [])
+      ),
+    sceneCascadeIntensity:
+      response.scene_cascade_intensity ??
+      inferSceneCascadeIntensity(
+        response.signature ?? "Pulse Field",
+        response.active_bonuses ?? [],
+        response.active_synergies ?? [],
+        response.growth_imprint ?? inferGrowthImprint(response.signature ?? "Pulse Field", response.active_bonuses ?? [])
+      ),
     activeBonuses: response.active_bonuses ?? [],
     activeSynergies: response.active_synergies ?? [],
     particles: {
@@ -240,4 +258,60 @@ function inferGrowthImprintIntensity(signature: string, activeBonuses: string[])
   }
 
   return activeBonuses.length > 0 ? 0.78 : 0.62;
+}
+
+function inferSceneCascade(
+  signature: string,
+  activeBonuses: string[],
+  activeSynergies: string[],
+  growthImprint: VisualParameters["growthImprint"]
+): VisualParameters["sceneCascade"] {
+  const text = [signature, ...activeBonuses, ...activeSynergies].join(" ");
+
+  if (containsAny(text, ["Aurora Choir", "Aurora", "Celestial"])) {
+    return "aurora-dais";
+  }
+
+  if (containsAny(text, ["Blue Velvet Arcade", "Velvet", "Glass", "Current"])) {
+    return "velvet-arcade";
+  }
+
+  if (containsAny(text, ["Ritual Crucible", "Occult", "Ashen"])) {
+    return "eclipse-altar";
+  }
+
+  if (containsAny(text, ["Prism Engine", "Prism", "Chrome", "Meridian"])) {
+    return "prism-vortex";
+  }
+
+  if (containsAny(text, ["Voltage Causeway", "Roadhouse", "Neon", "Run"])) {
+    return "tide-runway";
+  }
+
+  if (growthImprint === "metal-forge" && containsAny(text, ["Shadow Magnet", "Fracture", "Voltage"])) {
+    return "forge-ritual";
+  }
+
+  return "neutral";
+}
+
+function inferSceneCascadeIntensity(
+  signature: string,
+  activeBonuses: string[],
+  activeSynergies: string[],
+  growthImprint: VisualParameters["growthImprint"]
+): number {
+  const cascade = inferSceneCascade(signature, activeBonuses, activeSynergies, growthImprint);
+
+  if (cascade === "neutral") {
+    return 0;
+  }
+
+  const text = [signature, ...activeBonuses].join(" ");
+
+  if (containsAny(text, ["Aurora Choir", "Blue Velvet Arcade", "Ritual Crucible", "Prism Engine", "Voltage Causeway"])) {
+    return 0.92;
+  }
+
+  return growthImprint === "neutral" ? 0.68 : 0.76;
 }
