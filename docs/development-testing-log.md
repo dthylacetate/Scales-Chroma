@@ -1700,6 +1700,36 @@ Vite 构建通过
 - 本地浏览器导航实测：通过
 - 这轮未改后端业务逻辑，所以没有重跑后端整套测试。
 
+## 最新一轮：单端口部署脚本
+
+这一轮把服务器部署流程收敛成脚本，目标是减少手动步骤，避免上线时漏装依赖、忘记构建前端或端口写错。
+
+新增：
+
+```text
+scripts/deploy_single_port.sh
+```
+
+脚本能力：
+
+- 检测 Python 3.11+。
+- 检测 Node 18+ 与 npm。
+- 支持 `--host` 和 `--port` 选择最终访问端口。
+- 支持创建 `.venv` 虚拟环境。
+- 支持安装后端依赖。
+- 支持前端 `npm ci / npm install`。
+- 支持 `npm run build` 生成 `frontend/dist`。
+- 支持初始化 SQLite 数据库。
+- 支持 `--skip-install` 跳过依赖安装。
+- 支持 `--no-start` 只构建不启动。
+
+验证方式：
+
+- `bash -n scripts/deploy_single_port.sh` 通过。
+- `./scripts/deploy_single_port.sh --help` 通过。
+- `./scripts/deploy_single_port.sh --skip-install --no-start --port 8123` 通过，确认前端 build 和 SQLite 初始化都能跑通。
+- 本机没有安装 `shellcheck`，因此这一轮没有运行 shellcheck 静态检查。
+
 ## 当前覆盖能力
 
 已覆盖：

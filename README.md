@@ -122,15 +122,10 @@ npm run dev
 
 ## 单端口上线方式
 
-如果准备直接部署到服务器并通过 `IP + 端口` 访问，当前推荐走这一套：
+如果准备直接部署到服务器并通过 `IP + 端口` 访问，当前推荐直接用部署脚本：
 
 ```bash
-cd frontend
-npm install
-npm run build
-
-cd ../backend
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+./scripts/deploy_single_port.sh
 ```
 
 完成后直接访问：
@@ -146,13 +141,35 @@ http://<服务器IP>:8000/
 - SQLite 仍然作为当前默认数据库。
 - 旧 SQLite 如果缺少 `users.password` 字段，后端启动时会自动做轻量补齐。
 
-也可以直接用脚本：
+部署脚本会自动完成：
 
-```bash
-./scripts/run_single_port.sh
-```
+- 检测 Python / Node / npm 版本。
+- 创建 `.venv` 虚拟环境。
+- 安装后端依赖。
+- 安装前端依赖。
+- 构建 `frontend/dist`。
+- 初始化 SQLite 数据库。
+- 按指定 host 和 port 启动后端服务。
 
 如果需要指定监听端口：
+
+```bash
+./scripts/deploy_single_port.sh --port 9000
+```
+
+如果依赖已经安装过，只想重新构建并启动：
+
+```bash
+./scripts/deploy_single_port.sh --skip-install --port 9000
+```
+
+如果只想安装依赖和构建，不立即启动：
+
+```bash
+./scripts/deploy_single_port.sh --no-start
+```
+
+旧的轻量启动脚本仍然保留，适合本机已经装好依赖时使用：
 
 ```bash
 HOST=0.0.0.0 PORT=9000 ./scripts/run_single_port.sh
