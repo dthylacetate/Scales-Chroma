@@ -23,6 +23,7 @@ import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
+import { getStageTakeoverMode } from "../visual_engine/stageTakeoverModes";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
 
 const THEORY_LIBRARY: TheoryElement[] = [
@@ -438,6 +439,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStageMotionRig(visual) ? (
                 <div className="text-[11px] text-[#ffbdb8]">Motion: {getStageMotionRig(visual)?.label}</div>
               ) : null}
+              {getStageTakeoverMode(visual) ? (
+                <div className="text-[11px] text-[#f0c6ff]">Takeover: {getStageTakeoverMode(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -571,6 +575,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <StageDirectorCuePanel visual={visual} />
           <StageProjectionScriptPanel visual={visual} />
           <StageMotionRigPanel visual={visual} />
+          <StageTakeoverPanel visual={visual} />
           <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
@@ -1340,6 +1345,26 @@ function StageMotionRigPanel({ visual }: { visual: VisualParameters }) {
         <ReadingLine label="前景机构" value={rig.mechanism} />
         <ReadingLine label="节奏推进" value={rig.cadence} />
         <ReadingLine label="现场体感" value={rig.impact} />
+      </div>
+    </section>
+  );
+}
+
+function StageTakeoverPanel({ visual }: { visual: VisualParameters }) {
+  const takeover = getStageTakeoverMode(visual);
+
+  if (!takeover) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#49304e] bg-[#211824] p-3">
+      <div className="text-xs uppercase text-stone-400">Stage Takeover</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{takeover.label}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="接管触发" value={takeover.trigger} />
+        <ReadingLine label="换场动作" value={takeover.gesture} />
+        <ReadingLine label="现场体感" value={takeover.impact} />
       </div>
     </section>
   );

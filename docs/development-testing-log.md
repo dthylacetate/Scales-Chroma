@@ -426,6 +426,68 @@
 - 现在不同 Growth 分叉不只是“远景和地面不一样”，连靠近镜头的前景机构都不一样。
 - 这让舞台更像一整套真正会运作的 show，而不是把差异都留在远处背景里。
 
+## 最新一轮：Stage Takeover 换场接管层
+
+上一轮把前景动势也拆开之后，舞台本身已经更像完整 show 了，但切换的时候仍然有一个问题：很多路线还是共用“统一冲击波”的转场体感。
+
+目标：
+
+- 让不同路线在换场时也走完全不同的接管手势。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageTakeoverModes.ts`
+- 继续用 `getStageSetpiece(...)` 作为入口，把 setpiece 映射到不同的 takeover mode
+- `TheorySandbox` 新增 `Stage Takeover` 面板
+- 舞台左上角角标新增 `Takeover: ...`
+- `RealtimeCanvasRenderer`
+  - 扩展 `computeTransitionImpact(...)`
+  - 在 `drawTransitionImpact(...)` 里新增 `drawTakeoverTransitionLayer(...)`
+  - 根据不同 takeover mode 画不同接管手势
+
+当前已接入的接管家族：
+
+- `Cathedral Iris`
+  - 适用于 `Choir Vault / Aurora Dais / Blue Cloister`
+  - 体现礼堂开闸、穹顶收束和圆形礼堂波
+- `Velvet Drape`
+  - 适用于 `Silken Halo / Rose Arcade / Velvet Arcade`
+  - 体现双侧幕纱包场和柔性合帘
+- `Forge Slam`
+  - 适用于 `Forge Throne`
+  - 体现上压闸门、热口闪爆和重击式夺权
+- `Prism Scanline`
+  - 适用于 `Phase Cloister / Prism Vortex`
+  - 体现斜向扫描、折返重画和系统重路由
+- `Runway Rush`
+  - 适用于 `Neon Causeway / Tide Runway`
+  - 体现近景追光、跑道冲场和方向重排
+- `Eclipse Veil`
+  - 适用于 `Eclipse Altar`
+  - 体现压暗帘幕、边缘回亮和仪式性遮场
+
+对应验证：
+
+- 新增 `frontend/src/tests/canvas/stageTakeoverModes.test.ts`
+  - 验证 `Choir Vault` 会映射到 `Cathedral Iris`
+  - 验证 `Neon Causeway` 会映射到 `Runway Rush`
+  - 验证无 setpiece 时返回 `null`
+- 更新 `TheorySandbox.test.tsx`
+  - 验证右侧出现 `Stage Takeover`
+  - 验证舞台角标出现 `Takeover: Cathedral Iris`
+  - 验证 takeover 文案真实渲染
+- 更新 `realtimeCanvasRenderer.test.ts`
+  - 验证新舞台人格接管时会触发更强的 transition takeover 绘制
+- 前端整模块测试
+  - `79 passed`
+- 前端 build
+  - 通过
+
+这一轮的价值：
+
+- 现在不同 Growth 分叉不只是“舞台长得不一样”，连怎么把旧舞台接管走都不一样。
+- 这让切换本身也更像演出，而不是参数变了之后顺手加一圈统一冲击波。
+
 ## 当前测试结构
 
 ### 后端

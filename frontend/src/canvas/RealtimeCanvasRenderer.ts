@@ -3,6 +3,7 @@ import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
+import { getStageTakeoverMode } from "../visual_engine/stageTakeoverModes";
 
 export interface CanvasFrameScheduler {
   requestFrame: (callback: FrameRequestCallback) => number;
@@ -175,9 +176,19 @@ export class RealtimeCanvasRenderer {
     const signatureShift = fromVisual.signature !== toVisual.signature ? 0.2 : 0;
     const growthShift = fromVisual.growthImprint !== toVisual.growthImprint ? 0.18 : 0;
     const cascadeShift = fromVisual.sceneCascade !== toVisual.sceneCascade ? 0.26 : 0;
+    const setpieceShift = getStageSetpiece(fromVisual)?.kind !== getStageSetpiece(toVisual)?.kind ? 0.18 : 0;
+    const motionShift = getStageMotionRig(fromVisual)?.kind !== getStageMotionRig(toVisual)?.kind ? 0.12 : 0;
+    const projectionShift = getStageProjectionScript(fromVisual)?.kind !== getStageProjectionScript(toVisual)?.kind ? 0.12 : 0;
+    const takeoverShift = getStageTakeoverMode(fromVisual)?.kind !== getStageTakeoverMode(toVisual)?.kind ? 0.12 : 0;
     const energyShift = Math.abs(fromVisual.energy - toVisual.energy) * 0.22;
     const tensionShift = Math.abs(fromVisual.modalTension - toVisual.modalTension) * 0.18;
-    return Math.max(0, Math.min(1, 0.12 + sceneShift + signatureShift + growthShift + cascadeShift + energyShift + tensionShift));
+    return Math.max(
+      0,
+      Math.min(
+        1,
+        0.12 + sceneShift + signatureShift + growthShift + cascadeShift + setpieceShift + motionShift + projectionShift + takeoverShift + energyShift + tensionShift
+      )
+    );
   }
 
   private drawTransitionImpact(
@@ -224,7 +235,165 @@ export class RealtimeCanvasRenderer {
       );
       this.context.stroke();
     }
+
+    this.drawTakeoverTransitionLayer(visual, width, height, centerX, centerY, radius, progress, fade);
     this.context.restore();
+  }
+
+  private drawTakeoverTransitionLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    progress: number,
+    fade: number
+  ): void {
+    const takeover = getStageTakeoverMode(visual);
+
+    if (!takeover) {
+      return;
+    }
+
+    switch (takeover.kind) {
+      case "cathedral-iris":
+        this.drawCathedralIrisTakeover(visual, width, height, centerX, centerY, radius, progress, fade);
+        break;
+      case "velvet-drape":
+        this.drawVelvetDrapeTakeover(visual, width, height, centerX, centerY, radius, progress, fade);
+        break;
+      case "forge-slam":
+        this.drawForgeSlamTakeover(visual, width, height, centerX, centerY, radius, progress, fade);
+        break;
+      case "prism-scanline":
+        this.drawPrismScanlineTakeover(visual, width, height, centerX, centerY, radius, progress, fade);
+        break;
+      case "runway-rush":
+        this.drawRunwayRushTakeover(visual, width, height, centerX, centerY, radius, progress, fade);
+        break;
+      case "eclipse-veil":
+        this.drawEclipseVeilTakeover(visual, width, height, centerX, centerY, radius, progress, fade);
+        break;
+    }
+  }
+
+  private drawCathedralIrisTakeover(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    progress: number,
+    fade: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 * fade + this.transitionImpact * 0.08);
+    this.context.lineWidth = Math.max(1.2, radius * 0.012);
+    for (let index = 0; index < 4; index += 1) {
+      const archRadius = radius * (1 + index * 0.2 + progress * 0.24);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY - radius * 0.18, archRadius, Math.PI * 1.04, Math.PI * 1.96);
+      this.context.stroke();
+    }
+  }
+
+  private drawVelvetDrapeTakeover(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    progress: number,
+    fade: number
+  ): void {
+    const drapeWidth = radius * (0.34 + progress * 0.42);
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.08 * fade + this.transitionImpact * 0.06);
+    this.context.fillRect(0, 0, drapeWidth, height);
+    this.context.fillRect(width - drapeWidth, 0, drapeWidth, height);
+  }
+
+  private drawForgeSlamTakeover(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    progress: number,
+    fade: number
+  ): void {
+    const slamHeight = height * (0.12 + progress * 0.36);
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.1 * fade + this.transitionImpact * 0.08);
+    this.context.fillRect(0, 0, width, slamHeight);
+    this.context.fillStyle = alphaHex(visual.color, 0.08 * fade + this.transitionImpact * 0.08);
+    this.context.fillRect(centerX - radius * 0.76, centerY + radius * 0.82, radius * 1.52, radius * 0.08);
+  }
+
+  private drawPrismScanlineTakeover(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    progress: number,
+    fade: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 * fade + this.transitionImpact * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.01);
+    for (let index = 0; index < 6; index += 1) {
+      const offset = -radius * 1.18 + (progress + index / 6) * radius * 2.36;
+      this.context.beginPath();
+      this.context.moveTo(centerX + offset, 0);
+      this.context.lineTo(centerX + offset + radius * 0.24, height);
+      this.context.stroke();
+    }
+  }
+
+  private drawRunwayRushTakeover(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    progress: number,
+    fade: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 * fade + this.transitionImpact * 0.08);
+    this.context.lineWidth = Math.max(1.4, radius * 0.012);
+    for (let index = 0; index < 5; index += 1) {
+      const y = centerY + radius * (0.86 - (progress + index * 0.12) * 1.22);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * (1.18 - index * 0.12), y);
+      this.context.lineTo(centerX - radius * 0.08, y - radius * 0.08);
+      this.context.moveTo(centerX + radius * (1.18 - index * 0.12), y);
+      this.context.lineTo(centerX + radius * 0.08, y - radius * 0.08);
+      this.context.stroke();
+    }
+  }
+
+  private drawEclipseVeilTakeover(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    progress: number,
+    fade: number
+  ): void {
+    const veilWidth = radius * (0.3 + progress * 0.24);
+    this.context.fillStyle = alphaHex(visual.backgroundColor, 0.12 * fade + this.transitionImpact * 0.08);
+    this.context.fillRect(0, 0, veilWidth, height);
+    this.context.fillRect(width - veilWidth, 0, veilWidth, height);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 * fade + this.transitionImpact * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.01);
+    this.context.beginPath();
+    this.context.arc(centerX, centerY + radius * 0.04, radius * (0.82 + progress * 0.24), Math.PI * 0.14, Math.PI * 0.86);
+    this.context.stroke();
   }
 
   private drawBackground(

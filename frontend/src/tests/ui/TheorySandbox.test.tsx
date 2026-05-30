@@ -230,18 +230,22 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Stage Director Cue")).toBeInTheDocument();
     expect(screen.getByText("Stage Projection Script")).toBeInTheDocument();
     expect(screen.getByText("Stage Motion Rig")).toBeInTheDocument();
+    expect(screen.getByText("Stage Takeover")).toBeInTheDocument();
     expect(screen.getAllByText("Cathedral Descent").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Aisle Lattice").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Choir Crowns").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cathedral Iris").length).toBeGreaterThan(0);
     expect(screen.getByText(/顶部吊架、纵向窗格、拱形合唱廊/)).toBeInTheDocument();
     expect(screen.getByText(/顶部冷色吊灯和下压式礼堂光柱会持续往中心汇聚/)).toBeInTheDocument();
     expect(screen.getByText(/Setpiece: Choir Vault/)).toBeInTheDocument();
     expect(screen.getByText(/Cue: Cathedral Descent/)).toBeInTheDocument();
     expect(screen.getByText(/Projection: Aisle Lattice/)).toBeInTheDocument();
     expect(screen.getByText(/Motion: Choir Crowns/)).toBeInTheDocument();
+    expect(screen.getByText(/Takeover: Cathedral Iris/)).toBeInTheDocument();
     expect(screen.getByText(/成组下压，像礼堂灯柱一层层往中心落/)).toBeInTheDocument();
     expect(screen.getByText(/地面会长出合唱席一样的纵深 aisle 与圆形 choir mark/)).toBeInTheDocument();
     expect(screen.getByText(/前景会出现成组的拱冠、吊环和合唱席式悬挂边框/)).toBeInTheDocument();
+    expect(screen.getByText(/舞台会像穹顶开闸一样往中心收束再打开/)).toBeInTheDocument();
   });
 
   it("records a practice session and shows earned exp", async () => {

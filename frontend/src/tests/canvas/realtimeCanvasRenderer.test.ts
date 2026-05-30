@@ -344,6 +344,37 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.lineTo).toHaveBeenCalled();
     expect(context?.fillRect).toHaveBeenCalled();
   });
+
+  it("amplifies transition takeovers when a new stage personality takes control", () => {
+    const canvas = createCanvas();
+    const callbacks: FrameRequestCallback[] = [];
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame,
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start(visual);
+    renderer.start({
+      ...visual,
+      signature: "Aurora Choir",
+      sceneFamily: "solar-garden",
+      sceneCascade: "aurora-dais",
+      sceneCascadeIntensity: 0.95,
+      activeBonuses: ["Aurora Choir", "Choir Vault"]
+    });
+
+    callbacks[0]?.(220);
+
+    const context = canvas.getContext("2d");
+    expect(context?.fillRect).toHaveBeenCalled();
+    expect(context?.arc).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
+  });
 });
 
 function createCanvas(): HTMLCanvasElement {
