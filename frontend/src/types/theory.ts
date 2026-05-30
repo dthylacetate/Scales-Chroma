@@ -55,6 +55,8 @@ export interface VisualParameters {
   phraseVariationIntensity: number;
   voiceprints?: string[];
   voiceprintIntensity?: number;
+  elementRoles?: string[];
+  elementRoleIntensity?: number;
   sceneCascade:
     | "neutral"
     | "aurora-dais"

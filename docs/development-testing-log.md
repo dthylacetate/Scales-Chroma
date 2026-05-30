@@ -1493,7 +1493,72 @@ Vite 构建通过
   - 页面会真实出现 `Element Voiceprints`
   - 左上角会真实出现 `Voices: 3`
   - 同一条链路里 `hasVoiceprints: true`
-```
+
+## 最新一轮：Element Roles 模块空间席位层
+
+这一轮继续处理“每块模块不仅要看得见，还要知道它在舞台上负责什么位置”的问题。
+
+目标：
+
+- `Element Voiceprints` 已经能说明“每块积木留下什么痕迹”。
+- `Element Roles` 进一步说明“每块积木占据什么舞台席位、负责什么空间结构”。
+- 中间舞台不再只是叠纹理，而是会出现席位锚点和连接线，形成更明确的空间关系。
+
+实现方式：
+
+- 后端 `/sandbox/render` 新增：
+  - `element_roles`
+  - `element_role_intensity`
+- 当前已接入的席位包括：
+  - `Sky Lens`
+  - `Halo Core`
+  - `Cadence Rail`
+  - `Voltage Core`
+  - `Fracture Core`
+  - `Sun Deck`
+  - `Night Deck`
+  - 以及其他音阶/调式/和弦/进行对应的空间职责
+- 前端新增 `frontend/src/visual_engine/stageElementRoles.ts`
+- `RealtimeCanvasRenderer` 新增 element roles 演出层
+- `TheorySandbox` 新增右侧 `Element Roles` 面板，左上角新增 `Roles: ...`
+
+这层现在的意义：
+
+- `Element Voiceprints` 负责每个模块的“痕迹”。
+- `Element Roles` 负责每个模块的“站位与职责”。
+- 两者叠起来后，用户会更容易理解为什么同一舞台里有些元素像透镜、有些像核心、有些像导轨。
+
+对应测试：
+
+- 后端单元测试：
+  - 验证 `Lydian + Maj7 + II-V-I` 会返回 `Sky Lens / Halo Core / Cadence Rail`
+- 后端 API 测试：
+  - 验证 `/sandbox/render` 会返回 `element_roles` 与 `element_role_intensity`
+- 前端 service 测试：
+  - 验证 `renderSandboxVisual(...)` 会正确归一化 `element_roles`
+- 前端 visual engine 测试：
+  - 新增 `stageElementRoles.test.ts`
+- 前端 Canvas 测试：
+  - 验证渲染器会真的画出席位连接层
+- 前端 UI 测试：
+  - 验证右侧 `Element Roles` 面板与左上角 `Roles: 3` 会同时出现
+
+验证结果：
+
+- 后端：`97 passed, 1 warning`
+- 前端：`104 passed`
+- 前端 build：通过
+
+真实页面烟测补充：
+
+- `scripts/visual-smoke.mjs` 这轮继续升级，新增：
+  - 对 `Lydian -> Maj7 -> II-V-I` 等待 `Element Roles`
+  - 等待 `Sky Lens`
+  - 等待 `Cadence Rail`
+- 烟测结果通过，确认：
+  - 页面会真实出现 `Element Roles`
+  - 左上角会真实出现 `Roles: 3`
+  - 同一条链路里 `hasElementRoles: true`
 
 ## 当前覆盖能力
 

@@ -36,6 +36,8 @@ const visual: VisualParameters = {
   phraseVariationIntensity: 0.9,
   voiceprints: ["Sky Fan", "Velvet Halo", "Cadence Stairs"],
   voiceprintIntensity: 0.94,
+  elementRoles: ["Sky Lens", "Halo Core", "Cadence Rail"],
+  elementRoleIntensity: 0.88,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.88,
   openness: 0.82,
@@ -346,6 +348,32 @@ describe("RealtimeCanvasRenderer", () => {
 
     const context = canvas.getContext("2d");
     expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
+  });
+
+  it("draws dedicated element role anchors when modules claim stage seats", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      elementRoles: ["Sky Lens", "Voltage Core", "Cadence Rail"],
+      elementRoleIntensity: 0.86
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.quadraticCurveTo).toHaveBeenCalled();
     expect(context?.stroke).toHaveBeenCalled();
   });
 

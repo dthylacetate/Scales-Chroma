@@ -25,6 +25,8 @@ describe("sandbox API service", () => {
         phrase_variation_intensity: 0.9,
         voiceprints: ["Sky Fan", "Velvet Halo", "Cadence Stairs"],
         voiceprint_intensity: 0.94,
+        element_roles: ["Sky Lens", "Halo Core", "Cadence Rail"],
+        element_role_intensity: 0.88,
         scene_cascade: "aurora-dais",
         scene_cascade_intensity: 0.91,
         openness: 0.81,
@@ -80,6 +82,8 @@ describe("sandbox API service", () => {
     expect(visual.phraseVariationIntensity).toBe(0.9);
     expect(visual.voiceprints).toEqual(["Sky Fan", "Velvet Halo", "Cadence Stairs"]);
     expect(visual.voiceprintIntensity).toBe(0.94);
+    expect(visual.elementRoles).toEqual(["Sky Lens", "Halo Core", "Cadence Rail"]);
+    expect(visual.elementRoleIntensity).toBe(0.88);
     expect(visual.sceneCascade).toBe("aurora-dais");
     expect(visual.sceneCascadeIntensity).toBe(0.91);
     expect(visual.openness).toBe(0.81);

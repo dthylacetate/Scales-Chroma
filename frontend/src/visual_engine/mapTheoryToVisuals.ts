@@ -76,6 +76,8 @@ const DEFAULT_VISUALS: VisualParameters = {
   phraseVariationIntensity: 0,
   voiceprints: [],
   voiceprintIntensity: 0,
+  elementRoles: [],
+  elementRoleIntensity: 0,
   sceneCascade: "neutral",
   sceneCascadeIntensity: 0,
   activeBonuses: [],
@@ -715,6 +717,7 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
   visual.phraseTrajectoryIntensity = phraseTrajectory.intensity;
   applyPhraseHooks(elements, visual);
   const voiceprints = resolveVoiceprints(elements, visual);
+  const elementRoles = resolveElementRoles(elements);
   const animationState = dominantAnimationState(visual);
   const ringCount = Math.max(2, Math.min(8, Math.floor(2 + visual.rippleStrength * 3 + visual.complexity * 2)));
   const particles = {
@@ -766,6 +769,8 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     phraseVariationIntensity: 0,
     voiceprints,
     voiceprintIntensity: round(resolveVoiceprintIntensity(voiceprints, visual)),
+    elementRoles,
+    elementRoleIntensity: round(resolveElementRoleIntensity(elementRoles, visual)),
     sceneCascade: visual.sceneCascade,
     sceneCascadeIntensity: round(visual.sceneCascadeIntensity),
     activeBonuses: visual.activeBonuses,
@@ -1351,6 +1356,53 @@ function resolveVoiceprintIntensity(
       visual.complexity * 0.14 +
       visual.sceneCascadeIntensity * 0.08 +
       visual.phraseVariationIntensity * 0.08
+  );
+}
+
+function resolveElementRoles(elements: TheoryElement[]): string[] {
+  const roleMap: Record<string, string> = {
+    major: "Sun Deck",
+    minor: "Night Deck",
+    pentatonic: "Neon Deck",
+    "harmonic minor": "Ritual Deck",
+    "melodic minor": "Chrome Deck",
+    ionian: "Day Lens",
+    dorian: "Tide Lens",
+    phrygian: "Ember Lens",
+    lydian: "Sky Lens",
+    mixolydian: "Brass Lens",
+    maj7: "Halo Core",
+    min7: "Orbit Core",
+    dominant7: "Voltage Core",
+    dim7: "Fracture Core",
+    aug: "Prism Core",
+    "ii-v-i": "Cadence Rail",
+    "i-v-vi-iv": "Anthem Rail"
+  };
+
+  return elements.map((element) => roleMap[element.name.toLowerCase()] ?? `${element.name} Role`).slice(0, 4);
+}
+
+function resolveElementRoleIntensity(
+  elementRoles: string[],
+  visual: {
+    blendCohesion: number;
+    sceneCascadeIntensity: number;
+    voiceprintIntensity: number;
+    phraseTrajectoryIntensity: number;
+  }
+): number {
+  if (elementRoles.length === 0) {
+    return 0;
+  }
+
+  return clamp01(
+    0.3 +
+      elementRoles.length * 0.12 +
+      visual.blendCohesion * 0.14 +
+      visual.sceneCascadeIntensity * 0.08 +
+      visual.voiceprintIntensity * 0.08 +
+      visual.phraseTrajectoryIntensity * 0.06
   );
 }
 

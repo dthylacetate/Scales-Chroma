@@ -270,6 +270,8 @@ def test_sandbox_render_returns_growth_rewritten_phrase_variations() -> None:
     assert payload["phrase_variation_intensity"] > 0.8
     assert payload["voiceprints"][:3] == ["Sky Fan", "Velvet Halo", "Cadence Stairs"]
     assert payload["voiceprint_intensity"] > 0.8
+    assert payload["element_roles"][:3] == ["Sky Lens", "Halo Core", "Cadence Rail"]
+    assert payload["element_role_intensity"] > 0.8
     assert "Choir Step" in payload["active_bonuses"]
 
 

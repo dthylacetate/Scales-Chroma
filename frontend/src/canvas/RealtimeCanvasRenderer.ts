@@ -1,6 +1,7 @@
 import type { VisualParameters } from "../types/theory";
 import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
+import { getStageElementRoles } from "../visual_engine/stageElementRoles";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStagePhraseHooks } from "../visual_engine/stagePhraseHooks";
 import { getStagePhraseTrajectory } from "../visual_engine/stagePhraseTrajectories";
@@ -134,6 +135,7 @@ export class RealtimeCanvasRenderer {
     this.drawBackground(visual, width, height, centerX, centerY, radius, time);
     this.drawAtmosphereLayers(visual, width, height, centerX, centerY, radius, time);
     this.drawStageClimateLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStageElementRolesLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageVoiceprintsLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStagePhraseTrajectoryLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStagePhraseHooksLayer(visual, width, height, centerX, centerY, radius, time);
@@ -200,6 +202,11 @@ export class RealtimeCanvasRenderer {
       Math.abs((fromVisual.voiceprintIntensity ?? 0) - (toVisual.voiceprintIntensity ?? 0)) > 0.04
         ? 0.08
         : 0;
+    const roleShift =
+      Math.abs((fromVisual.elementRoles ?? []).length - (toVisual.elementRoles ?? []).length) > 0 ||
+      Math.abs((fromVisual.elementRoleIntensity ?? 0) - (toVisual.elementRoleIntensity ?? 0)) > 0.04
+        ? 0.08
+        : 0;
     const variationShift = getStagePhraseVariation(fromVisual)?.kind !== getStagePhraseVariation(toVisual)?.kind ? 0.12 : 0;
     const motionShift = getStageMotionRig(fromVisual)?.kind !== getStageMotionRig(toVisual)?.kind ? 0.12 : 0;
     const projectionShift = getStageProjectionScript(fromVisual)?.kind !== getStageProjectionScript(toVisual)?.kind ? 0.12 : 0;
@@ -219,6 +226,7 @@ export class RealtimeCanvasRenderer {
           trajectoryShift +
           hookShift +
           voiceprintShift +
+          roleShift +
           variationShift +
           motionShift +
           projectionShift +
@@ -884,6 +892,72 @@ export class RealtimeCanvasRenderer {
             anchorX + radius * 0.14,
             anchorY
           );
+          this.context.stroke();
+          break;
+      }
+    });
+
+    this.context.restore();
+  }
+
+  private drawStageElementRolesLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const roles = getStageElementRoles(visual);
+    const intensity = visual.elementRoleIntensity ?? 0;
+
+    if (roles.length === 0 || intensity <= 0.05) {
+      return;
+    }
+
+    const anchors = roles.map((role, index) => {
+      const angle = -Math.PI * 0.7 + (index / Math.max(1, roles.length - 1 || 1)) * Math.PI * 1.4;
+      return {
+        role,
+        x: centerX + Math.cos(angle + Math.sin(time * 0.2 + index) * 0.04) * radius * (0.92 + index * 0.05),
+        y: centerY + Math.sin(angle) * radius * (0.58 + index * 0.02)
+      };
+    });
+
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + intensity * 1.8);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + intensity * 0.14);
+    this.context.fillStyle = alphaHex(visual.color, 0.1 + intensity * 0.08);
+
+    for (let index = 0; index < anchors.length - 1; index += 1) {
+      const current = anchors[index];
+      const next = anchors[index + 1];
+      this.context.beginPath();
+      this.context.moveTo(current.x, current.y);
+      this.context.quadraticCurveTo(centerX, centerY - radius * 0.16, next.x, next.y);
+      this.context.stroke();
+    }
+
+    anchors.forEach(({ role, x, y }) => {
+      switch (role.kind) {
+        case "deck":
+          this.context.fillRect(x - radius * 0.06, y - radius * 0.025, radius * 0.12, radius * 0.05);
+          break;
+        case "lens":
+          this.context.beginPath();
+          this.context.ellipse(x, y, radius * 0.08, radius * 0.04, time * 0.2, 0, Math.PI * 2);
+          this.context.stroke();
+          break;
+        case "core":
+          this.context.beginPath();
+          this.context.arc(x, y, radius * 0.045, 0, Math.PI * 2);
+          this.context.fill();
+          break;
+        case "rail":
+          this.context.beginPath();
+          this.context.moveTo(x - radius * 0.08, y);
+          this.context.lineTo(x + radius * 0.08, y);
           this.context.stroke();
           break;
       }
@@ -4627,6 +4701,7 @@ function interpolateVisuals(
   const mergedSynergies = progress >= 0.45 ? toVisual.activeSynergies : fromVisual.activeSynergies;
   const mergedPhraseHooks = progress >= 0.45 ? toVisual.phraseHooks : fromVisual.phraseHooks;
   const mergedVoiceprints = progress >= 0.45 ? toVisual.voiceprints ?? [] : fromVisual.voiceprints ?? [];
+  const mergedElementRoles = progress >= 0.45 ? toVisual.elementRoles ?? [] : fromVisual.elementRoles ?? [];
 
   return {
     color: mixHex(fromVisual.color, toVisual.color, progress),
@@ -4669,6 +4744,8 @@ function interpolateVisuals(
     phraseVariationIntensity: numeric(fromVisual.phraseVariationIntensity, toVisual.phraseVariationIntensity),
     voiceprints: mergedVoiceprints,
     voiceprintIntensity: numeric(fromVisual.voiceprintIntensity ?? 0, toVisual.voiceprintIntensity ?? 0),
+    elementRoles: mergedElementRoles,
+    elementRoleIntensity: numeric(fromVisual.elementRoleIntensity ?? 0, toVisual.elementRoleIntensity ?? 0),
     sceneCascade: discrete(fromVisual.sceneCascade, toVisual.sceneCascade, 0.48),
     sceneCascadeIntensity: numeric(fromVisual.sceneCascadeIntensity, toVisual.sceneCascadeIntensity),
     activeBonuses: mergedBonuses,

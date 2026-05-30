@@ -84,6 +84,8 @@ class VisualParameters(BaseModel):
     phrase_variation_intensity: float = Field(ge=0.0, le=1.0)
     voiceprints: list[str]
     voiceprint_intensity: float = Field(ge=0.0, le=1.0)
+    element_roles: list[str]
+    element_role_intensity: float = Field(ge=0.0, le=1.0)
     scene_cascade: Literal[
         "neutral",
         "aurora-dais",

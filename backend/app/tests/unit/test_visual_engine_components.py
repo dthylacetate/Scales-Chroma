@@ -400,4 +400,6 @@ def test_renderer_lets_growth_routes_rewrite_phrase_systems() -> None:
     assert "Choir Step" in visual.active_bonuses
     assert visual.voiceprints[:3] == ["Sky Fan", "Velvet Halo", "Cadence Stairs"]
     assert visual.voiceprint_intensity > 0.9
+    assert visual.element_roles[:3] == ["Sky Lens", "Halo Core", "Cadence Rail"]
+    assert visual.element_role_intensity > 0.8
     assert visual.depth > 0.85

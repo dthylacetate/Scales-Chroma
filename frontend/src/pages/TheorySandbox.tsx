@@ -20,6 +20,7 @@ import {
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
+import { getStageElementRoles } from "../visual_engine/stageElementRoles";
 import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStagePhraseHooks } from "../visual_engine/stagePhraseHooks";
@@ -464,6 +465,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                 <div className="text-[11px] text-[#c4f3ff]">Variation: {getStagePhraseVariation(visual)?.label}</div>
               ) : null}
               {(visual.voiceprints?.length ?? 0) > 0 ? <div className="text-[11px] text-[#ffd7ff]">Voices: {visual.voiceprints?.length}</div> : null}
+              {(visual.elementRoles?.length ?? 0) > 0 ? <div className="text-[11px] text-[#c6ffec]">Roles: {visual.elementRoles?.length}</div> : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -594,6 +596,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <PhraseHooksPanel visual={visual} />
           <PhraseVariationPanel visual={visual} />
           <ElementVoiceprintsPanel visual={visual} />
+          <ElementRolesPanel visual={visual} />
           <GrowthImprintPanel visual={visual} />
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
@@ -1358,6 +1361,46 @@ function ElementVoiceprintsPanel({ visual }: { visual: VisualParameters }) {
   );
 }
 
+function ElementRolesPanel({ visual }: { visual: VisualParameters }) {
+  const roles = getStageElementRoles(visual);
+  const intensity = visual.elementRoleIntensity ?? 0;
+
+  if (roles.length === 0 || intensity <= 0.05) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#244542] bg-[#182221] p-3">
+      <div className="text-xs uppercase text-stone-400">Element Roles</div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium text-stone-100">{roles.length} Seats</div>
+          <div className="mt-1 text-xs text-stone-400">当前模块不仅留痕，还会各自占位并参与连线。</div>
+        </div>
+        <div className="text-sm font-semibold text-[#9af0dd]">{Math.round(intensity * 100)}%</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#101716]">
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${Math.max(6, Math.round(intensity * 100))}%`,
+            background: "linear-gradient(90deg, rgba(154, 240, 221, 0.35) 0%, rgba(154, 240, 221, 1) 100%)"
+          }}
+        />
+      </div>
+      <div className="mt-3 grid gap-2">
+        {roles.map((role) => (
+          <div key={role.label} className="rounded-md border border-white/5 bg-white/5 px-2 py-1.5 text-xs text-stone-300">
+            <div className="font-medium text-stone-100">{role.label}</div>
+            <div className="mt-1">{role.placement}</div>
+            <div className="mt-1 text-stone-400">{role.impact}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
   const reading = buildGrowthImprintReading(visual);
 
@@ -1805,6 +1848,10 @@ function buildStageReading(
     (visual.voiceprints?.length ?? 0) > 0
       ? `；当前模块已经留下 ${visual.voiceprints?.join("、")} 这些独立舞台痕迹`
       : "；当前模块还没有形成独立可读的舞台痕迹";
+  const roleText =
+    (visual.elementRoles?.length ?? 0) > 0
+      ? `；它们当前还分别占据 ${visual.elementRoles?.join("、")} 这些空间角色`
+      : "；当前模块还没有形成独立可读的空间角色";
   const cascadeText =
     visual.sceneCascade !== "neutral"
       ? `；当前还触发了 ${sceneCascadeLabel(visual.sceneCascade)}，强度 ${Math.round(visual.sceneCascadeIntensity * 100)}%`
@@ -1815,7 +1862,7 @@ function buildStageReading(
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${variationText}${voiceprintText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${variationText}${voiceprintText}${roleText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
   };
 }
 

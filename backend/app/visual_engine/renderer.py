@@ -59,6 +59,8 @@ class AggregateVisualState:
     phrase_variation_intensity: float
     voiceprints: list[str]
     voiceprint_intensity: float
+    element_roles: list[str]
+    element_role_intensity: float
     scene_cascade: str
     scene_cascade_intensity: float
     active_bonuses: list[str]
@@ -215,6 +217,26 @@ VOICEPRINT_RULES: dict[str, tuple[str, dict[str, float]]] = {
     "i-v-vi-iv": ("Anthem Lane", {"motion_speed": 0.02, "valence": 0.02}),
 }
 
+ELEMENT_ROLE_RULES: dict[str, tuple[str, dict[str, float]]] = {
+    "major": ("Sun Deck", {"valence": 0.02, "luminosity": 0.02}),
+    "minor": ("Night Deck", {"depth": 0.02, "grit": 0.02}),
+    "pentatonic": ("Neon Deck", {"pulse_density": 0.02, "energy": 0.02}),
+    "harmonic minor": ("Ritual Deck", {"modal_tension": 0.03, "grain": 0.02}),
+    "melodic minor": ("Chrome Deck", {"complexity": 0.03, "blend_cohesion": 0.02}),
+    "ionian": ("Day Lens", {"symmetry": 0.02, "openness": 0.02}),
+    "dorian": ("Tide Lens", {"swing": 0.03, "ripple_strength": 0.02}),
+    "phrygian": ("Ember Lens", {"attack": 0.03, "contrast": 0.02}),
+    "lydian": ("Sky Lens", {"beam_strength": 0.02, "openness": 0.03}),
+    "mixolydian": ("Brass Lens", {"energy": 0.02, "attack": 0.02}),
+    "maj7": ("Halo Core", {"glow": 0.03, "depth": 0.02}),
+    "min7": ("Orbit Core", {"wave": 0.03, "blend_cohesion": 0.02}),
+    "dominant7": ("Voltage Core", {"beam_strength": 0.03, "gravity": 0.03}),
+    "dim7": ("Fracture Core", {"fracture": 0.03, "grain": 0.02}),
+    "aug": ("Prism Core", {"complexity": 0.03, "attack": 0.02}),
+    "ii-v-i": ("Cadence Rail", {"cadence_pull": 0.03, "gravity": 0.03}),
+    "i-v-vi-iv": ("Anthem Rail", {"motion_speed": 0.02, "valence": 0.02}),
+}
+
 
 def render_visual_parameters(
     elements: list[TheoryElement],
@@ -246,6 +268,9 @@ def render_visual_parameters(
     voiceprints, voiceprint_intensity = _resolve_voiceprints(elements, aggregate_state)
     aggregate_state.voiceprints = voiceprints
     aggregate_state.voiceprint_intensity = voiceprint_intensity
+    element_roles, element_role_intensity = _resolve_element_roles(elements, aggregate_state)
+    aggregate_state.element_roles = element_roles
+    aggregate_state.element_role_intensity = element_role_intensity
     particles = configure_particles(
         density_seed=aggregate_state.particle_density,
         energy=aggregate_state.energy,
@@ -297,6 +322,8 @@ def render_visual_parameters(
         phrase_variation_intensity=round(aggregate_state.phrase_variation_intensity, 2),
         voiceprints=aggregate_state.voiceprints,
         voiceprint_intensity=round(aggregate_state.voiceprint_intensity, 2),
+        element_roles=aggregate_state.element_roles,
+        element_role_intensity=round(aggregate_state.element_role_intensity, 2),
         scene_cascade=aggregate_state.scene_cascade,
         scene_cascade_intensity=round(aggregate_state.scene_cascade_intensity, 2),
         active_bonuses=aggregate_state.active_bonuses,
@@ -383,6 +410,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             phrase_variation_intensity=0.0,
             voiceprints=[],
             voiceprint_intensity=0.0,
+            element_roles=[],
+            element_role_intensity=0.0,
             scene_cascade="neutral",
             scene_cascade_intensity=0.0,
             active_bonuses=[],
@@ -551,6 +580,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         phrase_variation_intensity=0.0,
         voiceprints=[],
         voiceprint_intensity=0.0,
+        element_roles=[],
+        element_role_intensity=0.0,
         scene_cascade="neutral",
         scene_cascade_intensity=0.0,
         active_bonuses=[],
@@ -1305,6 +1336,37 @@ def _resolve_voiceprints(elements: list[TheoryElement], state: AggregateVisualSt
     state.depth = min(1.0, state.depth + intensity * 0.03)
     state.pulse_density = min(1.0, state.pulse_density + intensity * 0.02)
     return voiceprints[:4], round(intensity, 2)
+
+
+def _resolve_element_roles(elements: list[TheoryElement], state: AggregateVisualState) -> tuple[list[str], float]:
+    if not elements:
+        return [], 0.0
+
+    roles: list[str] = []
+    for element in elements:
+        role = ELEMENT_ROLE_RULES.get(element.name.casefold())
+        if not role:
+            continue
+
+        label, bonus = role
+        roles.append(label)
+        _apply_scaled_bonus(state, bonus, 0.28)
+
+    if not roles:
+        return [], 0.0
+
+    intensity = min(
+        1.0,
+        0.3
+        + len(roles) * 0.12
+        + state.blend_cohesion * 0.14
+        + state.scene_cascade_intensity * 0.08
+        + state.voiceprint_intensity * 0.08
+        + state.phrase_trajectory_intensity * 0.06,
+    )
+    state.symmetry = min(1.0, state.symmetry + intensity * 0.03)
+    state.depth = min(1.0, state.depth + intensity * 0.02)
+    return roles[:4], round(intensity, 2)
 
 
 def _apply_scaled_bonus(
