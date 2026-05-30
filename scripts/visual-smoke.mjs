@@ -47,23 +47,35 @@ try {
   const hasTheorySynergy = true;
   await page.screenshot({ path: "/tmp/scales-stage-growth.png", fullPage: true });
 
+  await clearComposition(page);
+
   await page.getByRole("button", { name: "Lydian mode", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "Maj7 chord", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "II-V-I progression", exact: true }).dragTo(stage);
-  await page.getByText("日光穹庭", { exact: true }).waitFor();
-  await page.getByText("Aurora Dais", { exact: true }).waitFor();
+  await page.getByText("Aurora Dais", { exact: true }).first().waitFor();
+  await page.getByText("Phrase Trajectory", { exact: true }).waitFor();
+  await page.getByText("Phrase Hooks", { exact: true }).waitFor();
+  await page.getByText("Lift Arc", { exact: true }).first().waitFor();
+  await page.getByText("Skyline Rise", { exact: true }).first().waitFor();
+  await page.getByText("Cadence Sweep", { exact: true }).first().waitFor();
   const hasSolar = true;
   const hasCascade = true;
+  const hasLiftArc = true;
+  const hasPhraseHooks = true;
   const solarText = await page.locator("body").innerText();
   const solarValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-solar.png", fullPage: true });
 
   await clearComposition(page);
 
+  await page.getByRole("button", { name: "Dominant7 chord", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "Harmonic Minor scale", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "Dim7 chord", exact: true }).dragTo(stage);
-  await page.getByText("影纹祭坛", { exact: true }).waitFor();
+  await page.getByText("Phrase Trajectory", { exact: true }).waitFor();
+  await page.getByText("Shadow Sink", { exact: true }).first().waitFor();
+  await page.getByText("Eclipse Altar", { exact: true }).first().waitFor();
   const hasShadow = true;
+  const hasShadowSink = true;
   const shadowValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-shadow.png", fullPage: true });
 
@@ -79,7 +91,10 @@ try {
         hasTheorySynergy,
         hasCascade,
         hasSolar,
+        hasLiftArc,
+        hasPhraseHooks,
         hasShadow,
+        hasShadowSink,
         hasStageReading: pageText.includes("STAGE READING") || pageText.includes("Stage Reading"),
         hasMoodAxes:
           pageText.includes("VALENCE") &&

@@ -212,6 +212,10 @@ npx -y -p playwright@1.55.0 sh -lc 'ROOT=$(dirname "$(dirname "$(which playwrigh
 - 最新这一轮前端验证还确认 `Stage Climate` 会同时出现在舞台角标和右侧说明里，并把暖雾、丝绒粉雾、热灰、电雾、潮汽、阴雾这些环境气候真实接进舞台。
 - 最新这一轮前后端验证还确认 `Phrase Trajectory` 会随着模块顺序改变而切换，并同时出现在后端 `/sandbox/render`、左上角角标、右侧 `Phrase Trajectory` 面板和 Canvas 主弧线层里。
 - 最新这一轮前后端验证还确认 `Phrase Hooks` 会随着相邻模块的接法出现，并同时出现在后端 `/sandbox/render`、左上角 `Hooks: ...`、右侧 `Phrase Hooks` 面板和 Canvas 的桥接节点层里。
+- 最新这一轮真实浏览器烟测还确认：
+  - `Lydian -> Maj7 -> II-V-I` 会在真实页面里出现 `Aurora Dais`、`Lift Arc`、`Skyline Rise`、`Cadence Sweep`
+  - `Dominant7 -> Harmonic Minor -> Dim7` 会在真实页面里出现 `Eclipse Altar` 与 `Shadow Sink`
+  - 同一轮烟测里 `Valence` 读数从明亮场景的 `1.00` 掉到暗色场景的 `0.25`
 - API 边界测试会继续补充在测试规划文档中，覆盖非法参数、越权访问、空数据、异常日期和错误状态响应。
 
 ## TDD 与 Git 工作流

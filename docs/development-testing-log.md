@@ -601,6 +601,10 @@
 - 后端：`95 passed, 1 warning`
 - 前端：`94 passed`
 - 前端 build：通过
+- 真实浏览器烟测：通过
+  - `Lydian -> Maj7 -> II-V-I` 在真实页面里确认出现 `Aurora Dais / Lift Arc / Skyline Rise / Cadence Sweep`
+  - `Dominant7 -> Harmonic Minor -> Dim7` 在真实页面里确认出现 `Eclipse Altar / Shadow Sink`
+  - 同一轮烟测里 `Valence` 从 `1.00` 到 `0.25`
 
 这一层的价值在于：
 
