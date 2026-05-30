@@ -60,10 +60,25 @@
 - 前端 UI 测试：
   - 验证带认证的真实响应下会把 `Scene Cascade` 文本渲染出来。
 
+这一轮继续往前补了一层“切场体感”：
+
+- `RealtimeCanvasRenderer` 不再随着每次 `visual` 变化而销毁重建。
+- 现在同一实例会维护 `currentVisual -> targetVisual` 的过渡。
+- 当签名、场景家族、Growth 印记、Scene Cascade 发生切换时，会计算一段 `transition impact`，并画出额外的切场冲击波。
+
+新增前端测试点：
+
+- 同一渲染器在运行中接收第二次 `start()` 时，不会额外重建 render loop，而是会在现有循环里向新目标视觉形态 morph。
+
 本轮验证结果：
 
 - 后端：`86 passed, 1 warning`
 - 前端：`58 passed`
+- 前端 build：通过
+
+后续补测后最新结果：
+
+- 前端：`59 passed`
 - 前端 build：通过
 
 烟测补充说明：
