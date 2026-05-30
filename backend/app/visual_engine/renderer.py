@@ -55,6 +55,8 @@ class AggregateVisualState:
     phrase_trajectory_intensity: float
     phrase_hooks: list[str]
     phrase_hook_energy: float
+    phrase_variation: str
+    phrase_variation_intensity: float
     scene_cascade: str
     scene_cascade_intensity: float
     active_bonuses: list[str]
@@ -182,6 +184,15 @@ PHRASE_HOOK_RULES: tuple[tuple[tuple[str, str], str, dict[str, float]], ...] = (
     (("melodic minor", "aug"), "Prism Ladder", {"lattice": 0.1, "complexity": 0.08, "attack": 0.08, "motion_speed": 0.06}),
 )
 
+PHRASE_VARIATION_RULES: tuple[tuple[str, str, str, float, dict[str, float]], ...] = (
+    ("jazz-lattice", "lift-arc", "Choir Step", 0.82, {"beam_strength": 0.1, "symmetry": 0.1, "depth": 0.08, "blend_cohesion": 0.08}),
+    ("neo-soul-veil", "velvet-drift", "Silk Orbit", 0.8, {"wave": 0.1, "glow": 0.1, "depth": 0.08, "grit": -0.06}),
+    ("metal-forge", "forge-drop", "Hammer Fall", 0.84, {"fracture": 0.1, "attack": 0.1, "gravity": 0.08, "contrast": 0.08}),
+    ("metal-forge", "shadow-sink", "Hammer Fall", 0.78, {"fracture": 0.08, "grain": 0.1, "gravity": 0.1, "depth": 0.08}),
+    ("fusion-phase", "prism-climb", "Phase Spiral", 0.82, {"lattice": 0.1, "motion_speed": 0.08, "complexity": 0.1, "beam_strength": 0.08}),
+    ("pentatonic-drive", "runway-drive", "Spark Chase", 0.8, {"energy": 0.1, "motion_speed": 0.1, "pulse_density": 0.1, "beam_strength": 0.08}),
+)
+
 
 def render_visual_parameters(
     elements: list[TheoryElement],
@@ -207,6 +218,9 @@ def render_visual_parameters(
     aggregate_state.phrase_trajectory = phrase_trajectory
     aggregate_state.phrase_trajectory_intensity = phrase_trajectory_intensity
     _apply_phrase_hooks(elements, aggregate_state)
+    phrase_variation, phrase_variation_intensity = _resolve_phrase_variation(aggregate_state)
+    aggregate_state.phrase_variation = phrase_variation
+    aggregate_state.phrase_variation_intensity = phrase_variation_intensity
     particles = configure_particles(
         density_seed=aggregate_state.particle_density,
         energy=aggregate_state.energy,
@@ -254,6 +268,8 @@ def render_visual_parameters(
         phrase_trajectory_intensity=round(aggregate_state.phrase_trajectory_intensity, 2),
         phrase_hooks=aggregate_state.phrase_hooks,
         phrase_hook_energy=round(aggregate_state.phrase_hook_energy, 2),
+        phrase_variation=aggregate_state.phrase_variation,
+        phrase_variation_intensity=round(aggregate_state.phrase_variation_intensity, 2),
         scene_cascade=aggregate_state.scene_cascade,
         scene_cascade_intensity=round(aggregate_state.scene_cascade_intensity, 2),
         active_bonuses=aggregate_state.active_bonuses,
@@ -336,6 +352,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             phrase_trajectory_intensity=0.0,
             phrase_hooks=[],
             phrase_hook_energy=0.0,
+            phrase_variation="neutral",
+            phrase_variation_intensity=0.0,
             scene_cascade="neutral",
             scene_cascade_intensity=0.0,
             active_bonuses=[],
@@ -500,6 +518,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         phrase_trajectory_intensity=0.0,
         phrase_hooks=[],
         phrase_hook_energy=0.0,
+        phrase_variation="neutral",
+        phrase_variation_intensity=0.0,
         scene_cascade="neutral",
         scene_cascade_intensity=0.0,
         active_bonuses=[],
@@ -1199,6 +1219,30 @@ def _apply_phrase_hooks(elements: list[TheoryElement], state: AggregateVisualSta
     )
     state.depth = min(1.0, state.depth + hits * 0.02)
     state.motion_speed = min(1.0, state.motion_speed + hits * 0.02)
+
+
+def _resolve_phrase_variation(state: AggregateVisualState) -> tuple[str, float]:
+    if state.growth_imprint == "neutral" or state.phrase_trajectory == "neutral":
+        return "neutral", 0.0
+
+    for imprint, trajectory, label, base_intensity, bonus in PHRASE_VARIATION_RULES:
+        if state.growth_imprint != imprint or state.phrase_trajectory != trajectory:
+            continue
+
+        hook_bonus = min(0.12, len(state.phrase_hooks) * 0.04)
+        intensity = min(
+            1.0,
+            base_intensity
+            + hook_bonus
+            + state.growth_imprint_intensity * 0.08
+            + state.phrase_hook_energy * 0.06,
+        )
+        scale = 0.28 + intensity * 0.22
+        _apply_scaled_bonus(state, bonus, scale)
+        _append_unique(state.active_bonuses, label)
+        return label.casefold().replace(" ", "-"), round(intensity, 2)
+
+    return "neutral", 0.0
 
 
 def _apply_scaled_bonus(

@@ -40,6 +40,8 @@ const baseVisual: VisualParameters = {
   phraseTrajectoryIntensity: 0.86,
   phraseHooks: ["Skyline Rise", "Cadence Sweep"],
   phraseHookEnergy: 0.78,
+  phraseVariation: "choir-step",
+  phraseVariationIntensity: 0.88,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.94,
   activeBonuses: ["Aurora Choir"],

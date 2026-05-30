@@ -32,6 +32,8 @@ const visual: VisualParameters = {
   phraseTrajectoryIntensity: 0.84,
   phraseHooks: ["Skyline Rise", "Cadence Sweep"],
   phraseHookEnergy: 0.78,
+  phraseVariation: "choir-step",
+  phraseVariationIntensity: 0.9,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.88,
   openness: 0.82,
@@ -289,6 +291,32 @@ describe("RealtimeCanvasRenderer", () => {
 
     const context = canvas.getContext("2d");
     expect(context?.rotate).toHaveBeenCalled();
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
+  });
+
+  it("draws a dedicated phrase variation layer when growth rewrites the phrase path", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      phraseVariation: "phase-spiral",
+      phraseVariationIntensity: 0.88
+    });
+
+    const context = canvas.getContext("2d");
     expect(context?.lineTo).toHaveBeenCalled();
     expect(context?.stroke).toHaveBeenCalled();
   });

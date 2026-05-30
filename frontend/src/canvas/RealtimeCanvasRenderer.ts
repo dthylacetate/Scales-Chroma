@@ -4,6 +4,7 @@ import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStagePhraseHooks } from "../visual_engine/stagePhraseHooks";
 import { getStagePhraseTrajectory } from "../visual_engine/stagePhraseTrajectories";
+import { getStagePhraseVariation } from "../visual_engine/stagePhraseVariations";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { getStageSynergyGlyph } from "../visual_engine/stageSynergyGlyphs";
@@ -134,6 +135,7 @@ export class RealtimeCanvasRenderer {
     this.drawStageClimateLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStagePhraseTrajectoryLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStagePhraseHooksLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStagePhraseVariationLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
@@ -191,6 +193,7 @@ export class RealtimeCanvasRenderer {
       Math.abs(fromVisual.phraseHookEnergy - toVisual.phraseHookEnergy) > 0.04
         ? 0.1
         : 0;
+    const variationShift = getStagePhraseVariation(fromVisual)?.kind !== getStagePhraseVariation(toVisual)?.kind ? 0.12 : 0;
     const motionShift = getStageMotionRig(fromVisual)?.kind !== getStageMotionRig(toVisual)?.kind ? 0.12 : 0;
     const projectionShift = getStageProjectionScript(fromVisual)?.kind !== getStageProjectionScript(toVisual)?.kind ? 0.12 : 0;
     const takeoverShift = getStageTakeoverMode(fromVisual)?.kind !== getStageTakeoverMode(toVisual)?.kind ? 0.12 : 0;
@@ -200,7 +203,20 @@ export class RealtimeCanvasRenderer {
       0,
       Math.min(
         1,
-        0.12 + sceneShift + signatureShift + growthShift + cascadeShift + setpieceShift + trajectoryShift + hookShift + motionShift + projectionShift + takeoverShift + energyShift + tensionShift
+        0.12 +
+          sceneShift +
+          signatureShift +
+          growthShift +
+          cascadeShift +
+          setpieceShift +
+          trajectoryShift +
+          hookShift +
+          variationShift +
+          motionShift +
+          projectionShift +
+          takeoverShift +
+          energyShift +
+          tensionShift
       )
     );
   }
@@ -833,6 +849,100 @@ export class RealtimeCanvasRenderer {
           break;
       }
     });
+
+    this.context.restore();
+  }
+
+  private drawStagePhraseVariationLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const variation = getStagePhraseVariation(visual);
+
+    if (!variation || visual.phraseVariationIntensity <= 0.05) {
+      return;
+    }
+
+    const intensity = visual.phraseVariationIntensity;
+    this.context.save();
+    this.context.lineWidth = Math.max(1.2, 1 + intensity * 2.4);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + intensity * 0.16);
+    this.context.fillStyle = alphaHex(visual.color, 0.06 + intensity * 0.08);
+
+    switch (variation.kind) {
+      case "choir-step":
+        for (let step = 0; step < 4; step += 1) {
+          const stepWidth = radius * (0.18 + step * 0.1);
+          const stepY = centerY + radius * (0.34 - step * 0.16);
+          this.context.beginPath();
+          this.context.moveTo(centerX - stepWidth, stepY);
+          this.context.lineTo(centerX + stepWidth, stepY);
+          this.context.lineTo(centerX + stepWidth * 0.76, stepY - radius * 0.08);
+          this.context.lineTo(centerX - stepWidth * 0.76, stepY - radius * 0.08);
+          this.context.closePath();
+          this.context.stroke();
+        }
+        break;
+      case "silk-orbit":
+        for (let ring = 0; ring < 3; ring += 1) {
+          const orbitRadiusX = radius * (0.34 + ring * 0.1);
+          const orbitRadiusY = radius * (0.12 + ring * 0.06);
+          this.context.beginPath();
+          this.context.ellipse(
+            centerX + Math.sin(time * 0.5 + ring) * radius * 0.06,
+            centerY - radius * 0.06 + ring * radius * 0.04,
+            orbitRadiusX,
+            orbitRadiusY,
+            time * 0.12 + ring * 0.24,
+            0,
+            Math.PI * 2
+          );
+          this.context.stroke();
+        }
+        break;
+      case "hammer-fall":
+        for (let index = 0; index < 3; index += 1) {
+          const x = centerX + (index - 1) * radius * 0.28;
+          this.context.beginPath();
+          this.context.moveTo(x, centerY - radius * (0.92 - index * 0.08));
+          this.context.lineTo(x, centerY + radius * 0.34);
+          this.context.stroke();
+          this.context.fillRect(x - radius * 0.08, centerY + radius * 0.24, radius * 0.16, radius * 0.16);
+        }
+        break;
+      case "phase-spiral":
+        this.context.beginPath();
+        for (let index = 0; index <= 56; index += 1) {
+          const t = index / 56;
+          const angle = t * Math.PI * 3.2 + time * 0.4;
+          const spiralRadius = radius * (0.16 + t * 0.54);
+          const x = centerX + Math.cos(angle) * spiralRadius;
+          const y = centerY + Math.sin(angle) * spiralRadius * 0.68 - radius * 0.18;
+          if (index === 0) {
+            this.context.moveTo(x, y);
+          } else {
+            this.context.lineTo(x, y);
+          }
+        }
+        this.context.stroke();
+        break;
+      case "spark-chase":
+        for (let index = 0; index < 5; index += 1) {
+          const anchorX = centerX - radius * 0.56 + index * radius * 0.28;
+          const anchorY = centerY + radius * 0.42 - index * radius * 0.06;
+          this.context.beginPath();
+          this.context.moveTo(anchorX - radius * 0.08, anchorY + radius * 0.04);
+          this.context.lineTo(anchorX + radius * 0.05, anchorY - radius * 0.08);
+          this.context.lineTo(anchorX + radius * 0.12, anchorY + radius * 0.04);
+          this.context.stroke();
+        }
+        break;
+    }
 
     this.context.restore();
   }
@@ -4438,6 +4548,8 @@ function interpolateVisuals(
     phraseTrajectoryIntensity: numeric(fromVisual.phraseTrajectoryIntensity, toVisual.phraseTrajectoryIntensity),
     phraseHooks: mergedPhraseHooks,
     phraseHookEnergy: numeric(fromVisual.phraseHookEnergy, toVisual.phraseHookEnergy),
+    phraseVariation: discrete(fromVisual.phraseVariation, toVisual.phraseVariation, 0.48),
+    phraseVariationIntensity: numeric(fromVisual.phraseVariationIntensity, toVisual.phraseVariationIntensity),
     sceneCascade: discrete(fromVisual.sceneCascade, toVisual.sceneCascade, 0.48),
     sceneCascadeIntensity: numeric(fromVisual.sceneCascadeIntensity, toVisual.sceneCascadeIntensity),
     activeBonuses: mergedBonuses,

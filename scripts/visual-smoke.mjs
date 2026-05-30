@@ -52,16 +52,21 @@ try {
   await page.getByRole("button", { name: "Lydian mode", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "Maj7 chord", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "II-V-I progression", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: /Jazz/ }).click();
+  await page.getByText("预览镜头：Jazz Lattice", { exact: true }).waitFor();
   await page.getByText("Aurora Dais", { exact: true }).first().waitFor();
   await page.getByText("Phrase Trajectory", { exact: true }).waitFor();
   await page.getByText("Phrase Hooks", { exact: true }).waitFor();
+  await page.getByText("Phrase Variation", { exact: true }).waitFor();
   await page.getByText("Lift Arc", { exact: true }).first().waitFor();
   await page.getByText("Skyline Rise", { exact: true }).first().waitFor();
   await page.getByText("Cadence Sweep", { exact: true }).first().waitFor();
+  await page.getByText("Choir Step", { exact: true }).first().waitFor();
   const hasSolar = true;
   const hasCascade = true;
   const hasLiftArc = true;
   const hasPhraseHooks = true;
+  const hasPhraseVariation = true;
   const solarText = await page.locator("body").innerText();
   const solarValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-solar.png", fullPage: true });
@@ -93,6 +98,7 @@ try {
         hasSolar,
         hasLiftArc,
         hasPhraseHooks,
+        hasPhraseVariation,
         hasShadow,
         hasShadowSink,
         hasStageReading: pageText.includes("STAGE READING") || pageText.includes("Stage Reading"),

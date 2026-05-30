@@ -24,6 +24,15 @@ PhraseTrajectoryName = Literal[
     "shadow-sink",
 ]
 
+PhraseVariationName = Literal[
+    "neutral",
+    "choir-step",
+    "silk-orbit",
+    "hammer-fall",
+    "phase-spiral",
+    "spark-chase",
+]
+
 
 class VisualParameters(BaseModel):
     color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
@@ -71,6 +80,8 @@ class VisualParameters(BaseModel):
     phrase_trajectory_intensity: float = Field(ge=0.0, le=1.0)
     phrase_hooks: list[str]
     phrase_hook_energy: float = Field(ge=0.0, le=1.0)
+    phrase_variation: PhraseVariationName
+    phrase_variation_intensity: float = Field(ge=0.0, le=1.0)
     scene_cascade: Literal[
         "neutral",
         "aurora-dais",

@@ -24,6 +24,7 @@ import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStagePhraseHooks } from "../visual_engine/stagePhraseHooks";
 import { getStagePhraseTrajectory } from "../visual_engine/stagePhraseTrajectories";
+import { getStagePhraseVariation } from "../visual_engine/stagePhraseVariations";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { getStageSynergyGlyph } from "../visual_engine/stageSynergyGlyphs";
@@ -458,6 +459,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                 <div className="text-[11px] text-[#ffd7c2]">Trajectory: {getStagePhraseTrajectory(visual)?.label}</div>
               ) : null}
               {visual.phraseHooks.length > 0 ? <div className="text-[11px] text-[#f6e1a2]">Hooks: {visual.phraseHooks.length}</div> : null}
+              {getStagePhraseVariation(visual) ? (
+                <div className="text-[11px] text-[#c4f3ff]">Variation: {getStagePhraseVariation(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -586,6 +590,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <StageClimatePanel visual={visual} />
           <StagePhraseTrajectoryPanel visual={visual} />
           <PhraseHooksPanel visual={visual} />
+          <PhraseVariationPanel visual={visual} />
           <GrowthImprintPanel visual={visual} />
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
@@ -1276,6 +1281,40 @@ function PhraseHooksPanel({ visual }: { visual: VisualParameters }) {
   );
 }
 
+function PhraseVariationPanel({ visual }: { visual: VisualParameters }) {
+  const reading = buildPhraseVariationReading(visual);
+
+  if (visual.phraseVariation === "neutral" || visual.phraseVariationIntensity <= 0.05) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#2f4651] bg-[#182127] p-3">
+      <div className="text-xs uppercase text-stone-400">Phrase Variation</div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium text-stone-100">{reading.label}</div>
+          <div className="mt-1 text-xs text-stone-400">{reading.summary}</div>
+        </div>
+        <div className="text-sm font-semibold text-[#9fe8ff]">{Math.round(visual.phraseVariationIntensity * 100)}%</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#10171c]">
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${Math.max(6, Math.round(visual.phraseVariationIntensity * 100))}%`,
+            background: `linear-gradient(90deg, ${reading.accent}55 0%, ${reading.accent} 100%)`
+          }}
+        />
+      </div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="改写动作" value={reading.rewrite} />
+        <ReadingLine label="舞台体感" value={reading.impact} />
+      </div>
+    </section>
+  );
+}
+
 function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
   const reading = buildGrowthImprintReading(visual);
 
@@ -1715,17 +1754,21 @@ function buildStageReading(
     visual.phraseHooks.length > 0
       ? `；相邻模块之间已经长出 ${visual.phraseHooks.join("、")} 这些桥接动作`
       : "；相邻模块之间还没有长出独立桥接动作";
+  const variationText =
+    visual.phraseVariation !== "neutral"
+      ? `；Growth 还把当前句法进一步改写成 ${phraseVariationLabel(visual.phraseVariation)}，强度 ${Math.round(visual.phraseVariationIntensity * 100)}%`
+      : "；当前 Growth 还没有把句法推进改写成独立变体";
   const cascadeText =
     visual.sceneCascade !== "neutral"
       ? `；当前还触发了 ${sceneCascadeLabel(visual.sceneCascade)}，强度 ${Math.round(visual.sceneCascadeIntensity * 100)}%`
       : "；当前还没有触发场景级联";
 
   return {
-    summary: `当前舞台由 ${primaryDrivers} 主导，正在形成 ${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)} 读感${visual.phraseTrajectory !== "neutral" ? `，推进路径已经被拉成 ${phraseTrajectoryLabel(visual.phraseTrajectory)}` : ""}${visual.sceneCascade !== "neutral" ? `，并开始长出 ${sceneCascadeLabel(visual.sceneCascade)}` : ""}。`,
+    summary: `当前舞台由 ${primaryDrivers} 主导，正在形成 ${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)} 读感${visual.phraseTrajectory !== "neutral" ? `，推进路径已经被拉成 ${phraseTrajectoryLabel(visual.phraseTrajectory)}` : ""}${visual.phraseVariation !== "neutral" ? `，而且被继续改写成 ${phraseVariationLabel(visual.phraseVariation)}` : ""}${visual.sceneCascade !== "neutral" ? `，并开始长出 ${sceneCascadeLabel(visual.sceneCascade)}` : ""}。`,
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${variationText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
   };
 }
 
@@ -1801,6 +1844,82 @@ function buildPhraseTrajectoryReading(visual: VisualParameters): {
         summary: `这一组模块的顺序已经把重心拖向中心深井，${strength}。`,
         path: "路径会从前场慢慢往内塌，再坠进更暗的中心。",
         impact: "暗色组合会更像沉降和坍缩，而不是简单变碎变冷。 "
+      };
+  }
+}
+
+function buildPhraseVariationReading(visual: VisualParameters): {
+  label: string;
+  accent: string;
+  summary: string;
+  rewrite: string;
+  impact: string;
+} {
+  if (visual.phraseVariation === "neutral" || visual.phraseVariationIntensity <= 0.05) {
+    return {
+      label: "Neutral",
+      accent: "#8fdcff",
+      summary: "当前 Growth 还没有把顺序系统继续改写成独立的句法变体。",
+      rewrite: "现在还是轨迹和桥接动作在主导句法推进。",
+      impact: "舞台更多还是停留在原始轨迹的读感里。 "
+    };
+  }
+
+  const strength =
+    visual.phraseVariationIntensity >= 0.9
+      ? "已经非常明显地改写了整句走法"
+      : visual.phraseVariationIntensity >= 0.78
+        ? "已经能明显看出不是原始轨迹"
+        : "正在把原始轨迹推向另一种走法";
+
+  switch (visual.phraseVariation) {
+    case "choir-step":
+      return {
+        label: "Choir Step",
+        accent: "#9fe8ff",
+        summary: `Jazz 的成长印记已经把上扬弧线改写成分级托举的礼台踏步，${strength}。`,
+        rewrite: "原来连续上拱的 Lift Arc 被切成逐级上抬的合唱席台阶。",
+        impact: "会让上升感更像一阶一阶被托起来，而不是一条完整的弧。 "
+      };
+    case "silk-orbit":
+      return {
+        label: "Silk Orbit",
+        accent: "#ffb5dc",
+        summary: `Neo Soul 的幕纱已经把漂移路径裹成绕身轨道，${strength}。`,
+        rewrite: "原来横向滑移的 Velvet Drift 会被改写成更贴身、更环抱的柔性轨道。",
+        impact: "会让舞台从侧漂变成带有身体呼吸感的环抱式绕行。 "
+      };
+    case "hammer-fall":
+      return {
+        label: "Hammer Fall",
+        accent: "#ff9b7b",
+        summary: `Metal 的熔炉人格已经把下砸路径变成连续重击，${strength}。`,
+        rewrite: "原本的 Forge Drop 或 Shadow Sink 会被打成一记接一记的下落重锤。",
+        impact: "会让压迫感从整体沉降，变成有明确击打节拍的重坠。 "
+      };
+    case "phase-spiral":
+      return {
+        label: "Phase Spiral",
+        accent: "#9dc4ff",
+        summary: `Fusion 的相位人格已经把上爬折线扭成螺旋回路，${strength}。`,
+        rewrite: "原来逐级上爬的 Prism Climb 会被改写成一边旋转一边升阶的相位楼梯。",
+        impact: "会让复杂组合更像一套持续自旋、持续抬升的未来系统。 "
+      };
+    case "spark-chase":
+      return {
+        label: "Spark Chase",
+        accent: "#ffd166",
+        summary: `Pentatonic 的速度人格已经把跑道推进拆成连续追逐火花，${strength}。`,
+        rewrite: "原来一整条直推的 Runway Drive 会被改写成一段段抢拍前冲的追赶节点。",
+        impact: "会让速度感从整段推进，变成连续小冲刺在追着往前跑。 "
+      };
+    default:
+      return {
+        label: "Neutral",
+        accent: "#8fdcff",
+        summary: "当前变体还没有形成稳定读法。",
+        rewrite: "Growth 对句法的改写还没锁定。",
+        impact: "舞台暂时还不会出现稳定的第二层句法人格。 "
       };
   }
 }
@@ -2120,6 +2239,23 @@ function phraseTrajectoryLabel(trajectory: VisualParameters["phraseTrajectory"])
       return "Runway Drive";
     case "shadow-sink":
       return "Shadow Sink";
+    default:
+      return "Neutral";
+  }
+}
+
+function phraseVariationLabel(variation: VisualParameters["phraseVariation"]): string {
+  switch (variation) {
+    case "choir-step":
+      return "Choir Step";
+    case "silk-orbit":
+      return "Silk Orbit";
+    case "hammer-fall":
+      return "Hammer Fall";
+    case "phase-spiral":
+      return "Phase Spiral";
+    case "spark-chase":
+      return "Spark Chase";
     default:
       return "Neutral";
   }

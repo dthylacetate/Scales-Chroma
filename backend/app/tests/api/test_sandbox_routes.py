@@ -238,6 +238,39 @@ def test_sandbox_render_supports_non_persistent_growth_preview() -> None:
     assert unlocked_effect_count == 0
 
 
+def test_sandbox_render_returns_growth_rewritten_phrase_variations() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(
+            session,
+            username="variation-player",
+            email="variation@example.com",
+        )
+        response = client.post(
+            "/sandbox/render",
+            headers=headers,
+            json={
+                "elements": [
+                    {"id": "lydian", "type": "mode", "name": "Lydian"},
+                    {"id": "maj7", "type": "chord", "name": "Maj7"},
+                    {"id": "ii-v-i", "type": "progression", "name": "II-V-I"},
+                ],
+                "preview_growth_imprint": "jazz-lattice",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["phrase_trajectory"] == "lift-arc"
+    assert payload["phrase_variation"] == "choir-step"
+    assert payload["phrase_variation_intensity"] > 0.8
+    assert "Choir Step" in payload["active_bonuses"]
+
+
 def test_sandbox_render_returns_phrase_trajectory_for_order_sensitive_stacks() -> None:
     session = create_test_session()
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { VisualParameters } from "../../types/theory";
-import { getStageClimateProfile } from "../../visual_engine/stageClimateProfiles";
+import { getStagePhraseVariation } from "../../visual_engine/stagePhraseVariations";
 
 const baseVisual: VisualParameters = {
   color: "#ffd166",
@@ -38,13 +38,13 @@ const baseVisual: VisualParameters = {
   growthImprintIntensity: 0.88,
   phraseTrajectory: "lift-arc",
   phraseTrajectoryIntensity: 0.86,
-  phraseHooks: ["Skyline Rise"],
-  phraseHookEnergy: 0.6,
+  phraseHooks: ["Skyline Rise", "Cadence Sweep"],
+  phraseHookEnergy: 0.78,
   phraseVariation: "choir-step",
-  phraseVariationIntensity: 0.88,
+  phraseVariationIntensity: 0.9,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.94,
-  activeBonuses: ["Aurora Choir"],
+  activeBonuses: ["Aurora Choir", "Choir Step"],
   activeSynergies: ["Cadential Lift"],
   particles: {
     density: 0.7,
@@ -57,32 +57,32 @@ const baseVisual: VisualParameters = {
   animationState: "flowing"
 };
 
-describe("stage climate profiles", () => {
-  it("returns a bloom-specific climate when the stage holds Horizon Bloom", () => {
-    const climate = getStageClimateProfile({
-      ...baseVisual,
-      activeSynergies: ["Cadential Lift", "Horizon Bloom"]
-    });
+describe("stage phrase variations", () => {
+  it("returns a named phrase variation when growth rewrites the phrase system", () => {
+    const variation = getStagePhraseVariation(baseVisual);
 
-    expect(climate.label).toBe("Bloom Haze");
-    expect(climate.medium).toContain("日冕");
+    expect(variation?.label).toBe("Choir Step");
+    expect(variation?.rewrite).toContain("合唱席");
   });
 
-  it("falls back to scene-family climate when no emergent synergy overrides it", () => {
-    const climate = getStageClimateProfile(baseVisual);
-
-    expect(climate.label).toBe("Solar Haze");
-    expect(climate.motion).toContain("天光");
-  });
-
-  it("returns shadow smoke for sanctum scenes without overrides", () => {
-    const climate = getStageClimateProfile({
+  it("resolves fusion phrase spirals for prismatic growth rewrites", () => {
+    const variation = getStagePhraseVariation({
       ...baseVisual,
-      sceneFamily: "shadow-sanctum",
-      activeSynergies: []
+      phraseVariation: "phase-spiral",
+      phraseVariationIntensity: 0.84
     });
 
-    expect(climate.label).toBe("Sanctum Smoke");
-    expect(climate.impact).toContain("仪式");
+    expect(variation?.label).toBe("Phase Spiral");
+    expect(variation?.impact).toContain("自旋");
+  });
+
+  it("returns null when no phrase rewrite is active", () => {
+    const variation = getStagePhraseVariation({
+      ...baseVisual,
+      phraseVariation: "neutral",
+      phraseVariationIntensity: 0
+    });
+
+    expect(variation).toBeNull();
   });
 });

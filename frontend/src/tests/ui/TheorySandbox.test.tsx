@@ -78,6 +78,12 @@ describe("TheorySandbox", () => {
         signature: "Blue Hour Run",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.84,
+        phrase_trajectory: "velvet-drift",
+        phrase_trajectory_intensity: 0.74,
+        phrase_hooks: ["Velvet Link"],
+        phrase_hook_energy: 0.68,
+        phrase_variation: "silk-orbit",
+        phrase_variation_intensity: 0.81,
         scene_cascade: "velvet-arcade",
         scene_cascade_intensity: 0.79,
         openness: 0.76,
@@ -112,6 +118,7 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("On")).toBeInTheDocument();
     expect(screen.getAllByText("Blue Hour Run").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Velvet Arcade").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Silk Orbit").length).toBeGreaterThan(0);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://api.test/sandbox/render",
       expect.objectContaining({
@@ -199,6 +206,8 @@ describe("TheorySandbox", () => {
         phrase_trajectory_intensity: 0.88,
         phrase_hooks: ["Skyline Rise", "Cadence Sweep"],
         phrase_hook_energy: 0.79,
+        phrase_variation: "choir-step",
+        phrase_variation_intensity: 0.91,
         scene_cascade: "aurora-dais",
         scene_cascade_intensity: 0.95,
         openness: 0.84,
@@ -239,9 +248,11 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Stage Climate")).toBeInTheDocument();
     expect(screen.getByText("Phrase Trajectory")).toBeInTheDocument();
     expect(screen.getByText("Phrase Hooks")).toBeInTheDocument();
+    expect(screen.getByText("Phrase Variation")).toBeInTheDocument();
     expect(screen.getAllByText("Cathedral Descent").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Lift Arc").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Skyline Rise").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Choir Step").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Aisle Lattice").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Choir Crowns").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Cathedral Iris").length).toBeGreaterThan(0);
@@ -258,10 +269,12 @@ describe("TheorySandbox", () => {
     expect(screen.getByText(/Climate: Bloom Haze/)).toBeInTheDocument();
     expect(screen.getByText(/Trajectory: Lift Arc/)).toBeInTheDocument();
     expect(screen.getByText(/Hooks: 2/)).toBeInTheDocument();
+    expect(screen.getByText(/Variation: Choir Step/)).toBeInTheDocument();
     expect(screen.getByText(/成组下压，像礼堂灯柱一层层往中心落/)).toBeInTheDocument();
     expect(screen.getByText(/从前场两翼往上拱，再在舞台上方收成一个高点/)).toBeInTheDocument();
     expect(screen.getByText(/明亮开放的起点会先抬一小段/)).toBeInTheDocument();
     expect(screen.getByText(/柔亮和弦会顺着弧线扫向进行终点/)).toBeInTheDocument();
+    expect(screen.getByText(/Jazz 的成长印记已经把上扬弧线改写成分级托举的礼台踏步/)).toBeInTheDocument();
     expect(screen.getByText(/地面会长出合唱席一样的纵深 aisle 与圆形 choir mark/)).toBeInTheDocument();
     expect(screen.getByText(/前景会出现成组的拱冠、吊环和合唱席式悬挂边框/)).toBeInTheDocument();
     expect(screen.getByText(/舞台会像穹顶开闸一样往中心收束再打开/)).toBeInTheDocument();

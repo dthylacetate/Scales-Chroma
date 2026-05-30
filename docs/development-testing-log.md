@@ -1364,6 +1364,69 @@ Vite 构建通过
 
 ```text
 已验证登录会话恢复、Growth 解锁后的舞台签名切换、中文特效说明展示，以及 Temperature / Symmetry / Depth / Pulse 新读数与 Stage Reading 文案同步刷新。
+
+## 最新一轮：Phrase Variation Growth 改写层
+
+这一轮继续沿着“顺序必须持续有回报”往下走，但重点从“顺序本身”切到了“Growth 会不会继续改写这条顺序”。
+
+目标：
+
+- 让 `Growth Imprint` 不只是盖在舞台外观上，还能继续改写已经形成的 `Phrase Trajectory`。
+- 让同一条顺序在不同成长路线下，真的长成不同句法人格。
+
+实现方式：
+
+- 后端 `/sandbox/render` 新增：
+  - `phrase_variation`
+  - `phrase_variation_intensity`
+- 当前已接入的变体规则：
+  - `jazz-lattice + lift-arc` -> `Choir Step`
+  - `neo-soul-veil + velvet-drift` -> `Silk Orbit`
+  - `metal-forge + forge-drop` -> `Hammer Fall`
+  - `metal-forge + shadow-sink` -> `Hammer Fall`
+  - `fusion-phase + prism-climb` -> `Phase Spiral`
+  - `pentatonic-drive + runway-drive` -> `Spark Chase`
+- 前端新增 `frontend/src/visual_engine/stagePhraseVariations.ts`
+- `RealtimeCanvasRenderer` 新增独立的 phrase variation 演出层
+- `TheorySandbox` 新增右侧 `Phrase Variation` 面板，左上角新增 `Variation: ...`
+
+这层现在的意义：
+
+- `Phrase Trajectory` 负责一句话大体怎么走。
+- `Phrase Hooks` 负责相邻节点怎么桥接。
+- `Phrase Variation` 负责 Growth 会不会把这整套顺序再改写成另一种走法。
+
+对应测试：
+
+- 后端单元测试：
+  - 验证 `Lydian + Maj7 + II-V-I` 在 `jazz-lattice` 下会得到 `choir-step`
+- 后端 API 测试：
+  - 验证 `/sandbox/render` 会返回 `phrase_variation` 和 `phrase_variation_intensity`
+- 前端 service 测试：
+  - 验证 `renderSandboxVisual(...)` 会正确归一化 `phrase_variation`
+- 前端 visual engine 测试：
+  - 新增 `stagePhraseVariations.test.ts`
+- 前端 Canvas 测试：
+  - 验证渲染器会真的画出 phrase variation 层，而不是只改面板文本
+- 前端 UI 测试：
+  - 验证右侧 `Phrase Variation` 和左上角 `Variation: Choir Step` 会同时出现
+
+验证结果：
+
+- 后端：`97 passed, 1 warning`
+- 前端：`98 passed`
+- 前端 build：通过
+
+真实页面烟测补充：
+
+- `scripts/visual-smoke.mjs` 这轮又继续升级，新增：
+  - 在 `Growth Lens Preview` 点击 `Jazz`
+  - 对 `Lydian -> Maj7 -> II-V-I` 等待 `Phrase Variation`
+  - 等待 `Choir Step`
+- 烟测结果通过，确认：
+  - 页面会真实出现 `Phrase Variation`
+  - 左上角会真实出现 `Variation: Choir Step`
+  - 在同一条 Jazz 预览链路里，`Valence` 会从 `1.00` 降到 `0.50`
 ```
 
 ## 当前覆盖能力

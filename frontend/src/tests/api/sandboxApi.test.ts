@@ -21,6 +21,8 @@ describe("sandbox API service", () => {
         phrase_trajectory_intensity: 0.84,
         phrase_hooks: ["Skyline Rise", "Cadence Sweep"],
         phrase_hook_energy: 0.79,
+        phrase_variation: "choir-step",
+        phrase_variation_intensity: 0.9,
         scene_cascade: "aurora-dais",
         scene_cascade_intensity: 0.91,
         openness: 0.81,
@@ -72,6 +74,8 @@ describe("sandbox API service", () => {
     expect(visual.phraseTrajectoryIntensity).toBe(0.84);
     expect(visual.phraseHooks).toEqual(["Skyline Rise", "Cadence Sweep"]);
     expect(visual.phraseHookEnergy).toBe(0.79);
+    expect(visual.phraseVariation).toBe("choir-step");
+    expect(visual.phraseVariationIntensity).toBe(0.9);
     expect(visual.sceneCascade).toBe("aurora-dais");
     expect(visual.sceneCascadeIntensity).toBe(0.91);
     expect(visual.openness).toBe(0.81);

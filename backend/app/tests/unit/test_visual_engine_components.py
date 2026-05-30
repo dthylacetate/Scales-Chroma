@@ -381,3 +381,21 @@ def test_renderer_derives_phrase_hooks_from_adjacent_module_bridges() -> None:
     assert "Cadence Sweep" in visual.phrase_hooks
     assert visual.phrase_hook_energy > 0.7
     assert visual.beam_strength > 0.8
+
+
+def test_renderer_lets_growth_routes_rewrite_phrase_systems() -> None:
+    visual = render_visual_parameters(
+        [
+            TheoryElement(id="lydian", type="mode", name="Lydian"),
+            TheoryElement(id="maj7", type="chord", name="Maj7"),
+            TheoryElement(id="ii-v-i", type="progression", name="II-V-I"),
+        ],
+        unlocked_effects=["harmonic_lattice", "cadence_bloom"],
+    )
+
+    assert visual.growth_imprint == "jazz-lattice"
+    assert visual.phrase_trajectory == "lift-arc"
+    assert visual.phrase_variation == "choir-step"
+    assert visual.phrase_variation_intensity > 0.85
+    assert "Choir Step" in visual.active_bonuses
+    assert visual.depth > 0.85

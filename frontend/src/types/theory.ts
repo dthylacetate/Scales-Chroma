@@ -51,6 +51,8 @@ export interface VisualParameters {
   phraseTrajectoryIntensity: number;
   phraseHooks: string[];
   phraseHookEnergy: number;
+  phraseVariation: "neutral" | "choir-step" | "silk-orbit" | "hammer-fall" | "phase-spiral" | "spark-chase";
+  phraseVariationIntensity: number;
   sceneCascade:
     | "neutral"
     | "aurora-dais"
