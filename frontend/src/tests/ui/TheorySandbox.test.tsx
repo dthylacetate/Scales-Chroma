@@ -111,7 +111,7 @@ describe("TheorySandbox", () => {
 
     expect(screen.getByText("On")).toBeInTheDocument();
     expect(screen.getAllByText("Blue Hour Run").length).toBeGreaterThan(1);
-    expect(screen.getByText("Velvet Arcade")).toBeInTheDocument();
+    expect(screen.getAllByText("Velvet Arcade").length).toBeGreaterThan(0);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://api.test/sandbox/render",
       expect.objectContaining({
@@ -176,6 +176,59 @@ describe("TheorySandbox", () => {
       .map(([, init]) => JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
 
     expect(sandboxBodies.some((body) => body.preview_growth_imprint === "neo-soul-veil")).toBe(true);
+  });
+
+  it("shows a dedicated stage setpiece reading when the visual has a large split-stage identity", async () => {
+    const fetchMock = createAuthenticatedFetchMock({
+      visualResponse: {
+        color: "#ffd166",
+        secondary_color: "#c2b8ff",
+        background_color: "#081018",
+        glow: 0.9,
+        energy: 0.74,
+        complexity: 0.72,
+        motion_speed: 0.68,
+        ring_count: 5,
+        ripple_strength: 0.76,
+        beam_strength: 0.72,
+        grain: 0.18,
+        signature: "Aurora Choir",
+        growth_imprint: "jazz-lattice",
+        growth_imprint_intensity: 0.91,
+        scene_cascade: "aurora-dais",
+        scene_cascade_intensity: 0.95,
+        openness: 0.84,
+        attack: 0.32,
+        swing: 0.66,
+        gravity: 0.48,
+        synergy_resonance: 0.8,
+        cadence_pull: 0.74,
+        modal_tension: 0.24,
+        blend_cohesion: 0.82,
+        active_synergies: ["Cadential Lift", "Color Convergence"],
+        active_bonuses: ["Aurora Choir", "Choir Vault"],
+        particles: {
+          density: 0.76,
+          trail: false,
+          size: 2.4,
+          speed: 1.18,
+          spread: 0.58
+        },
+        geometry: "lattice",
+        animation_state: "flowing"
+      }
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Stage Setpiece")).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText("Choir Vault").length).toBeGreaterThan(0);
+    expect(screen.getByText(/顶部吊架、纵向窗格、拱形合唱廊/)).toBeInTheDocument();
+    expect(screen.getByText(/Setpiece: Choir Vault/)).toBeInTheDocument();
   });
 
   it("records a practice session and shows earned exp", async () => {

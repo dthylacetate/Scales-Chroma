@@ -19,6 +19,7 @@ import {
 } from "../services/progressionApi";
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
+import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
 
 const THEORY_LIBRARY: TheoryElement[] = [
@@ -422,6 +423,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                   </span>
                 ))}
               </div>
+              {getStageSetpiece(visual) ? (
+                <div className="text-[11px] text-stone-200">Setpiece: {getStageSetpiece(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -551,6 +555,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
           <SceneCascadePanel visual={visual} />
+          <StageSetpiecePanel visual={visual} />
           <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
@@ -1239,6 +1244,26 @@ function SceneCascadePanel({ visual }: { visual: VisualParameters }) {
         <ReadingLine label="级联来源" value={reading.trigger} />
         <ReadingLine label="舞台变化" value={reading.impact} />
         <ReadingLine label="成长染色" value={reading.tint} />
+      </div>
+    </section>
+  );
+}
+
+function StageSetpiecePanel({ visual }: { visual: VisualParameters }) {
+  const setpiece = getStageSetpiece(visual);
+
+  if (!setpiece) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
+      <div className="text-xs uppercase text-stone-400">Stage Setpiece</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{setpiece.label}</div>
+      <div className="mt-1 text-xs text-stone-400">{setpiece.cue}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="装置骨架" value={setpiece.rig} />
+        <ReadingLine label="体感变化" value={setpiece.impact} />
       </div>
     </section>
   );

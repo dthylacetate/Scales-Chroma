@@ -1,4 +1,5 @@
 import type { VisualParameters } from "../types/theory";
+import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 
 export interface CanvasFrameScheduler {
   requestFrame: (callback: FrameRequestCallback) => number;
@@ -128,6 +129,7 @@ export class RealtimeCanvasRenderer {
     this.drawTheoryTraitLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawTheorySynergyLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneCascadeLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStageSetpieceLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -802,6 +804,65 @@ export class RealtimeCanvasRenderer {
     this.context.restore();
   }
 
+  private drawStageSetpieceLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const setpiece = getStageSetpiece(visual);
+
+    if (!setpiece) {
+      return;
+    }
+
+    this.context.save();
+
+    switch (setpiece.kind) {
+      case "choir-vault":
+        this.drawChoirVaultSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "silken-halo":
+        this.drawSilkenHaloSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "rose-arcade":
+        this.drawRoseArcadeSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "blue-cloister":
+        this.drawBlueCloisterSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "forge-throne":
+        this.drawForgeThroneSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "phase-cloister":
+        this.drawPhaseCloisterSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "neon-causeway":
+        this.drawNeonCausewaySetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "aurora-dais":
+        this.drawAuroraDaisSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "velvet-arcade":
+        this.drawVelvetArcadeSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "eclipse-altar":
+        this.drawEclipseAltarSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-vortex":
+        this.drawPrismVortexSetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "tide-runway":
+        this.drawTideRunwaySetpiece(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
   private drawAuroraDaisCascade(
     visual: VisualParameters,
     width: number,
@@ -1107,6 +1168,307 @@ export class RealtimeCanvasRenderer {
         this.context.stroke();
       }
       this.context.restore();
+    }
+  }
+
+  private drawChoirVaultSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const panelCount = Math.max(4, Math.round(4 + visual.depth * 4));
+    this.context.lineWidth = Math.max(1, 1 + visual.symmetry * 1.8);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.depth * 0.08);
+    for (let index = 0; index < panelCount; index += 1) {
+      const progress = (index + 1) / (panelCount + 1);
+      const x = centerX - radius * 1.04 + progress * radius * 2.08;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 1.02);
+      this.context.lineTo(x, height);
+      this.context.stroke();
+      this.context.beginPath();
+      this.context.arc(x, centerY - radius * 0.98, radius * 0.08, Math.PI, 0);
+      this.context.stroke();
+    }
+  }
+
+  private drawSilkenHaloSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const veil = this.context.createLinearGradient(0, 0, 0, height);
+    veil.addColorStop(0, alphaHex(visual.secondaryColor, 0.12 + visual.glow * 0.06));
+    veil.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+    this.context.fillStyle = veil;
+    this.context.beginPath();
+    this.context.moveTo(0, 0);
+    this.context.quadraticCurveTo(centerX - radius * 0.42, centerY, radius * 0.42, height);
+    this.context.lineTo(0, height);
+    this.context.closePath();
+    this.context.fill();
+    this.context.beginPath();
+    this.context.moveTo(width, 0);
+    this.context.quadraticCurveTo(centerX + radius * 0.42, centerY, width - radius * 0.42, height);
+    this.context.lineTo(width, height);
+    this.context.closePath();
+    this.context.fill();
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.2, 1 + visual.glow * 1.8);
+    for (let index = 0; index < 3; index += 1) {
+      this.context.beginPath();
+      this.context.ellipse(centerX, centerY, radius * (1 + index * 0.16), radius * (0.38 + index * 0.08), 0, 0, Math.PI * 2);
+      this.context.stroke();
+    }
+  }
+
+  private drawRoseArcadeSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.2, 1 + visual.glow * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY - radius * (0.68 - index * 0.18);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 1.12, y);
+      this.context.quadraticCurveTo(centerX, y - radius * 0.26, centerX + radius * 1.12, y);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 5; index += 1) {
+      const x = centerX - radius * 0.98 + (index / 4) * radius * 1.96;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 0.82);
+      this.context.lineTo(x, height);
+      this.context.stroke();
+    }
+  }
+
+  private drawBlueCloisterSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.depth * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.symmetry * 1.8);
+    for (let index = 0; index < 6; index += 1) {
+      const x = centerX - radius * 1.08 + (index / 5) * radius * 2.16;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 0.94);
+      this.context.lineTo(x, height);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY - radius * (0.72 - index * 0.18);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 1.12, y);
+      this.context.lineTo(centerX + radius * 1.12, y);
+      this.context.stroke();
+    }
+  }
+
+  private drawForgeThroneSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.2 + visual.grit * 0.08);
+    this.context.lineWidth = Math.max(1.4, 1.2 + visual.grit * 2.2);
+    this.context.beginPath();
+    this.context.moveTo(centerX - radius * 0.42, centerY + radius * 0.64);
+    this.context.lineTo(centerX - radius * 0.32, centerY - radius * 0.28);
+    this.context.lineTo(centerX + radius * 0.32, centerY - radius * 0.28);
+    this.context.lineTo(centerX + radius * 0.42, centerY + radius * 0.64);
+    this.context.closePath();
+    this.context.stroke();
+    for (let index = 0; index < 4; index += 1) {
+      const x = centerX - radius * 1.02 + (index / 3) * radius * 2.04;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 0.9);
+      this.context.lineTo(x, height);
+      this.context.stroke();
+    }
+  }
+
+  private drawPhaseCloisterSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.translate(centerX, centerY);
+    this.context.rotate(time * 0.1);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.beamStrength * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const halfWidth = radius * (0.18 + index * 0.14);
+      const topY = -radius * (1 - index * 0.1);
+      const bottomY = radius * (0.2 + index * 0.14);
+      this.context.beginPath();
+      this.context.moveTo(0, topY);
+      this.context.lineTo(-halfWidth, bottomY);
+      this.context.lineTo(halfWidth, bottomY);
+      this.context.closePath();
+      this.context.stroke();
+    }
+  }
+
+  private drawNeonCausewaySetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + visual.energy * 0.08);
+    this.context.lineWidth = Math.max(1.2, 1 + visual.energy * 1.8);
+    const horizonY = centerY + radius * 0.74;
+    for (let index = 0; index < 8; index += 1) {
+      const progress = index / 7;
+      const x = progress * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(centerX + (x - centerX) * 0.12, horizonY);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 6; index += 1) {
+      const y = horizonY + index * radius * 0.11;
+      this.context.beginPath();
+      this.context.moveTo(0, y);
+      this.context.lineTo(width, y);
+      this.context.stroke();
+    }
+  }
+
+  private drawAuroraDaisSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.luminosity * 0.08);
+    this.context.lineWidth = Math.max(1.2, 1 + visual.luminosity * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY + radius * (0.48 + index * 0.08);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * (0.72 - index * 0.1), y);
+      this.context.lineTo(centerX + radius * (0.72 - index * 0.1), y);
+      this.context.stroke();
+    }
+  }
+
+  private drawVelvetArcadeSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.depth * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.depth * 1.6);
+    for (let index = 0; index < 5; index += 1) {
+      const progress = index / 4;
+      const x = centerX - radius * 1.08 + progress * radius * 2.16;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 0.82);
+      this.context.lineTo(x, height);
+      this.context.stroke();
+    }
+  }
+
+  private drawEclipseAltarSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.translate(centerX, centerY + radius * 0.04);
+    this.context.rotate(time * 0.05);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.16 + visual.contrast * 0.08);
+    this.context.lineWidth = Math.max(1.2, 1 + visual.contrast * 1.8);
+    for (let index = 0; index < 4; index += 1) {
+      this.context.beginPath();
+      this.context.arc(0, 0, radius * (0.88 + index * 0.16), 0, Math.PI * 2);
+      this.context.stroke();
+    }
+  }
+
+  private drawPrismVortexSetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.translate(centerX, centerY);
+    this.context.rotate(time * 0.12);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.beamStrength * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.beamStrength * 1.8);
+    for (let index = 0; index < 5; index += 1) {
+      const size = radius * (0.24 + index * 0.14);
+      this.context.beginPath();
+      this.context.moveTo(0, -size);
+      this.context.lineTo(-size * 0.82, size);
+      this.context.lineTo(size * 0.82, size);
+      this.context.closePath();
+      this.context.stroke();
+    }
+  }
+
+  private drawTideRunwaySetpiece(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const horizonY = centerY + radius * 0.78;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.rippleStrength * 0.08);
+    this.context.lineWidth = Math.max(1, 1 + visual.rippleStrength * 1.8);
+    for (let index = 0; index < 6; index += 1) {
+      const x = ((index + 1) / 7) * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(centerX + (x - centerX) * 0.08, horizonY);
+      this.context.stroke();
     }
   }
 

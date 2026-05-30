@@ -153,6 +153,52 @@
 - 当前环境对本地地址和浏览器进程都有运行限制，所以这轮没有新增可复现的浏览器自动化截图。
 - 不过接口、渲染、UI 交互和不落库约束已经被自动化测试完整锁住，这轮功能风险是可控的。
 
+## 最新一轮：Stage Setpiece 大型舞台装置层
+
+这一轮继续处理“同一个场景家族里，为什么用户还会觉得不够大、不够像换了一整套 show rig”这个问题。
+
+目标：
+
+- 让 `Choir Vault / Silken Halo / Forge Throne / Phase Cloister / Neon Causeway` 这些成长分叉结果不再只是 bonus 文本。
+- 让它们成为真正接管中间舞台的大型装置层。
+
+实现方式：
+
+- 前端新增 `frontend/src/visual_engine/stageSetpieces.ts`
+- 先把成长分叉型 setpiece 和基础 `Scene Cascade` setpiece 统一整理成一个纯映射层
+- `RealtimeCanvasRenderer` 新增 `drawStageSetpieceLayer(...)`
+- 在 `Scene Cascade` 之后、主 beam/ring/geometry 之前插入 setpiece 层
+- `TheorySandbox` 右侧新增 `Stage Setpiece` 面板，舞台左上角也会显示当前 setpiece 名称
+
+这轮的设计重点：
+
+- `Choir Vault`：纵向窗格、合唱穹顶、悬挂礼堂骨架
+- `Silken Halo`：双侧幕纱、柔性光环、贴身包裹空间
+- `Rose Arcade`：更浪漫、更靠近身体的拱廊走道
+- `Blue Cloister`：更冷静、更规整的修道院回廊
+- `Forge Throne`：中央王座、锻柱、压顶式熔炉骨架
+- `Phase Cloister`：相位门框、棱镜回返通道
+- `Neon Causeway`：更明确的护栏、跑道、远端冲刺线
+
+对应测试：
+
+- 新增 `frontend/src/tests/canvas/stageSetpieces.test.ts`
+  - 验证分叉型 setpiece 优先于基础级联 setpiece
+  - 验证没有级联时返回 `null`
+- 更新 `frontend/src/tests/ui/TheorySandbox.test.tsx`
+  - 验证 `Stage Setpiece` 面板真实渲染
+  - 验证 `Choir Vault` 会同时出现在舞台角标和右侧说明中
+
+本轮验证结果：
+
+- 前端：`64 passed`
+- 前端 build：通过
+
+说明：
+
+- 这轮没有改后端协议，所以没有重跑后端整套测试。
+- 当前 1 个 React `act(...)` 提示仍然来自旧的组合保存测试，不是这轮 setpiece 变更引入的。
+
 烟测补充说明：
 
 - 本地浏览器链路已经真实跑到注册、练习记录、连续 `/sandbox/render` 请求和截图落盘。
