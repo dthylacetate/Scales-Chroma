@@ -316,6 +316,34 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.lineTo).toHaveBeenCalled();
     expect(context?.stroke).toHaveBeenCalled();
   });
+
+  it("draws foreground motion rigs for stage personalities with near-camera machinery", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      activeBonuses: ["Aurora Choir", "Choir Vault"],
+      sceneCascade: "aurora-dais",
+      sceneCascadeIntensity: 0.95
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.arc).toHaveBeenCalled();
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.fillRect).toHaveBeenCalled();
+  });
 });
 
 function createCanvas(): HTMLCanvasElement {

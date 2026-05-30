@@ -367,6 +367,65 @@
 - 现在不同 Growth 分叉不只是“头顶灯不一样、骨架不一样”，连脚下的空间语法都不一样。
 - 这让舞台更像完整的演出现场，而不是把所有变化都堆在中心发光体上。
 
+## 最新一轮：Stage Motion Rig 前景动势层
+
+上一轮把地面投影层拆开之后，舞台的远景、中景、脚下都更完整了，但镜头前方还是不够“有机械在运作”。
+
+目标：
+
+- 让不同路线连近景机构、前景幕纱和前冲装置都完全分家。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageMotionRigs.ts`
+- 继续用 `getStageSetpiece(...)` 作为入口，把 setpiece 映射到不同的前景 motion rig
+- `TheorySandbox` 新增 `Stage Motion Rig` 面板
+- 舞台左上角角标新增 `Motion: ...`
+- `RealtimeCanvasRenderer` 新增 `drawStageMotionRigLayer(...)`
+
+当前已接入的动势家族：
+
+- `Choir Crowns`
+  - 适用于 `Choir Vault / Aurora Dais / Blue Cloister`
+  - 体现拱冠、吊环和礼堂式近景边框
+- `Ribbon Veils`
+  - 适用于 `Silken Halo / Rose Arcade / Velvet Arcade`
+  - 体现贴身幕纱、丝带和柔性近景导光
+- `Piston Frames`
+  - 适用于 `Forge Throne`
+  - 体现锻柱、活塞框和热口挡板
+- `Prism Gates`
+  - 适用于 `Phase Cloister / Prism Vortex`
+  - 体现折返门框、相位门和扫描框
+- `Runway Drones`
+  - 适用于 `Neon Causeway / Tide Runway`
+  - 体现巡航灯点、近景护标和冲刺 drone 轨迹
+- `Eclipse Curtains`
+  - 适用于 `Eclipse Altar`
+  - 体现阴影帘幕、弧形遮挡和祭仪式边框
+
+对应验证：
+
+- 新增 `frontend/src/tests/canvas/stageMotionRigs.test.ts`
+  - 验证 `Choir Vault` 会映射到 `Choir Crowns`
+  - 验证 `Neon Causeway` 会映射到 `Runway Drones`
+  - 验证无 setpiece 时返回 `null`
+- 更新 `TheorySandbox.test.tsx`
+  - 验证右侧出现 `Stage Motion Rig`
+  - 验证舞台角标出现 `Motion: Choir Crowns`
+  - 验证 motion rig 文案真实渲染
+- 更新 `realtimeCanvasRenderer.test.ts`
+  - 验证 setpiece 驱动的近景机构会进入 Canvas 绘制
+- 前端整模块测试
+  - `75 passed`
+- 前端 build
+  - 通过
+
+这一轮的价值：
+
+- 现在不同 Growth 分叉不只是“远景和地面不一样”，连靠近镜头的前景机构都不一样。
+- 这让舞台更像一整套真正会运作的 show，而不是把差异都留在远处背景里。
+
 ## 当前测试结构
 
 ### 后端

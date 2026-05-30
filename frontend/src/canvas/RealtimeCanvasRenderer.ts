@@ -1,5 +1,6 @@
 import type { VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
+import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 
@@ -138,6 +139,7 @@ export class RealtimeCanvasRenderer {
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
+    this.drawStageMotionRigLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBonusMotifs(visual, centerX, centerY, radius, time);
     this.drawPulseConstellation(visual, centerX, centerY, radius, time);
     this.drawTransitionImpact(visual, width, height, centerX, centerY, radius, time);
@@ -1427,6 +1429,223 @@ export class RealtimeCanvasRenderer {
       this.context.lineTo(centerX + Math.cos(angle) * radius * 0.68, centerY + radius * 0.56 + Math.sin(angle) * radius * 0.68);
       this.context.stroke();
     }
+  }
+
+  private drawStageMotionRigLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const rig = getStageMotionRig(visual);
+
+    if (!rig) {
+      return;
+    }
+
+    this.context.save();
+
+    switch (rig.kind) {
+      case "choir-crowns":
+        this.drawChoirCrownsRig(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "ribbon-veils":
+        this.drawRibbonVeilsRig(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "piston-frames":
+        this.drawPistonFramesRig(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-gates":
+        this.drawPrismGatesRig(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "runway-drones":
+        this.drawRunwayDronesRig(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "eclipse-curtains":
+        this.drawEclipseCurtainsRig(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
+  private drawChoirCrownsRig(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const descent = 0.5 + 0.5 * Math.sin(time * (0.84 + visual.motionSpeed * 0.28));
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.4, radius * 0.012);
+
+    for (let index = 0; index < 3; index += 1) {
+      const archRadius = radius * (1.08 + index * 0.16);
+      const drop = radius * (0.12 + index * 0.08 + descent * 0.05);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY - radius * 0.44 + drop, archRadius, Math.PI * 1.08, Math.PI * 1.92);
+      this.context.stroke();
+    }
+
+    for (const direction of [-1, 1]) {
+      this.context.beginPath();
+      this.context.moveTo(centerX + direction * radius * 0.92, 0);
+      this.context.lineTo(centerX + direction * radius * (1.02 + descent * 0.04), centerY + radius * 0.08);
+      this.context.stroke();
+    }
+  }
+
+  private drawRibbonVeilsRig(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const sway = Math.sin(time * (1.04 + visual.swing * 1.2));
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.6, radius * 0.014);
+
+    for (const direction of [-1, 1]) {
+      this.context.beginPath();
+      this.context.moveTo(centerX + direction * radius * 1.12, 0);
+      this.context.bezierCurveTo(
+        centerX + direction * radius * (0.84 + sway * 0.08),
+        centerY - radius * 0.36,
+        centerX + direction * radius * (0.92 - sway * 0.06),
+        centerY + radius * 0.22,
+        centerX + direction * radius * (0.48 + sway * 0.04),
+        height
+      );
+      this.context.stroke();
+    }
+
+    this.context.fillStyle = alphaHex(visual.color, 0.04 + visual.glow * 0.06);
+    this.context.fillRect(centerX - radius * 1.24, 0, radius * 0.16, height);
+    this.context.fillRect(centerX + radius * 1.08, 0, radius * 0.16, height);
+  }
+
+  private drawPistonFramesRig(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const strike = Math.pow(Math.max(0, Math.sin(time * (1.36 + visual.attack * 1.8))), 3);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.grit * 0.12);
+    this.context.lineWidth = Math.max(2, radius * 0.018);
+
+    for (const direction of [-1, 1]) {
+      const x = centerX + direction * radius * 1.02;
+      this.context.beginPath();
+      this.context.moveTo(x, 0);
+      this.context.lineTo(x, centerY + radius * (0.42 + strike * 0.18));
+      this.context.stroke();
+      this.context.fillStyle = alphaHex(visual.color, 0.1 + strike * 0.18);
+      this.context.fillRect(x - radius * 0.08, centerY + radius * (0.3 + strike * 0.18), radius * 0.16, radius * 0.22);
+    }
+
+    this.context.beginPath();
+    this.context.moveTo(centerX - radius * 1.18, centerY + radius * 0.58);
+    this.context.lineTo(centerX + radius * 1.18, centerY + radius * 0.58);
+    this.context.lineTo(centerX + radius * 1.18, centerY + radius * 1);
+    this.context.lineTo(centerX - radius * 1.18, centerY + radius * 1);
+    this.context.closePath();
+    this.context.stroke();
+  }
+
+  private drawPrismGatesRig(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const shift = Math.sin(time * (0.98 + visual.motionSpeed * 0.44));
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.14 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.4, radius * 0.012);
+
+    for (let index = 0; index < 3; index += 1) {
+      const offset = radius * (0.16 + index * 0.22);
+      this.context.save();
+      this.context.translate(centerX + shift * radius * 0.08 * (index % 2 === 0 ? 1 : -1), centerY + radius * 0.1);
+      this.context.rotate((index - 1) * 0.12);
+      this.context.beginPath();
+      this.context.moveTo(-offset, -radius * 0.86);
+      this.context.lineTo(offset, -radius * 0.86);
+      this.context.lineTo(offset, radius * 0.84);
+      this.context.lineTo(-offset, radius * 0.84);
+      this.context.closePath();
+      this.context.stroke();
+      this.context.restore();
+    }
+  }
+
+  private drawRunwayDronesRig(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const chase = (time * (0.42 + visual.motionSpeed * 0.16)) % 1;
+    for (const direction of [-1, 1]) {
+      for (let index = 0; index < 5; index += 1) {
+        const progress = (chase + index / 5) % 1;
+        const x = centerX + direction * radius * (1.18 - progress * 0.68);
+        const y = centerY + radius * (0.92 - progress * 1.32);
+        this.context.fillStyle = alphaHex(visual.secondaryColor, 0.08 + (1 - progress) * 0.16);
+        this.context.beginPath();
+        this.context.arc(x, y, radius * (0.024 + (1 - progress) * 0.012), 0, Math.PI * 2);
+        this.context.fill();
+      }
+    }
+
+    this.context.strokeStyle = alphaHex(visual.color, 0.12 + visual.energy * 0.08);
+    this.context.lineWidth = Math.max(1.2, radius * 0.01);
+    this.context.beginPath();
+    this.context.moveTo(centerX - radius * 1.22, centerY + radius * 0.72);
+    this.context.lineTo(centerX - radius * 0.94, centerY + radius * 0.18);
+    this.context.moveTo(centerX + radius * 1.22, centerY + radius * 0.72);
+    this.context.lineTo(centerX + radius * 0.94, centerY + radius * 0.18);
+    this.context.stroke();
+  }
+
+  private drawEclipseCurtainsRig(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const close = 0.5 + 0.5 * Math.sin(time * (0.62 + visual.gravity * 0.18));
+    this.context.fillStyle = alphaHex(visual.backgroundColor, 0.08 + visual.grit * 0.08);
+    const curtainWidth = radius * (0.24 + close * 0.08);
+    this.context.fillRect(0, 0, curtainWidth, height);
+    this.context.fillRect(width - curtainWidth, 0, curtainWidth, height);
+
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.glow * 0.06);
+    this.context.lineWidth = Math.max(1.2, radius * 0.01);
+    this.context.beginPath();
+    this.context.arc(centerX, centerY + radius * 0.02, radius * (1 + close * 0.05), Math.PI * 0.1, Math.PI * 0.9);
+    this.context.stroke();
   }
 
   private drawAuroraDaisCascade(

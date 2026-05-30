@@ -20,6 +20,7 @@ import {
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
+import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
@@ -434,6 +435,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStageProjectionScript(visual) ? (
                 <div className="text-[11px] text-[#a6ebff]">Projection: {getStageProjectionScript(visual)?.label}</div>
               ) : null}
+              {getStageMotionRig(visual) ? (
+                <div className="text-[11px] text-[#ffbdb8]">Motion: {getStageMotionRig(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -566,6 +570,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <StageSetpiecePanel visual={visual} />
           <StageDirectorCuePanel visual={visual} />
           <StageProjectionScriptPanel visual={visual} />
+          <StageMotionRigPanel visual={visual} />
           <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
@@ -1315,6 +1320,26 @@ function StageProjectionScriptPanel({ visual }: { visual: VisualParameters }) {
         <ReadingLine label="地面图样" value={script.pattern} />
         <ReadingLine label="推进方式" value={script.drift} />
         <ReadingLine label="现场体感" value={script.impact} />
+      </div>
+    </section>
+  );
+}
+
+function StageMotionRigPanel({ visual }: { visual: VisualParameters }) {
+  const rig = getStageMotionRig(visual);
+
+  if (!rig) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#4b2b2b] bg-[#241818] p-3">
+      <div className="text-xs uppercase text-stone-400">Stage Motion Rig</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{rig.label}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="前景机构" value={rig.mechanism} />
+        <ReadingLine label="节奏推进" value={rig.cadence} />
+        <ReadingLine label="现场体感" value={rig.impact} />
       </div>
     </section>
   );
