@@ -343,6 +343,32 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.stroke).toHaveBeenCalled();
   });
 
+  it("draws a stage climate layer that responds to scene family and synergy mood", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      sceneFamily: "solar-garden",
+      activeSynergies: ["Cadential Lift", "Horizon Bloom"]
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.createRadialGradient).toHaveBeenCalled();
+    expect(context?.fillRect).toHaveBeenCalled();
+  });
+
   it("draws foreground motion rigs for stage personalities with near-camera machinery", () => {
     const canvas = createCanvas();
     let shouldRenderImmediately = true;

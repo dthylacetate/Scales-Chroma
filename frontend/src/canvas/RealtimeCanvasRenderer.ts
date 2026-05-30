@@ -1,4 +1,5 @@
 import type { VisualParameters } from "../types/theory";
+import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
@@ -128,6 +129,7 @@ export class RealtimeCanvasRenderer {
     this.context.clearRect(0, 0, width, height);
     this.drawBackground(visual, width, height, centerX, centerY, radius, time);
     this.drawAtmosphereLayers(visual, width, height, centerX, centerY, radius, time);
+    this.drawStageClimateLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
@@ -495,6 +497,213 @@ export class RealtimeCanvasRenderer {
     }
 
     this.context.restore();
+  }
+
+  private drawStageClimateLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const climate = getStageClimateProfile(visual);
+
+    this.context.save();
+
+    switch (climate.kind) {
+      case "solar-haze":
+        this.drawSolarHazeClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "velvet-mist":
+        this.drawVelvetMistClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "ember-ash":
+        this.drawEmberAshClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "choir-dust":
+        this.drawChoirDustClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-fog":
+        this.drawPrismFogClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "tide-vapor":
+        this.drawTideVaporClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "neon-smog":
+        this.drawNeonSmogClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "sanctum-smoke":
+        this.drawSanctumSmokeClimate(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
+  private drawSolarHazeClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const gradient = this.context.createRadialGradient(centerX, centerY - radius * 0.4, radius * 0.12, centerX, centerY, radius * 1.8);
+    gradient.addColorStop(0, alphaHex(visual.secondaryColor, 0.08));
+    gradient.addColorStop(0.6, alphaHex(visual.color, 0.05));
+    gradient.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+    this.context.fillStyle = gradient;
+    this.context.fillRect(0, 0, width, height);
+  }
+
+  private drawVelvetMistClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.04 + visual.glow * 0.03);
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY + radius * (0.12 + index * 0.22) + Math.sin(time * 0.42 + index) * radius * 0.04;
+      this.context.beginPath();
+      this.context.ellipse(centerX, y, radius * (1.12 + index * 0.08), radius * 0.12, 0, 0, Math.PI * 2);
+      this.context.fill();
+    }
+  }
+
+  private drawEmberAshClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.08 + visual.grit * 0.08);
+    this.context.lineWidth = Math.max(1, radius * 0.008);
+    for (let index = 0; index < 18; index += 1) {
+      const x = ((index + 1) / 19) * width;
+      const y = centerY + radius * 0.46 + ((index % 5) - 2) * radius * 0.08;
+      this.context.beginPath();
+      this.context.moveTo(x, y);
+      this.context.lineTo(x + radius * 0.04, y - radius * (0.06 + Math.sin(time + index) * 0.02));
+      this.context.stroke();
+    }
+  }
+
+  private drawChoirDustClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.04 + visual.depth * 0.03);
+    for (let index = 0; index < 12; index += 1) {
+      const x = centerX + Math.cos(time * 0.2 + index) * radius * (0.24 + (index % 4) * 0.16);
+      const y = centerY - radius * 0.62 + ((index % 6) * radius) / 4;
+      this.context.beginPath();
+      this.context.arc(x, y, radius * 0.02, 0, Math.PI * 2);
+      this.context.fill();
+    }
+  }
+
+  private drawPrismFogClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.06 + visual.beamStrength * 0.08);
+    this.context.lineWidth = Math.max(1, radius * 0.007);
+    for (let index = 0; index < 8; index += 1) {
+      const offset = -radius * 1.1 + index * radius * 0.3 + ((time * 18) % (radius * 0.3));
+      this.context.beginPath();
+      this.context.moveTo(centerX + offset, 0);
+      this.context.lineTo(centerX + offset + radius * 0.16, height);
+      this.context.stroke();
+    }
+  }
+
+  private drawTideVaporClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.06 + visual.rippleStrength * 0.06);
+    this.context.lineWidth = Math.max(1, radius * 0.008);
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY + radius * (0.28 + index * 0.16);
+      this.context.beginPath();
+      for (let step = 0; step <= 14; step += 1) {
+        const progress = step / 14;
+        const x = progress * width;
+        const waveY = y + Math.sin(progress * Math.PI * 4 + time * (0.6 + index * 0.08)) * radius * 0.03;
+        if (step === 0) {
+          this.context.moveTo(x, waveY);
+        } else {
+          this.context.lineTo(x, waveY);
+        }
+      }
+      this.context.stroke();
+    }
+  }
+
+  private drawNeonSmogClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.03 + visual.energy * 0.04);
+    this.context.fillRect(0, centerY + radius * 0.18, width, radius * 0.92);
+    this.context.strokeStyle = alphaHex(visual.color, 0.06 + visual.motionSpeed * 0.06);
+    this.context.lineWidth = Math.max(1, radius * 0.007);
+    for (let index = 0; index < 6; index += 1) {
+      const y = centerY + radius * (0.22 + index * 0.14);
+      this.context.beginPath();
+      this.context.moveTo(0, y);
+      this.context.lineTo(width, y - radius * 0.06);
+      this.context.stroke();
+    }
+  }
+
+  private drawSanctumSmokeClimate(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.fillStyle = alphaHex(visual.backgroundColor, 0.06 + visual.grit * 0.05);
+    for (let index = 0; index < 4; index += 1) {
+      const x = centerX + Math.cos(time * 0.18 + index) * radius * 0.38;
+      const y = centerY + radius * 0.18 + Math.sin(time * 0.24 + index) * radius * 0.22;
+      this.context.beginPath();
+      this.context.ellipse(x, y, radius * 0.46, radius * 0.14, 0, 0, Math.PI * 2);
+      this.context.fill();
+    }
   }
 
   private drawStageArchitecture(

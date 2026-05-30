@@ -20,6 +20,7 @@ import {
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
+import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
@@ -450,6 +451,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStageSynergyGlyph(visual) ? (
                 <div className="text-[11px] text-[#d8ff9c]">Glyph: {getStageSynergyGlyph(visual)?.label}</div>
               ) : null}
+              <div className="text-[11px] text-[#b8d7ff]">Climate: {getStageClimateProfile(visual).label}</div>
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -575,6 +577,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Signature" value={visual.signature} />
           <Readout label="Scene" value={sceneFamilyLabel(visual.sceneFamily)} />
           <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
+          <StageClimatePanel visual={visual} />
           <GrowthImprintPanel visual={visual} />
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
@@ -1174,6 +1177,22 @@ function MoodAxesPanel({ visual }: { visual: VisualParameters }) {
           value={visual.grit}
           note={moodAxisLabel("grit", visual.grit)}
         />
+      </div>
+    </section>
+  );
+}
+
+function StageClimatePanel({ visual }: { visual: VisualParameters }) {
+  const climate = getStageClimateProfile(visual);
+
+  return (
+    <section className="rounded-md border border-[#2f3e52] bg-[#19202a] p-3">
+      <div className="text-xs uppercase text-stone-400">Stage Climate</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{climate.label}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="空气介质" value={climate.medium} />
+        <ReadingLine label="流动方式" value={climate.motion} />
+        <ReadingLine label="现场体感" value={climate.impact} />
       </div>
     </section>
   );

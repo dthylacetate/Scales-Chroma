@@ -1,0 +1,82 @@
+import { describe, expect, it } from "vitest";
+
+import type { VisualParameters } from "../../types/theory";
+import { getStageClimateProfile } from "../../visual_engine/stageClimateProfiles";
+
+const baseVisual: VisualParameters = {
+  color: "#ffd166",
+  secondaryColor: "#c2b8ff",
+  backgroundColor: "#081018",
+  glow: 0.82,
+  contrast: 0.54,
+  energy: 0.72,
+  complexity: 0.68,
+  temperature: 0.62,
+  valence: 0.8,
+  arousal: 0.74,
+  luminosity: 0.82,
+  grit: 0.24,
+  openness: 0.82,
+  attack: 0.32,
+  swing: 0.64,
+  gravity: 0.46,
+  synergyResonance: 0.76,
+  cadencePull: 0.7,
+  modalTension: 0.28,
+  blendCohesion: 0.78,
+  symmetry: 0.78,
+  depth: 0.82,
+  pulseDensity: 0.72,
+  motionSpeed: 0.68,
+  ringCount: 5,
+  rippleStrength: 0.72,
+  beamStrength: 0.66,
+  grain: 0.2,
+  signature: "Aurora Choir",
+  sceneFamily: "solar-garden",
+  growthImprint: "jazz-lattice",
+  growthImprintIntensity: 0.88,
+  sceneCascade: "aurora-dais",
+  sceneCascadeIntensity: 0.94,
+  activeBonuses: ["Aurora Choir"],
+  activeSynergies: ["Cadential Lift"],
+  particles: {
+    density: 0.7,
+    trail: false,
+    size: 2.2,
+    speed: 1.1,
+    spread: 0.56
+  },
+  geometry: "lattice",
+  animationState: "flowing"
+};
+
+describe("stage climate profiles", () => {
+  it("returns a bloom-specific climate when the stage holds Horizon Bloom", () => {
+    const climate = getStageClimateProfile({
+      ...baseVisual,
+      activeSynergies: ["Cadential Lift", "Horizon Bloom"]
+    });
+
+    expect(climate.label).toBe("Bloom Haze");
+    expect(climate.medium).toContain("日冕");
+  });
+
+  it("falls back to scene-family climate when no emergent synergy overrides it", () => {
+    const climate = getStageClimateProfile(baseVisual);
+
+    expect(climate.label).toBe("Solar Haze");
+    expect(climate.motion).toContain("天光");
+  });
+
+  it("returns shadow smoke for sanctum scenes without overrides", () => {
+    const climate = getStageClimateProfile({
+      ...baseVisual,
+      sceneFamily: "shadow-sanctum",
+      activeSynergies: []
+    });
+
+    expect(climate.label).toBe("Sanctum Smoke");
+    expect(climate.impact).toContain("仪式");
+  });
+});

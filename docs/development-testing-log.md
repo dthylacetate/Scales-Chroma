@@ -259,6 +259,242 @@
 实现方式：
 
 - 新增 `frontend/src/visual_engine/stageDirectorCues.ts`
+- 用 `setpiece / scene family / growth imprint` 推导导演式调度人格
+- `RealtimeCanvasRenderer` 新增 `drawStageDirectorCueLayer(...)`
+- `TheorySandbox` 右侧新增 `Stage Director Cue` 面板，舞台左上角新增 `Cue: ...`
+
+当前已接入的导演调度：
+
+- `Cathedral Descent`
+- `Silk Breath`
+- `Arcade Sway`
+- `Forge Hammer`
+- `Prism Scan`
+- `Runway Chase`
+- `Altar Eclipse`
+
+对应验证：
+
+- 前端测试：`67 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 现在不同路线不只是“长得不同、灯光不同”，连演出节奏和运动重心都不同。
+- 舞台开始更像“不同导演在控同一个场地”，而不是同一套画法换一组配色。
+
+## 最新一轮：Stage Projection Script 地面投影层
+
+上一轮把导演调度加上之后，这一轮继续补“脚下空间的语法”。
+
+目标：
+
+- 让不同路线连地面都说不同的话，而不是所有舞台都共享一套默认地板。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageProjectionScripts.ts`
+- `RealtimeCanvasRenderer` 新增 `drawStageProjectionLayer(...)`
+- `TheorySandbox` 右侧新增 `Stage Projection Script` 面板，舞台左上角新增 `Projection: ...`
+
+当前已接入的地面投影家族：
+
+- `Aisle Lattice`
+- `Velvet Bloom`
+- `Ember Grid`
+- `Prism Circuit`
+- `Velocity Markers`
+- `Eclipse Seal`
+
+对应验证：
+
+- 前端测试：`71 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 不同 Growth / cascade 分叉不只是天上和中景不同，连脚下的导向、节奏和仪式感也不同。
+- 用户对“我现在站在什么空间里”的感知会明显更强。
+
+## 最新一轮：Stage Motion Rig 前景动势层
+
+上一轮把脚下空间分开之后，这一轮继续补“观众面前那层会动的机构”。
+
+目标：
+
+- 让不同路线在前景也有独立的舞台机构，而不是所有变化都发生在远景和中景。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageMotionRigs.ts`
+- `RealtimeCanvasRenderer` 新增 `drawStageMotionRigLayer(...)`
+- `TheorySandbox` 右侧新增 `Stage Motion Rig` 面板，舞台左上角新增 `Motion: ...`
+
+当前已接入的前景动势机构：
+
+- `Choir Crowns`
+- `Ribbon Veils`
+- `Piston Frames`
+- `Prism Gates`
+- `Runway Drones`
+- `Eclipse Curtains`
+
+对应验证：
+
+- 前端测试：`75 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 舞台终于不只是“背景在变”，而是会有近景机构压到观众面前。
+- 观感上更接近 live show，而不是中心发光体加几层背景粒子。
+
+## 最新一轮：Stage Takeover 换场接管层
+
+上一轮把前景机构也分出来之后，这一轮继续补“换场手势”。
+
+目标：
+
+- 让不同路线不只是切换结果不同，连“怎么接管旧舞台、怎么抢占新舞台”也不同。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageTakeoverModes.ts`
+- 把 `setpiece / motion rig / projection / takeover` 一起纳入 `transition impact` 计算
+- `RealtimeCanvasRenderer` 在 `drawTransitionImpact(...)` 中按 takeover 模式绘制不同换场手势
+- `TheorySandbox` 右侧新增 `Stage Takeover` 面板，舞台左上角新增 `Takeover: ...`
+
+当前已接入的接管模式：
+
+- `Cathedral Iris`
+- `Velvet Drape`
+- `Forge Slam`
+- `Prism Scanline`
+- `Runway Rush`
+- `Eclipse Veil`
+
+对应验证：
+
+- 前端测试：`79 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 现在换场本身更像演出的一部分，而不是统一的冲击波过渡。
+- 不同 Growth / cascade 分叉会带来不同的接管体感。
+
+## 最新一轮：后端 Emergent Synergy 参数人格增强
+
+前端演出层越做越厚之后，这一轮把后端视觉引擎本身也往更“二次生长”的方向推。
+
+目标：
+
+- 不只识别预设组合规则，而是让后端根据参数聚合后的整体人格继续触发二次加成。
+
+实现方式：
+
+- `backend/app/visual_engine/renderer.py` 新增 `emergent synergy` 判断层
+- 至少双元素以上时，基于聚合后的开放度、重力、摆动、复杂度、beam 等条件再触发额外人格
+
+当前已接入的参数人格：
+
+- `Horizon Bloom`
+- `Abyss Pressure`
+- `Slipstream Pocket`
+- `Prism Surge`
+
+对应验证：
+
+- 后端整套：`92 passed, 1 warning`
+
+这一层的价值在于：
+
+- 后端不再只是“命中表就给 bonus”，而开始像一个会从整体参数结构里长出第二层性格的视觉引擎。
+
+## 最新一轮：Synergy Glyph 协同徽记层
+
+后端开始长出参数人格之后，这一轮把这层人格真正做成可见舞台结构。
+
+目标：
+
+- 让 `Horizon Bloom / Abyss Pressure / Slipstream Pocket / Prism Surge` 不再只是列表项，而是真正进入舞台画面。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageSynergyGlyphs.ts`
+- `RealtimeCanvasRenderer` 新增 `drawStageSynergyGlyphLayer(...)`
+- `TheorySandbox` 右侧新增 `Synergy Glyph` 面板，舞台左上角新增 `Glyph: ...`
+
+当前已接入的协同徽记：
+
+- `Horizon Bloom`
+- `Abyss Pressure`
+- `Slipstream Pocket`
+- `Prism Surge`
+- 回退 glyph：`Cadence Spine`、`Radiant Fan`
+
+对应验证：
+
+- 前端测试：`83 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 后端“更聪明”的部分终于能被用户肉眼看见。
+- 参数人格开始拥有自己的结构语言，而不是只留在数值和面板文字里。
+
+## 最新一轮：Stage Climate 场景气候层
+
+这一轮继续处理一个很关键但容易被忽略的问题：不同路线虽然已经有不同骨架、灯光、前景和换场，但“空气本身”还不够像不同世界。
+
+目标：
+
+- 让不同场景家族和协同人格拥有不同的空气介质、漂浮物和环境流动方式。
+- 让用户不仅看见舞台“长得不一样”，还会感觉“这里的空气也不是同一种空气”。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageClimateProfiles.ts`
+- 先基于 `sceneFamily` 给出基础 `Stage Climate`
+- 再结合 `Synergy Glyph` 把气候进一步推向更明确的二级人格
+- `RealtimeCanvasRenderer` 新增 `drawStageClimateLayer(...)`
+- `TheorySandbox` 右侧新增 `Stage Climate` 面板，舞台左上角新增 `Climate: ...`
+
+当前基础气候家族：
+
+- `Solar Haze`
+- `Velvet Mist`
+- `Ember Ash`
+- `Choir Dust`
+- `Prism Fog`
+- `Tide Vapor`
+- `Neon Smog`
+- `Sanctum Smoke`
+
+当前基于协同人格的二级改写：
+
+- `Horizon Bloom` -> `Bloom Haze`
+- `Abyss Pressure` -> `Abyss Smoke`
+- `Slipstream Pocket` -> `Slipstream Air`
+- `Prism Surge` -> `Prism Charge`
+
+对应验证：
+
+- 新增 `frontend/src/tests/canvas/stageClimateProfiles.test.ts`
+  - 验证基础气候与协同改写都会返回正确 profile
+- 更新 `frontend/src/tests/canvas/realtimeCanvasRenderer.test.ts`
+  - 验证渲染器会真的画出 climate layer，而不是只有说明文字
+- 更新 `frontend/src/tests/ui/TheorySandbox.test.tsx`
+  - 验证右侧 `Stage Climate` 面板和舞台角标都会显示正确的气候名称
+- 前端整套：`87 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 现在不同路线不只是舞台装置、灯光和换场不同，连空气介质和体感都不同。
+- 整个中间舞台开始更像一个真正被不同物理/情绪环境占领的演出空间，而不是只有图层数量在增加。
+
+- 新增 `frontend/src/visual_engine/stageDirectorCues.ts`
 - 用 `getStageSetpiece(...)` 作为入口，把 setpiece 继续映射到不同的 director cue
 - `TheorySandbox` 新增 `Stage Director Cue` 面板
 - 舞台左上角角标新增 `Cue: ...`
