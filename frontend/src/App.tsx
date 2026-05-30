@@ -1,10 +1,25 @@
 import { type ReactNode, useEffect, useState } from "react";
 
+import { MusicTheoryGuide } from "./pages/MusicTheoryGuide";
+import { SkillTreePage } from "./pages/SkillTreePage";
 import { TheorySandbox } from "./pages/TheorySandbox";
 import { type AuthSession, getCurrentUser, login, logout, register } from "./services/authApi";
 
 const AUTH_STORAGE_KEY = "scales-chroma-auth-token";
 const DEV_PORTS = new Set(["4173", "5173", "5174"]);
+type AppPage = "sandbox" | "skills" | "theory";
+
+const PAGE_HASHES: Record<AppPage, string> = {
+  sandbox: "#sandbox",
+  skills: "#skills",
+  theory: "#theory"
+};
+
+const PAGE_LABELS: Record<AppPage, string> = {
+  sandbox: "视觉沙盘",
+  skills: "技能树",
+  theory: "基础乐理"
+};
 
 export function App() {
   const apiBaseUrl = resolveApiBaseUrl();
@@ -38,7 +53,7 @@ export function App() {
   }, [apiBaseUrl]);
 
   if (!apiBaseUrl) {
-    return <TheorySandbox />;
+    return <AppExperience />;
   }
 
   if (authLoading) {
@@ -58,7 +73,7 @@ export function App() {
   }
 
   return (
-    <TheorySandbox
+    <AppExperience
       apiBaseUrl={apiBaseUrl}
       authToken={session.token}
       currentUsername={session.user.username}
@@ -72,6 +87,98 @@ export function App() {
       }}
     />
   );
+}
+
+interface AppExperienceProps {
+  apiBaseUrl?: string;
+  authToken?: string;
+  currentUsername?: string;
+  onLogout?: () => void;
+}
+
+function AppExperience({ apiBaseUrl, authToken, currentUsername, onLogout }: AppExperienceProps) {
+  const [activePage, setActivePage] = useState<AppPage>(() => pageFromHash() ?? "sandbox");
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const nextPage = pageFromHash();
+
+      if (nextPage) {
+        setActivePage(nextPage);
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  function navigate(page: AppPage) {
+    window.location.hash = PAGE_HASHES[page];
+    setActivePage(page);
+  }
+
+  return (
+    <div className="min-h-screen bg-[#120f12] text-stone-100">
+      <header className="sticky top-0 z-30 border-b border-[#5bd0c7]/15 bg-[#120f12]/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-lg font-semibold tracking-normal text-stone-50">Scales & Chroma</div>
+            <div className="text-xs text-stone-400">乐理视觉沙盘 · 成长系统 · 入门学习</div>
+          </div>
+          <nav className="flex flex-wrap items-center gap-2" aria-label="主导航">
+            {(["sandbox", "skills", "theory"] as AppPage[]).map((page) => (
+              <button
+                key={page}
+                className={`h-9 rounded-md border px-3 text-sm font-semibold transition ${
+                  activePage === page
+                    ? "border-[#ffd166] bg-[#ffd166] text-[#16110f]"
+                    : "border-[#3f3144] bg-[#201922] text-stone-200 hover:border-[#5bd0c7]"
+                }`}
+                type="button"
+                onClick={() => navigate(page)}
+              >
+                {PAGE_LABELS[page]}
+              </button>
+            ))}
+            {currentUsername ? <span className="ml-1 text-sm text-stone-300">{currentUsername}</span> : null}
+            {onLogout ? (
+              <button
+                className="h-9 rounded-md border border-[#3f3144] bg-[#201922] px-3 text-sm text-stone-200 transition hover:border-[#ff8fa3]"
+                type="button"
+                onClick={onLogout}
+              >
+                退出
+              </button>
+            ) : null}
+          </nav>
+        </div>
+      </header>
+
+      {activePage === "sandbox" ? (
+        <TheorySandbox apiBaseUrl={apiBaseUrl} authToken={authToken} currentUsername={currentUsername} onLogout={onLogout} />
+      ) : null}
+      {activePage === "skills" ? <SkillTreePage apiBaseUrl={apiBaseUrl} authToken={authToken} /> : null}
+      {activePage === "theory" ? <MusicTheoryGuide /> : null}
+    </div>
+  );
+}
+
+function pageFromHash(): AppPage | null {
+  const normalizedHash = window.location.hash.toLowerCase();
+
+  if (normalizedHash === PAGE_HASHES.skills) {
+    return "skills";
+  }
+
+  if (normalizedHash === PAGE_HASHES.theory) {
+    return "theory";
+  }
+
+  if (normalizedHash === PAGE_HASHES.sandbox || normalizedHash === "") {
+    return "sandbox";
+  }
+
+  return null;
 }
 
 function resolveApiBaseUrl(): string | undefined {

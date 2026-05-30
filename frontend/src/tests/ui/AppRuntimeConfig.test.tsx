@@ -5,6 +5,7 @@ import { App } from "../../App";
 
 describe("App runtime config", () => {
   afterEach(() => {
+    window.history.replaceState(null, "", window.location.pathname);
     window.localStorage.clear();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -49,7 +50,7 @@ describe("App runtime config", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("player-one")).toBeInTheDocument();
+      expect(screen.getAllByText("player-one").length).toBeGreaterThan(0);
     });
   });
 
@@ -86,7 +87,7 @@ describe("App runtime config", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("player-one")).toBeInTheDocument();
+      expect(screen.getAllByText("player-one").length).toBeGreaterThan(0);
     });
     expect(window.localStorage.getItem("scales-chroma-auth-token")).toBe("token-123");
   });
