@@ -28,6 +28,50 @@
 4. Canvas 测试优先覆盖生命周期和资源清理，避免后续实时渲染内存泄漏。
 5. API 测试先锁定契约形状，再逐步接数据库和更复杂的服务逻辑。
 
+## 最新一轮：Scene Cascade 三元组合级联
+
+这一轮的核心不是再加几个小 bonus，而是把“满足合理三元组合时，舞台要明显长出第二层大型结构”正式做出来。
+
+新增设计重点：
+
+- 后端 `/sandbox/render` 新增 `scene_cascade` 与 `scene_cascade_intensity`。
+- 前端本地映射也同步支持同一套级联逻辑，避免离线和在线两套世界观不一致。
+- Canvas 新增独立 `Scene Cascade` 渲染层。
+- 右侧新增 `Scene Cascade` 面板，用中文解释“为什么这次不是普通换色，而是舞台整体升级”。
+
+当前重点覆盖的三元组合：
+
+- `Lydian + Maj7 + II-V-I` -> `Aurora Choir` / `Aurora Dais`
+- `Dorian + Min7 + II-V-I` -> `Blue Velvet Arcade` / `Velvet Arcade`
+- `Harmonic Minor + Dim7 + Dominant7` -> `Ritual Crucible` / `Eclipse Altar`
+- `Melodic Minor + Dominant7 + Aug` -> `Prism Engine` / `Prism Vortex`
+- `Pentatonic + Mixolydian + Dominant7` -> `Voltage Causeway` / `Tide Runway`
+
+对应测试补充：
+
+- 后端单元测试：
+  - 验证三元组合会触发新的签名、级联名称和更高的 `depth / beam_strength`。
+- 后端 API 测试：
+  - 验证 `/sandbox/render` 会返回 `scene_cascade` 和 `scene_cascade_intensity`。
+- 前端 visual engine 测试：
+  - 验证本地映射同样会把三元组合提升为 `Scene Cascade`。
+- 前端 Canvas 测试：
+  - 验证有级联时会调用额外的旋转/线段/描边逻辑，而不是仍然停留在旧层级。
+- 前端 UI 测试：
+  - 验证带认证的真实响应下会把 `Scene Cascade` 文本渲染出来。
+
+本轮验证结果：
+
+- 后端：`86 passed, 1 warning`
+- 前端：`58 passed`
+- 前端 build：通过
+
+烟测补充说明：
+
+- 本地浏览器链路已经真实跑到注册、练习记录、连续 `/sandbox/render` 请求和截图落盘。
+- 当前 `/tmp/scales-stage-default.png` 与 `/tmp/scales-stage-growth.png` 已成功生成，可直接对照默认舞台与 Neo Soul 成长舞台的差异。
+- 更激进的三元组合无头浏览器自动化在当前环境下仍然会遇到浏览器进程权限限制，但代码级与接口级验证已经完整覆盖了这轮改动的核心约束。
+
 ## 当前测试结构
 
 ### 后端
