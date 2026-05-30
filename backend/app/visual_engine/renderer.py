@@ -180,6 +180,7 @@ def render_visual_parameters(
     _apply_combo_bonuses(elements, aggregate_state)
     _apply_theory_synergies(elements, aggregate_state)
     _apply_unlock_effects(aggregate_state, unlocks)
+    _apply_emergent_synergies(elements, aggregate_state)
     growth_imprint, growth_imprint_intensity = _resolve_growth_imprint(elements, unlocks, aggregate_state.active_bonuses)
     aggregate_state.growth_imprint = growth_imprint
     aggregate_state.growth_imprint_intensity = growth_imprint_intensity
@@ -515,7 +516,7 @@ def _apply_theory_synergies(elements: list[TheoryElement], state: AggregateVisua
     element_types = {element.type for element in elements}
 
     if {"lydian", "ionian", "major"} & element_names and {"maj7", "major"} & element_names:
-        state.active_synergies.append("Radiant Voicing")
+        _append_unique(state.active_synergies, "Radiant Voicing")
         state.synergy_resonance = min(1.0, state.synergy_resonance + 0.16)
         state.blend_cohesion = min(1.0, state.blend_cohesion + 0.12)
         state.openness = min(1.0, state.openness + 0.08)
@@ -523,7 +524,7 @@ def _apply_theory_synergies(elements: list[TheoryElement], state: AggregateVisua
         state.symmetry = min(1.0, state.symmetry + 0.06)
 
     if "progression" in element_types and "chord" in element_types:
-        state.active_synergies.append("Cadential Lift")
+        _append_unique(state.active_synergies, "Cadential Lift")
         state.cadence_pull = min(1.0, state.cadence_pull + 0.38)
         state.synergy_resonance = min(1.0, state.synergy_resonance + 0.08)
         state.depth = min(1.0, state.depth + 0.08)
@@ -531,21 +532,21 @@ def _apply_theory_synergies(elements: list[TheoryElement], state: AggregateVisua
         state.gravity = min(1.0, state.gravity + 0.08)
 
     if {"dorian", "mixolydian", "ii-v-i"} & element_names and {"min7", "dominant7"} & element_names:
-        state.active_synergies.append("Groove Pocket")
+        _append_unique(state.active_synergies, "Groove Pocket")
         state.swing = min(1.0, state.swing + 0.16)
         state.ripple_strength = min(1.0, state.ripple_strength + 0.08)
         state.motion_speed = min(1.0, state.motion_speed + 0.06)
         state.synergy_resonance = min(1.0, state.synergy_resonance + 0.1)
 
     if {"harmonic minor", "phrygian"} & element_names and {"dim7", "dominant7", "aug"} & element_names:
-        state.active_synergies.append("Shadow Magnet")
+        _append_unique(state.active_synergies, "Shadow Magnet")
         state.modal_tension = min(1.0, state.modal_tension + 0.22)
         state.attack = min(1.0, state.attack + 0.12)
         state.gravity = min(1.0, state.gravity + 0.1)
         state.contrast = min(1.0, state.contrast + 0.08)
 
     if len(element_types) >= 3:
-        state.active_synergies.append("Color Convergence")
+        _append_unique(state.active_synergies, "Color Convergence")
         state.blend_cohesion = min(1.0, state.blend_cohesion + 0.22)
         state.depth = min(1.0, state.depth + 0.06)
         state.secondary_color = _blend_hexes(
@@ -559,6 +560,57 @@ def _apply_theory_synergies(elements: list[TheoryElement], state: AggregateVisua
     if len(state.active_synergies) > 1:
         state.synergy_resonance = min(1.0, state.synergy_resonance + 0.08)
         state.blend_cohesion = min(1.0, state.blend_cohesion + 0.08)
+
+
+def _apply_emergent_synergies(elements: list[TheoryElement], state: AggregateVisualState) -> None:
+    if len(elements) < 2:
+        return
+
+    emergent_hits = 0
+
+    if state.openness > 0.78 and state.cadence_pull > 0.72 and state.luminosity > 0.72:
+        emergent_hits += 1
+        _append_unique(state.active_synergies, "Horizon Bloom")
+        state.beam_strength = min(1.0, state.beam_strength + 0.12)
+        state.depth = min(1.0, state.depth + 0.1)
+        state.symmetry = min(1.0, state.symmetry + 0.08)
+        state.valence = min(1.0, state.valence + 0.08)
+        state.blend_cohesion = min(1.0, state.blend_cohesion + 0.08)
+        state.glow = min(1.0, state.glow + 0.06)
+
+    if state.modal_tension > 0.76 and state.grit > 0.68 and state.gravity > 0.68:
+        emergent_hits += 1
+        _append_unique(state.active_synergies, "Abyss Pressure")
+        state.fracture = min(1.0, state.fracture + 0.14)
+        state.grain = min(1.0, state.grain + 0.14)
+        state.contrast = min(1.0, state.contrast + 0.12)
+        state.pulse_density = min(1.0, state.pulse_density + 0.12)
+        state.energy = min(1.0, state.energy + 0.08)
+        state.arousal = min(1.0, state.arousal + 0.1)
+
+    if state.swing > 0.68 and state.motion_speed > 0.62 and state.energy > 0.68:
+        emergent_hits += 1
+        _append_unique(state.active_synergies, "Slipstream Pocket")
+        state.wave = min(1.0, state.wave + 0.12)
+        state.ripple_strength = min(1.0, state.ripple_strength + 0.14)
+        state.motion_speed = min(1.0, state.motion_speed + 0.1)
+        state.pulse_density = min(1.0, state.pulse_density + 0.1)
+        state.arousal = min(1.0, state.arousal + 0.08)
+        state.beam_strength = min(1.0, state.beam_strength + 0.06)
+
+    if state.complexity > 0.78 and state.attack > 0.72 and state.beam_strength > 0.62 and (state.lattice > 0.5 or state.fracture > 0.5):
+        emergent_hits += 1
+        _append_unique(state.active_synergies, "Prism Surge")
+        state.lattice = min(1.0, state.lattice + 0.12)
+        state.complexity = min(1.0, state.complexity + 0.1)
+        state.beam_strength = min(1.0, state.beam_strength + 0.1)
+        state.energy = min(1.0, state.energy + 0.08)
+        state.motion_speed = min(1.0, state.motion_speed + 0.08)
+
+    if emergent_hits:
+        state.synergy_resonance = min(1.0, state.synergy_resonance + emergent_hits * 0.06)
+        state.blend_cohesion = min(1.0, state.blend_cohesion + emergent_hits * 0.04)
+        state.depth = min(1.0, state.depth + emergent_hits * 0.03)
 
 
 def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str]) -> None:
@@ -863,6 +915,11 @@ def _resolve_scene_family(
 
 def _contains_any(source: str, needles: list[str]) -> bool:
     return any(needle in source for needle in needles)
+
+
+def _append_unique(values: list[str], value: str) -> None:
+    if value not in values:
+        values.append(value)
 
 
 def _resolve_growth_imprint(

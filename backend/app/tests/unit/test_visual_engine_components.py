@@ -231,6 +231,7 @@ def test_renderer_exposes_systemic_synergy_metrics_for_progression_and_chord_ali
     assert visual.cadence_pull > 0.7
     assert visual.blend_cohesion > 0.58
     assert "Cadential Lift" in visual.active_synergies
+    assert "Horizon Bloom" in visual.active_synergies
 
 
 def test_renderer_escalates_three_way_combinations_into_scene_cascades() -> None:
@@ -249,6 +250,54 @@ def test_renderer_escalates_three_way_combinations_into_scene_cascades() -> None
     assert visual.scene_cascade_intensity > 0.9
     assert visual.depth > 0.8
     assert visual.beam_strength > 0.7
+
+
+def test_renderer_derives_dark_pressure_synergy_from_extreme_tension_axes() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="harmonic-minor", type="scale", name="Harmonic Minor"),
+            TheoryElement(id="dim7", type="chord", name="Dim7"),
+            TheoryElement(id="dominant7", type="chord", name="Dominant7"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert "Abyss Pressure" in visual.active_synergies
+    assert visual.grain > 0.75
+    assert visual.contrast > 0.78
+    assert visual.pulse_density > 0.8
+
+
+def test_renderer_derives_prism_surge_from_open_attackive_complexity_blends() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="melodic-minor", type="scale", name="Melodic Minor"),
+            TheoryElement(id="dominant7", type="chord", name="Dominant7"),
+            TheoryElement(id="aug", type="chord", name="Aug"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert "Prism Surge" in visual.active_synergies
+    assert visual.complexity > 0.82
+    assert visual.beam_strength > 0.55
+    assert visual.motion_speed > 0.7
+
+
+def test_renderer_derives_slipstream_synergy_from_high_swing_acceleration_stacks() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="pentatonic", type="scale", name="Pentatonic"),
+            TheoryElement(id="mixolydian", type="mode", name="Mixolydian"),
+            TheoryElement(id="dominant7", type="chord", name="Dominant7"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert "Slipstream Pocket" in visual.active_synergies
+    assert visual.ripple_strength > 0.75
+    assert visual.motion_speed > 0.78
+    assert visual.arousal > 0.88
 
 
 def test_renderer_lets_growth_tracks_recolor_scene_cascades() -> None:

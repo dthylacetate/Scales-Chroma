@@ -488,6 +488,60 @@
 - 现在不同 Growth 分叉不只是“舞台长得不一样”，连怎么把旧舞台接管走都不一样。
 - 这让切换本身也更像演出，而不是参数变了之后顺手加一圈统一冲击波。
 
+## 最新一轮：后端 Emergent Synergy 系统性交互层
+
+前面几轮把前端舞台层做厚之后，这一轮回到后端，把“乐理 -> 参数”的映射本身再往深处推。
+
+问题：
+
+- 之前后端已经有不少固定组合规则和命名 bonus，但还比较像“命中表”。
+- 也就是说，系统能识别 `Lydian + Maj7` 这种固定组合，却还不够会识别“这一堆参数已经长成哪种人格了”。
+
+目标：
+
+- 让后端在固定 combo rule 之外，再根据已经聚合出来的参数族群触发二次加成。
+
+实现方式：
+
+- 在 `backend/app/visual_engine/renderer.py` 新增 `_apply_emergent_synergies(...)`
+- 它会在基础 combo、theory synergy、unlock effect 之后运行
+- 目前接入 4 类 emergent synergy：
+
+- `Horizon Bloom`
+  - 由高开放度 + 高终止牵引 + 高亮度触发
+  - 会继续抬高 beam、depth、symmetry、valence、blend
+- `Abyss Pressure`
+  - 由高 modal tension + 高 grit + 高 gravity 触发
+  - 会继续抬高 fracture、grain、contrast、pulse density、arousal
+- `Slipstream Pocket`
+  - 由高 swing + 高 motion speed + 高 energy 触发
+  - 会继续抬高 wave、ripple、motion、pulse、arousal
+- `Prism Surge`
+  - 由高 complexity + 高 attack + 强 beam + 棱镜/碎裂倾向触发
+  - 会继续抬高 lattice、complexity、beam、energy、motion
+
+这一层的意义：
+
+- 后端现在不只会说“你命中了哪条组合公式”，也会说“你已经把参数堆成了哪种人格”，然后顺势把它再往前推一段。
+- 这比单纯不断扩固定组合表更接近“参数化映射引擎”的味道。
+
+对应验证：
+
+- 更新 `backend/app/tests/unit/test_visual_engine_components.py`
+  - 明亮富三元组合现在要求出现 `Horizon Bloom`
+  - 暗压组合要求出现 `Abyss Pressure`
+  - 高速推进组合要求出现 `Slipstream Pocket`
+  - 高复杂棱镜组合要求出现 `Prism Surge`
+- 更新 `backend/app/tests/api/test_sandbox_routes.py`
+  - `/sandbox/render` 现在要求把 `Horizon Bloom` 透传出来
+- 后端整套测试
+  - `92 passed, 1 warning`
+
+注意：
+
+- 这层被我显式限制为至少双元素以上才会触发，避免“单个元素 + 一个解锁”被误判成大型系统性交互。
+- 那个 warning 仍然是已有的 `StarletteDeprecationWarning`，不是这轮引入的新问题。
+
 ## 当前测试结构
 
 ### 后端

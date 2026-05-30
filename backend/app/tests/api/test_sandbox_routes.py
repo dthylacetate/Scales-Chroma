@@ -200,6 +200,7 @@ def test_sandbox_render_returns_scene_cascade_for_rich_three_part_stacks() -> No
     assert payload["scene_cascade_intensity"] > 0.9
     assert payload["depth"] > 0.8
     assert payload["beam_strength"] > 0.7
+    assert "Horizon Bloom" in payload["active_synergies"]
 
 
 def test_sandbox_render_supports_non_persistent_growth_preview() -> None:
