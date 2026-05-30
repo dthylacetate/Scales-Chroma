@@ -101,6 +101,7 @@ export class RealtimeCanvasRenderer {
     this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawTheoryTraitLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawTheorySynergyLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -620,6 +621,36 @@ export class RealtimeCanvasRenderer {
 
     if (visual.gravity > 0.4) {
       this.drawGravityTethers(visual, width, height, centerX, centerY, radius, time);
+    }
+
+    this.context.restore();
+  }
+
+  private drawTheorySynergyLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+
+    if (visual.synergyResonance > 0.44) {
+      this.drawSynergyResonanceMesh(visual, centerX, centerY, radius, time);
+    }
+
+    if (visual.cadencePull > 0.44) {
+      this.drawCadenceConvergence(visual, width, height, centerX, centerY, radius, time);
+    }
+
+    if (visual.modalTension > 0.42) {
+      this.drawModalTensionCrossings(visual, centerX, centerY, radius, time);
+    }
+
+    if (visual.blendCohesion > 0.44) {
+      this.drawBlendCohesionBraids(visual, centerX, centerY, radius, time);
     }
 
     this.context.restore();
@@ -1182,6 +1213,122 @@ export class RealtimeCanvasRenderer {
         centerX + (x - centerX) * (0.12 - gravity * 0.04),
         centerY + radius * 0.14
       );
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawSynergyResonanceMesh(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const strength = visual.synergyResonance;
+    const nodeCount = Math.max(4, Math.round(4 + strength * 6));
+    const points: Array<{ x: number; y: number }> = [];
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + strength * 1.8);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.08 + strength * 0.1);
+    for (let index = 0; index < nodeCount; index += 1) {
+      const angle = time * 0.4 + index * ((Math.PI * 2) / nodeCount);
+      const orbit = radius * (0.64 + (index % 3) * 0.12);
+      points.push({
+        x: centerX + Math.cos(angle) * orbit,
+        y: centerY + Math.sin(angle * (0.9 + strength * 0.22)) * orbit * 0.72
+      });
+    }
+    for (let index = 0; index < points.length; index += 1) {
+      const current = points[index];
+      const next = points[(index + 1) % points.length];
+      this.context.beginPath();
+      this.context.moveTo(current.x, current.y);
+      this.context.lineTo(next.x, next.y);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawCadenceConvergence(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const strength = visual.cadencePull;
+    const laneCount = Math.max(3, Math.round(3 + strength * 4));
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + strength * 2);
+    this.context.strokeStyle = alphaHex(visual.color, 0.08 + strength * 0.12);
+    for (let index = 0; index < laneCount; index += 1) {
+      const progress = (index + 1) / (laneCount + 1);
+      const x = progress * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.quadraticCurveTo(
+        centerX + Math.sin(time * 0.5 + index) * radius * 0.06,
+        centerY + radius * (0.58 + strength * 0.12),
+        centerX,
+        centerY + radius * 0.18
+      );
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawModalTensionCrossings(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const strength = visual.modalTension;
+    const lineCount = Math.max(3, Math.round(3 + strength * 5));
+    this.context.save();
+    this.context.translate(centerX, centerY);
+    this.context.lineWidth = Math.max(1, 1 + strength * 2.2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.1 + strength * 0.14);
+    for (let index = 0; index < lineCount; index += 1) {
+      const angle = time * (0.3 + strength * 0.2) + index * (Math.PI / lineCount);
+      this.context.beginPath();
+      this.context.moveTo(Math.cos(angle) * radius * 1.08, Math.sin(angle) * radius * 0.84);
+      this.context.lineTo(Math.cos(angle + Math.PI) * radius * 1.08, Math.sin(angle + Math.PI) * radius * 0.84);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawBlendCohesionBraids(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const strength = visual.blendCohesion;
+    const braidCount = Math.max(2, Math.round(2 + strength * 3));
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + strength * 1.8);
+    for (let index = 0; index < braidCount; index += 1) {
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.color : visual.secondaryColor, 0.08 + strength * 0.12);
+      for (let step = 0; step <= 20; step += 1) {
+        const progress = step / 20;
+        const angle = progress * Math.PI * 2 + time * 0.6 + index * 0.8;
+        const orbit = radius * (0.46 + index * 0.12 + Math.sin(progress * Math.PI * 4 + time) * 0.04);
+        const x = centerX + Math.cos(angle) * orbit;
+        const y = centerY + Math.sin(angle * 0.86) * orbit * 0.72;
+        if (step === 0) {
+          this.context.moveTo(x, y);
+        } else {
+          this.context.lineTo(x, y);
+        }
+      }
       this.context.stroke();
     }
     this.context.restore();

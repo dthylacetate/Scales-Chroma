@@ -82,6 +82,11 @@ describe("TheorySandbox", () => {
         attack: 0.38,
         swing: 0.7,
         gravity: 0.42,
+        synergy_resonance: 0.74,
+        cadence_pull: 0.68,
+        modal_tension: 0.24,
+        blend_cohesion: 0.7,
+        active_synergies: ["Cadential Lift", "Groove Pocket"],
         active_bonuses: ["Blue Hour Run"],
         particles: {
           density: 0.78,
@@ -399,6 +404,11 @@ describe("TheorySandbox", () => {
         attack: 0.28,
         swing: 0.62,
         gravity: 0.38,
+        synergy_resonance: 0.78,
+        cadence_pull: 0.72,
+        modal_tension: 0.18,
+        blend_cohesion: 0.76,
+        active_synergies: ["Cadential Lift", "Radiant Voicing"],
         active_bonuses: ["Celestial Bloom"],
         particles: {
           density: 0.72,
@@ -451,6 +461,11 @@ describe("TheorySandbox", () => {
           attack: 0.24,
           swing: 0.64,
           gravity: 0.36,
+          synergy_resonance: 0.64,
+          cadence_pull: 0.48,
+          modal_tension: 0.22,
+          blend_cohesion: 0.7,
+          active_synergies: ["Silken Resolve"],
           active_bonuses: ["Velvet Tide"],
           particles: {
             density: 0.72,
@@ -500,6 +515,11 @@ describe("TheorySandbox", () => {
           attack: 0.26,
           swing: 0.58,
           gravity: 0.34,
+          synergy_resonance: 0.8,
+          cadence_pull: 0.72,
+          modal_tension: 0.16,
+          blend_cohesion: 0.78,
+          active_synergies: ["Cadential Lift", "Radiant Voicing"],
           signature: "Celestial Bloom",
           active_bonuses: ["Celestial Bloom"],
           particles: {
@@ -524,6 +544,64 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Attack")).toBeInTheDocument();
     expect(screen.getByText("Swing")).toBeInTheDocument();
     expect(screen.getByText("Gravity")).toBeInTheDocument();
+  });
+
+  it("shows a theory synergy panel when the stack has strong interaction", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createAuthenticatedFetchMock({
+        visualResponse: {
+          color: "#cfd9ff",
+          secondary_color: "#8fdcff",
+          background_color: "#081018",
+          glow: 0.9,
+          energy: 0.78,
+          complexity: 0.66,
+          temperature: 0.48,
+          symmetry: 0.82,
+          depth: 0.82,
+          pulse_density: 0.72,
+          motion_speed: 0.66,
+          ring_count: 5,
+          ripple_strength: 0.76,
+          beam_strength: 0.62,
+          grain: 0.16,
+          growth_imprint: "jazz-lattice",
+          growth_imprint_intensity: 0.88,
+          openness: 0.82,
+          attack: 0.32,
+          swing: 0.68,
+          gravity: 0.72,
+          synergy_resonance: 0.84,
+          cadence_pull: 0.88,
+          modal_tension: 0.18,
+          blend_cohesion: 0.76,
+          active_synergies: ["Cadential Lift", "Radiant Voicing", "Color Convergence"],
+          signature: "Cadence Aurora",
+          active_bonuses: ["Cadence Aurora"],
+          particles: {
+            density: 0.76,
+            trail: false,
+            size: 2.3,
+            speed: 1.18,
+            spread: 0.54
+          },
+          geometry: "lattice",
+          animation_state: "flowing"
+        }
+      })
+    );
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Theory Synergy")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Resonance")).toBeInTheDocument();
+    expect(screen.getByText("Cadence Pull")).toBeInTheDocument();
+    expect(screen.getByText("Modal Tension")).toBeInTheDocument();
+    expect(screen.getByText("Blend Cohesion")).toBeInTheDocument();
+    expect(screen.getByText("Cadential Lift")).toBeInTheDocument();
   });
 
   it("loads and displays yearly practice heatmap entries", async () => {
@@ -718,6 +796,11 @@ interface TheorySandboxFetchOptions {
     attack?: number;
     swing?: number;
     gravity?: number;
+    synergy_resonance?: number;
+    cadence_pull?: number;
+    modal_tension?: number;
+    blend_cohesion?: number;
+    active_synergies?: string[];
     signature?: string;
     active_bonuses?: string[];
     particles: {
@@ -752,6 +835,11 @@ interface TheorySandboxFetchOptions {
     attack?: number;
     swing?: number;
     gravity?: number;
+    synergy_resonance?: number;
+    cadence_pull?: number;
+    modal_tension?: number;
+    blend_cohesion?: number;
+    active_synergies?: string[];
     signature?: string;
     active_bonuses?: string[];
     particles: {
@@ -811,6 +899,11 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
           attack: 0.36,
           swing: 0.42,
           gravity: 0.44,
+          synergy_resonance: 0.48,
+          cadence_pull: 0.42,
+          modal_tension: 0.32,
+          blend_cohesion: 0.56,
+          active_synergies: [],
           signature: "Maj7",
           active_bonuses: [],
           particles: {
@@ -954,6 +1047,11 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
         attack: 0.36,
         swing: 0.42,
         gravity: 0.44,
+        synergy_resonance: 0.48,
+        cadence_pull: 0.42,
+        modal_tension: 0.32,
+        blend_cohesion: 0.56,
+        active_synergies: [],
         signature: "Maj7",
         active_bonuses: [],
         particles: {

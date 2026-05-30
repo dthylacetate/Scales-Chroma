@@ -18,6 +18,10 @@ interface SandboxRenderResponse {
   attack?: number;
   swing?: number;
   gravity?: number;
+  synergy_resonance?: number;
+  cadence_pull?: number;
+  modal_tension?: number;
+  blend_cohesion?: number;
   symmetry?: number;
   depth?: number;
   pulse_density?: number;
@@ -31,6 +35,7 @@ interface SandboxRenderResponse {
   growth_imprint?: VisualParameters["growthImprint"];
   growth_imprint_intensity?: number;
   active_bonuses?: string[];
+  active_synergies?: string[];
   particles: {
     density: number;
     trail: boolean;
@@ -86,6 +91,10 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
     attack: response.attack ?? 0.32,
     swing: response.swing ?? 0.42,
     gravity: response.gravity ?? 0.48,
+    synergyResonance: response.synergy_resonance ?? 0.48,
+    cadencePull: response.cadence_pull ?? 0.42,
+    modalTension: response.modal_tension ?? 0.32,
+    blendCohesion: response.blend_cohesion ?? 0.56,
     symmetry: response.symmetry ?? 0.52,
     depth: response.depth ?? 0.56,
     pulseDensity: response.pulse_density ?? 0.48,
@@ -114,6 +123,7 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
       response.growth_imprint_intensity ??
       inferGrowthImprintIntensity(response.signature ?? "Pulse Field", response.active_bonuses ?? []),
     activeBonuses: response.active_bonuses ?? [],
+    activeSynergies: response.active_synergies ?? [],
     particles: {
       density: response.particles.density,
       trail: response.particles.trail,

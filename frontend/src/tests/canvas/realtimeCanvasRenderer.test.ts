@@ -32,7 +32,12 @@ const visual: VisualParameters = {
   attack: 0.34,
   swing: 0.68,
   gravity: 0.44,
+  synergyResonance: 0.72,
+  cadencePull: 0.66,
+  modalTension: 0.28,
+  blendCohesion: 0.74,
   activeBonuses: ["Cadence Aurora"],
+  activeSynergies: ["Cadential Lift"],
   particles: {
     density: 0.72,
     trail: false,
@@ -194,6 +199,35 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.fillRect).toHaveBeenCalled();
     expect(context?.lineTo).toHaveBeenCalled();
     expect(context?.stroke).toHaveBeenCalled();
+  });
+
+  it("draws systemic theory synergy overlays for strong harmonic interaction", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      synergyResonance: 0.84,
+      cadencePull: 0.78,
+      modalTension: 0.22,
+      blendCohesion: 0.8
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.arc).toHaveBeenCalled();
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.quadraticCurveTo).toHaveBeenCalled();
   });
 });
 

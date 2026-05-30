@@ -29,6 +29,10 @@ class AggregateVisualState:
     attack: float
     swing: float
     gravity: float
+    synergy_resonance: float
+    cadence_pull: float
+    modal_tension: float
+    blend_cohesion: float
     symmetry: float
     depth: float
     pulse_density: float
@@ -48,6 +52,7 @@ class AggregateVisualState:
     growth_imprint: str
     growth_imprint_intensity: float
     active_bonuses: list[str]
+    active_synergies: list[str]
 
 
 @dataclass(frozen=True)
@@ -86,7 +91,7 @@ COMBO_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
     ({"dorian", "ii-v-i"}, "Blue Hour Run", {"wave": 0.18, "lattice": 0.14, "ripple_strength": 0.18, "beam_strength": 0.1, "depth": 0.1, "pulse_density": 0.12, "valence": 0.04, "luminosity": 0.06, "arousal": 0.08, "grit": 0.02, "swing": 0.18, "gravity": 0.08, "signature": "Blue Hour Run", "secondary_color": "#7fe0c8"}),
     ({"phrygian", "dominant7"}, "Desert Voltage", {"fracture": 0.22, "contrast": 0.14, "beam_strength": 0.18, "energy": 0.1, "pulse_density": 0.14, "temperature": 0.12, "valence": -0.04, "luminosity": 0.02, "arousal": 0.14, "grit": 0.12, "signature": "Desert Voltage", "secondary_color": "#ff9b35"}),
     ({"harmonic minor", "dim7"}, "Occult Fracture", {"fracture": 0.24, "grain": 0.18, "complexity": 0.14, "glow": 0.1, "depth": 0.18, "pulse_density": 0.12, "symmetry": -0.12, "valence": -0.1, "luminosity": -0.08, "arousal": 0.12, "grit": 0.18, "attack": 0.12, "gravity": 0.14, "openness": -0.12, "swing": -0.08, "signature": "Occult Fracture", "background_color": "#05060d"}),
-    ({"melodic minor", "dominant7"}, "Chrome Meridian", {"wave": 0.16, "fracture": 0.12, "complexity": 0.16, "energy": 0.12, "depth": 0.14, "pulse_density": 0.1, "symmetry": 0.08, "valence": 0.04, "luminosity": 0.08, "arousal": 0.14, "grit": 0.08, "attack": 0.1, "swing": 0.14, "signature": "Chrome Meridian", "secondary_color": "#73f0d5"}),
+    ({"melodic minor", "dominant7"}, "Chrome Meridian", {"wave": 0.16, "fracture": 0.12, "complexity": 0.16, "energy": 0.12, "depth": 0.14, "pulse_density": 0.1, "symmetry": 0.08, "valence": 0.04, "luminosity": 0.08, "arousal": 0.14, "grit": 0.08, "attack": 0.1, "swing": 0.14, "blend_cohesion": 0.06, "signature": "Chrome Meridian", "secondary_color": "#73f0d5"}),
     ({"ii-v-i", "maj7"}, "Cadence Aurora", {"lattice": 0.2, "ripple_strength": 0.16, "beam_strength": 0.18, "depth": 0.12, "symmetry": 0.14, "valence": 0.1, "luminosity": 0.14, "arousal": 0.06, "grit": -0.04, "gravity": 0.18, "openness": 0.08, "signature": "Cadence Aurora", "secondary_color": "#c2b8ff"}),
     ({"i-v-vi-iv", "major"}, "Anthem Lift", {"orb": 0.22, "glow": 0.1, "energy": 0.12, "beam_strength": 0.12, "temperature": 0.1, "pulse_density": 0.12, "valence": 0.12, "luminosity": 0.14, "arousal": 0.1, "grit": -0.04, "signature": "Anthem Lift"}),
     ({"ionian", "i-v-vi-iv"}, "Daybreak Parade", {"orb": 0.18, "glow": 0.12, "beam_strength": 0.14, "ripple_strength": 0.08, "temperature": 0.14, "symmetry": 0.12, "valence": 0.16, "luminosity": 0.18, "arousal": 0.06, "grit": -0.08, "signature": "Daybreak Parade", "secondary_color": "#ffe5a8"}),
@@ -146,6 +151,7 @@ def render_visual_parameters(
     unlocks = set(unlocked_effects or [])
     aggregate_state = _aggregate_visual_state(elements)
     _apply_combo_bonuses(elements, aggregate_state)
+    _apply_theory_synergies(elements, aggregate_state)
     _apply_unlock_effects(aggregate_state, unlocks)
     growth_imprint, growth_imprint_intensity = _resolve_growth_imprint(elements, unlocks, aggregate_state.active_bonuses)
     aggregate_state.growth_imprint = growth_imprint
@@ -177,6 +183,10 @@ def render_visual_parameters(
         attack=round(aggregate_state.attack, 2),
         swing=round(aggregate_state.swing, 2),
         gravity=round(aggregate_state.gravity, 2),
+        synergy_resonance=round(aggregate_state.synergy_resonance, 2),
+        cadence_pull=round(aggregate_state.cadence_pull, 2),
+        modal_tension=round(aggregate_state.modal_tension, 2),
+        blend_cohesion=round(aggregate_state.blend_cohesion, 2),
         symmetry=round(aggregate_state.symmetry, 2),
         depth=round(aggregate_state.depth, 2),
         pulse_density=round(aggregate_state.pulse_density, 2),
@@ -190,6 +200,7 @@ def render_visual_parameters(
         growth_imprint=aggregate_state.growth_imprint,
         growth_imprint_intensity=round(aggregate_state.growth_imprint_intensity, 2),
         active_bonuses=aggregate_state.active_bonuses,
+        active_synergies=aggregate_state.active_synergies,
         geometry=geometry_shape,
         animation_state=animation_state,
         particles={
@@ -222,6 +233,10 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             attack=0.32,
             swing=0.42,
             gravity=0.48,
+            synergy_resonance=0.48,
+            cadence_pull=0.42,
+            modal_tension=0.32,
+            blend_cohesion=0.56,
             symmetry=_resolve_symmetry(
                 orb=base_profile.geometry.orb,
                 wave=base_profile.geometry.wave,
@@ -261,6 +276,7 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             growth_imprint="neutral",
             growth_imprint_intensity=0.0,
             active_bonuses=[],
+            active_synergies=[],
         )
 
     weighted_profiles: list[tuple[float, TheoryElement]] = []
@@ -386,6 +402,10 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         attack=max(0.0, min(1.0, attack + stack_bonus * 0.08)),
         swing=max(0.0, min(1.0, swing + stack_bonus * 0.08)),
         gravity=max(0.0, min(1.0, gravity + stack_bonus * 0.08)),
+        synergy_resonance=max(0.0, min(1.0, 0.26 + (openness * 0.22) + ((1.0 - grit) * 0.16) + (depth * 0.18) + stack_bonus * 0.1)),
+        cadence_pull=max(0.0, min(1.0, 0.18 + (gravity * 0.32) + stack_bonus * 0.08)),
+        modal_tension=max(0.0, min(1.0, 0.14 + (attack * 0.24) + (grit * 0.26) + ((1.0 - openness) * 0.12) + stack_bonus * 0.06)),
+        blend_cohesion=max(0.0, min(1.0, 0.24 + (openness * 0.16) + (depth * 0.14) + ((1.0 - contrast) * 0.08) + stack_bonus * 0.08)),
         symmetry=min(1.0, symmetry + stack_bonus * 0.12),
         depth=min(1.0, depth + stack_bonus * 0.2),
         pulse_density=min(1.0, pulse_density + stack_bonus * 0.22),
@@ -414,6 +434,7 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         growth_imprint="neutral",
         growth_imprint_intensity=0.0,
         active_bonuses=[],
+        active_synergies=[],
     )
 
 
@@ -446,6 +467,60 @@ def _apply_combo_bonuses(elements: list[TheoryElement], state: AggregateVisualSt
         luminosity=state.luminosity,
         grit=state.grit,
     )
+
+
+def _apply_theory_synergies(elements: list[TheoryElement], state: AggregateVisualState) -> None:
+    if not elements:
+        return
+
+    element_names = {element.name.casefold() for element in elements}
+    element_types = {element.type for element in elements}
+
+    if {"lydian", "ionian", "major"} & element_names and {"maj7", "major"} & element_names:
+        state.active_synergies.append("Radiant Voicing")
+        state.synergy_resonance = min(1.0, state.synergy_resonance + 0.16)
+        state.blend_cohesion = min(1.0, state.blend_cohesion + 0.12)
+        state.openness = min(1.0, state.openness + 0.08)
+        state.glow = min(1.0, state.glow + 0.06)
+        state.symmetry = min(1.0, state.symmetry + 0.06)
+
+    if "progression" in element_types and "chord" in element_types:
+        state.active_synergies.append("Cadential Lift")
+        state.cadence_pull = min(1.0, state.cadence_pull + 0.38)
+        state.synergy_resonance = min(1.0, state.synergy_resonance + 0.08)
+        state.depth = min(1.0, state.depth + 0.08)
+        state.beam_strength = min(1.0, state.beam_strength + 0.08)
+        state.gravity = min(1.0, state.gravity + 0.08)
+
+    if {"dorian", "mixolydian", "ii-v-i"} & element_names and {"min7", "dominant7"} & element_names:
+        state.active_synergies.append("Groove Pocket")
+        state.swing = min(1.0, state.swing + 0.16)
+        state.ripple_strength = min(1.0, state.ripple_strength + 0.08)
+        state.motion_speed = min(1.0, state.motion_speed + 0.06)
+        state.synergy_resonance = min(1.0, state.synergy_resonance + 0.1)
+
+    if {"harmonic minor", "phrygian"} & element_names and {"dim7", "dominant7", "aug"} & element_names:
+        state.active_synergies.append("Shadow Magnet")
+        state.modal_tension = min(1.0, state.modal_tension + 0.22)
+        state.attack = min(1.0, state.attack + 0.12)
+        state.gravity = min(1.0, state.gravity + 0.1)
+        state.contrast = min(1.0, state.contrast + 0.08)
+
+    if len(element_types) >= 3:
+        state.active_synergies.append("Color Convergence")
+        state.blend_cohesion = min(1.0, state.blend_cohesion + 0.22)
+        state.depth = min(1.0, state.depth + 0.06)
+        state.secondary_color = _blend_hexes(
+            [
+                (state.primary_color, 0.45),
+                (state.secondary_color, 0.35),
+                (state.background_color, 0.2),
+            ]
+        )
+
+    if len(state.active_synergies) > 1:
+        state.synergy_resonance = min(1.0, state.synergy_resonance + 0.08)
+        state.blend_cohesion = min(1.0, state.blend_cohesion + 0.08)
 
 
 def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str]) -> None:

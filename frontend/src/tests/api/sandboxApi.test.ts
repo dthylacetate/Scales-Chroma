@@ -21,6 +21,11 @@ describe("sandbox API service", () => {
         attack: 0.32,
         swing: 0.66,
         gravity: 0.41,
+        synergy_resonance: 0.74,
+        cadence_pull: 0.68,
+        modal_tension: 0.26,
+        blend_cohesion: 0.72,
+        active_synergies: ["Cadential Lift", "Radiant Voicing"],
         particles: {
           density: 0.74,
           trail: true
@@ -59,6 +64,11 @@ describe("sandbox API service", () => {
     expect(visual.attack).toBe(0.32);
     expect(visual.swing).toBe(0.66);
     expect(visual.gravity).toBe(0.41);
+    expect(visual.synergyResonance).toBe(0.74);
+    expect(visual.cadencePull).toBe(0.68);
+    expect(visual.modalTension).toBe(0.26);
+    expect(visual.blendCohesion).toBe(0.72);
+    expect(visual.activeSynergies).toContain("Cadential Lift");
   });
 
   it("throws a readable error when sandbox rendering fails", async () => {

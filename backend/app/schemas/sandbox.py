@@ -22,6 +22,10 @@ class VisualParameters(BaseModel):
     attack: float = Field(ge=0.0, le=1.0)
     swing: float = Field(ge=0.0, le=1.0)
     gravity: float = Field(ge=0.0, le=1.0)
+    synergy_resonance: float = Field(ge=0.0, le=1.0)
+    cadence_pull: float = Field(ge=0.0, le=1.0)
+    modal_tension: float = Field(ge=0.0, le=1.0)
+    blend_cohesion: float = Field(ge=0.0, le=1.0)
     symmetry: float = Field(ge=0.0, le=1.0)
     depth: float = Field(ge=0.0, le=1.0)
     pulse_density: float = Field(ge=0.0, le=1.0)
@@ -51,6 +55,7 @@ class VisualParameters(BaseModel):
     ]
     growth_imprint_intensity: float = Field(ge=0.0, le=1.0)
     active_bonuses: list[str]
+    active_synergies: list[str]
     particles: dict[str, float | bool]
     geometry: Literal["soft-orb", "fracture", "wave", "lattice"]
     animation_state: Literal["calm", "flowing", "tense", "explosive"]

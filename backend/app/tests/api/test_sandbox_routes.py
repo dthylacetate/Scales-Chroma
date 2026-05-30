@@ -44,6 +44,8 @@ def test_sandbox_render_maps_theory_elements_to_visual_parameters() -> None:
     assert payload["grit"] < 0.2
     assert payload["openness"] > 0.7
     assert payload["attack"] < 0.5
+    assert payload["synergy_resonance"] > 0.5
+    assert payload["blend_cohesion"] > 0.45
     assert payload["ring_count"] >= 2
 
 

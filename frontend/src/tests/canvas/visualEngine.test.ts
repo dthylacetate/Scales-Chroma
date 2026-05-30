@@ -44,6 +44,7 @@ describe("visual engine theory mapping", () => {
     expect(visual.depth).toBeGreaterThan(0.6);
     expect(visual.sceneFamily).toBe("solar-garden");
     expect(visual.gravity).toBeLessThan(0.5);
+    expect(visual.synergyResonance).toBeGreaterThan(0.65);
   });
 
   it("pushes high-energy tension combinations toward explosive fracture states", () => {

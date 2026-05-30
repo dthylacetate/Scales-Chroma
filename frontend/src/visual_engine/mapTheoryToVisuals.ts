@@ -52,6 +52,10 @@ const DEFAULT_VISUALS: VisualParameters = {
   attack: 0.32,
   swing: 0.42,
   gravity: 0.48,
+  synergyResonance: 0.48,
+  cadencePull: 0.42,
+  modalTension: 0.32,
+  blendCohesion: 0.56,
   symmetry: 0.52,
   depth: 0.56,
   pulseDensity: 0.48,
@@ -65,6 +69,7 @@ const DEFAULT_VISUALS: VisualParameters = {
   growthImprint: "neutral",
   growthImprintIntensity: 0,
   activeBonuses: [],
+  activeSynergies: [],
   particles: {
     density: 0.42,
     trail: false,
@@ -282,6 +287,7 @@ const COMBO_BONUSES = [
     grit: 0.08,
     attack: 0.1,
     swing: 0.14,
+    blendCohesion: 0.06,
     secondaryColor: "#73f0d5"
   }),
   combo(["ii-v-i", "maj7"], "Cadence Aurora", {
@@ -522,12 +528,17 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     attack: weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).attack),
     swing: weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).swing),
     gravity: weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).gravity),
+    synergyResonance: 0,
+    cadencePull: 0,
+    modalTension: 0,
+    blendCohesion: 0,
     symmetry: 0,
     depth: 0,
     pulseDensity: 0,
     signature: elements.length > 1 ? "Composite Pulse" : elements[0].name,
     sceneFamily: "neon-grid" as VisualParameters["sceneFamily"],
-    activeBonuses: [] as string[]
+    activeBonuses: [] as string[],
+    activeSynergies: [] as string[]
   };
   visual.symmetry = resolveSymmetry(visual.geometryWeights);
   visual.depth = resolveDepth(visual);
@@ -547,6 +558,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
   visual.attack = clamp01(weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).attack) + stackBonus * 0.08);
   visual.swing = clamp01(weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).swing) + stackBonus * 0.08);
   visual.gravity = clamp01(weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).gravity) + stackBonus * 0.08);
+  visual.synergyResonance = clamp01(0.26 + visual.openness * 0.22 + (1 - visual.grit) * 0.16 + visual.depth * 0.18 + stackBonus * 0.1);
+  visual.cadencePull = clamp01(0.18 + visual.gravity * 0.32 + stackBonus * 0.08);
+  visual.modalTension = clamp01(0.14 + visual.attack * 0.24 + visual.grit * 0.26 + (1 - visual.openness) * 0.12 + stackBonus * 0.06);
+  visual.blendCohesion = clamp01(0.24 + visual.openness * 0.16 + visual.depth * 0.14 + (1 - visual.contrast) * 0.08 + stackBonus * 0.08);
   visual.symmetry = clamp01(visual.symmetry + stackBonus * 0.12);
   visual.depth = clamp01(visual.depth + stackBonus * 0.2);
   visual.pulseDensity = clamp01(visual.pulseDensity + stackBonus * 0.22);
@@ -568,6 +583,8 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
       visual.signature = comboItem.name;
     }
   }
+
+  applyTheorySynergies(elements, names, visual);
 
   const geometry = dominantGeometry(visual.geometryWeights);
   visual.sceneFamily = inferSceneFamily(
@@ -607,6 +624,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     attack: round(visual.attack),
     swing: round(visual.swing),
     gravity: round(visual.gravity),
+    synergyResonance: round(visual.synergyResonance),
+    cadencePull: round(visual.cadencePull),
+    modalTension: round(visual.modalTension),
+    blendCohesion: round(visual.blendCohesion),
     symmetry: round(visual.symmetry),
     depth: round(visual.depth),
     pulseDensity: round(visual.pulseDensity),
@@ -620,6 +641,7 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     growthImprint: "neutral",
     growthImprintIntensity: 0,
     activeBonuses: visual.activeBonuses,
+    activeSynergies: visual.activeSynergies,
     particles,
     geometry,
     animationState
@@ -740,6 +762,10 @@ function applyComboEffects(
     attack: number;
     swing: number;
     gravity: number;
+    synergyResonance: number;
+    cadencePull: number;
+    modalTension: number;
+    blendCohesion: number;
     symmetry: number;
     depth: number;
     pulseDensity: number;
@@ -752,6 +778,7 @@ function applyComboEffects(
     signature: string;
     sceneFamily: VisualParameters["sceneFamily"];
     activeBonuses: string[];
+    activeSynergies: string[];
   },
   effects: Record<string, number | string>
 ): void {
@@ -775,6 +802,84 @@ function applyComboEffects(
     if (typeof currentValue === "number") {
       visual[key as keyof typeof visual] = clamp01(currentValue + value) as never;
     }
+  }
+}
+
+function applyTheorySynergies(
+  elements: TheoryElement[],
+  names: Set<string>,
+  visual: {
+    glow: number;
+    contrast: number;
+    depth: number;
+    rippleStrength: number;
+    motionSpeed: number;
+    beamStrength: number;
+    openness: number;
+    attack: number;
+    swing: number;
+    gravity: number;
+    synergyResonance: number;
+    cadencePull: number;
+    modalTension: number;
+    blendCohesion: number;
+    symmetry: number;
+    secondaryColor: string;
+    color: string;
+    backgroundColor: string;
+    activeSynergies: string[];
+  }
+): void {
+  const types = new Set(elements.map((element) => element.type));
+
+  if ((names.has("lydian") || names.has("ionian") || names.has("major")) && (names.has("maj7") || names.has("major"))) {
+    visual.activeSynergies.push("Radiant Voicing");
+    visual.synergyResonance = clamp01(visual.synergyResonance + 0.16);
+    visual.blendCohesion = clamp01(visual.blendCohesion + 0.12);
+    visual.openness = clamp01(visual.openness + 0.08);
+    visual.glow = clamp01(visual.glow + 0.06);
+    visual.symmetry = clamp01(visual.symmetry + 0.06);
+  }
+
+  if (types.has("progression") && types.has("chord")) {
+    visual.activeSynergies.push("Cadential Lift");
+    visual.cadencePull = clamp01(visual.cadencePull + 0.38);
+    visual.synergyResonance = clamp01(visual.synergyResonance + 0.08);
+    visual.depth = clamp01(visual.depth + 0.08);
+    visual.beamStrength = clamp01(visual.beamStrength + 0.08);
+    visual.gravity = clamp01(visual.gravity + 0.08);
+  }
+
+  if ((names.has("dorian") || names.has("mixolydian") || names.has("ii-v-i")) && (names.has("min7") || names.has("dominant7"))) {
+    visual.activeSynergies.push("Groove Pocket");
+    visual.swing = clamp01(visual.swing + 0.16);
+    visual.rippleStrength = clamp01(visual.rippleStrength + 0.08);
+    visual.motionSpeed = clamp01(visual.motionSpeed + 0.06);
+    visual.synergyResonance = clamp01(visual.synergyResonance + 0.1);
+  }
+
+  if ((names.has("harmonic minor") || names.has("phrygian")) && (names.has("dim7") || names.has("dominant7") || names.has("aug"))) {
+    visual.activeSynergies.push("Shadow Magnet");
+    visual.modalTension = clamp01(visual.modalTension + 0.22);
+    visual.attack = clamp01(visual.attack + 0.12);
+    visual.gravity = clamp01(visual.gravity + 0.1);
+    visual.contrast = clamp01(visual.contrast + 0.08);
+  }
+
+  if (types.size >= 3) {
+    visual.activeSynergies.push("Color Convergence");
+    visual.blendCohesion = clamp01(visual.blendCohesion + 0.22);
+    visual.depth = clamp01(visual.depth + 0.06);
+    visual.secondaryColor = blendHexes([
+      [visual.color, 0.45],
+      [visual.secondaryColor, 0.35],
+      [visual.backgroundColor, 0.2]
+    ]);
+  }
+
+  if (visual.activeSynergies.length > 1) {
+    visual.synergyResonance = clamp01(visual.synergyResonance + 0.08);
+    visual.blendCohesion = clamp01(visual.blendCohesion + 0.08);
   }
 }
 

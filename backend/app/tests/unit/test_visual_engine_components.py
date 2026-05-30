@@ -133,6 +133,8 @@ def test_renderer_supports_expanded_combo_library_for_modern_tension_blends() ->
     assert visual.pulse_density > 0.7
     assert visual.attack > 0.65
     assert visual.swing > 0.55
+    assert visual.synergy_resonance > 0.55
+    assert visual.blend_cohesion > 0.45
     assert visual.scene_family == "prism-array"
 
 
@@ -211,3 +213,21 @@ def test_renderer_exposes_musical_trait_axes_for_dark_tension_combinations() -> 
     assert visual.gravity > 0.7
     assert visual.openness < 0.35
     assert visual.swing < 0.45
+    assert visual.modal_tension > 0.75
+    assert visual.cadence_pull < 0.5
+
+
+def test_renderer_exposes_systemic_synergy_metrics_for_progression_and_chord_alignment() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="ii-v-i", type="progression", name="II-V-I"),
+            TheoryElement(id="maj7", type="chord", name="Maj7"),
+            TheoryElement(id="lydian", type="mode", name="Lydian"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert visual.synergy_resonance > 0.72
+    assert visual.cadence_pull > 0.7
+    assert visual.blend_cohesion > 0.58
+    assert "Cadential Lift" in visual.active_synergies

@@ -23,6 +23,10 @@ export interface VisualParameters {
   attack: number;
   swing: number;
   gravity: number;
+  synergyResonance: number;
+  cadencePull: number;
+  modalTension: number;
+  blendCohesion: number;
   symmetry: number;
   depth: number;
   pulseDensity: number;
@@ -44,6 +48,7 @@ export interface VisualParameters {
   growthImprint: "neutral" | "pentatonic-drive" | "jazz-lattice" | "metal-forge" | "neo-soul-veil" | "fusion-phase";
   growthImprintIntensity: number;
   activeBonuses: string[];
+  activeSynergies: string[];
   particles: {
     density: number;
     trail: boolean;
