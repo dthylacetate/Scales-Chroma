@@ -23,6 +23,8 @@ describe("sandbox API service", () => {
         phrase_hook_energy: 0.79,
         phrase_variation: "choir-step",
         phrase_variation_intensity: 0.9,
+        voiceprints: ["Sky Fan", "Velvet Halo", "Cadence Stairs"],
+        voiceprint_intensity: 0.94,
         scene_cascade: "aurora-dais",
         scene_cascade_intensity: 0.91,
         openness: 0.81,
@@ -76,6 +78,8 @@ describe("sandbox API service", () => {
     expect(visual.phraseHookEnergy).toBe(0.79);
     expect(visual.phraseVariation).toBe("choir-step");
     expect(visual.phraseVariationIntensity).toBe(0.9);
+    expect(visual.voiceprints).toEqual(["Sky Fan", "Velvet Halo", "Cadence Stairs"]);
+    expect(visual.voiceprintIntensity).toBe(0.94);
     expect(visual.sceneCascade).toBe("aurora-dais");
     expect(visual.sceneCascadeIntensity).toBe(0.91);
     expect(visual.openness).toBe(0.81);

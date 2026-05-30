@@ -34,6 +34,8 @@ const visual: VisualParameters = {
   phraseHookEnergy: 0.78,
   phraseVariation: "choir-step",
   phraseVariationIntensity: 0.9,
+  voiceprints: ["Sky Fan", "Velvet Halo", "Cadence Stairs"],
+  voiceprintIntensity: 0.94,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.88,
   openness: 0.82,
@@ -314,6 +316,32 @@ describe("RealtimeCanvasRenderer", () => {
       ...visual,
       phraseVariation: "phase-spiral",
       phraseVariationIntensity: 0.88
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
+  });
+
+  it("draws dedicated element voiceprints when individual modules leave stage traces", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      voiceprints: ["Voltage Spear", "Fracture Crown", "Cadence Stairs"],
+      voiceprintIntensity: 0.88
     });
 
     const context = canvas.getContext("2d");

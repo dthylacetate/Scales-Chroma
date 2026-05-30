@@ -53,6 +53,8 @@ export interface VisualParameters {
   phraseHookEnergy: number;
   phraseVariation: "neutral" | "choir-step" | "silk-orbit" | "hammer-fall" | "phase-spiral" | "spark-chase";
   phraseVariationIntensity: number;
+  voiceprints?: string[];
+  voiceprintIntensity?: number;
   sceneCascade:
     | "neutral"
     | "aurora-dais"

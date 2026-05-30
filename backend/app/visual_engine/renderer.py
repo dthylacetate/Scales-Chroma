@@ -57,6 +57,8 @@ class AggregateVisualState:
     phrase_hook_energy: float
     phrase_variation: str
     phrase_variation_intensity: float
+    voiceprints: list[str]
+    voiceprint_intensity: float
     scene_cascade: str
     scene_cascade_intensity: float
     active_bonuses: list[str]
@@ -193,6 +195,26 @@ PHRASE_VARIATION_RULES: tuple[tuple[str, str, str, float, dict[str, float]], ...
     ("pentatonic-drive", "runway-drive", "Spark Chase", 0.8, {"energy": 0.1, "motion_speed": 0.1, "pulse_density": 0.1, "beam_strength": 0.08}),
 )
 
+VOICEPRINT_RULES: dict[str, tuple[str, dict[str, float]]] = {
+    "major": ("Sun Ribbon", {"glow": 0.02, "luminosity": 0.02}),
+    "minor": ("Night Ribbon", {"depth": 0.02, "grit": 0.02}),
+    "pentatonic": ("Neon Ticks", {"pulse_density": 0.03, "motion_speed": 0.02}),
+    "harmonic minor": ("Altar Teeth", {"grain": 0.03, "modal_tension": 0.03}),
+    "melodic minor": ("Chrome Flow", {"complexity": 0.03, "blend_cohesion": 0.02}),
+    "ionian": ("Day Arch", {"symmetry": 0.02, "valence": 0.02}),
+    "dorian": ("Tide Braid", {"swing": 0.03, "ripple_strength": 0.02}),
+    "phrygian": ("Ember Veil", {"contrast": 0.02, "attack": 0.03}),
+    "lydian": ("Sky Fan", {"openness": 0.03, "beam_strength": 0.02}),
+    "mixolydian": ("Brass Rails", {"energy": 0.02, "attack": 0.02}),
+    "maj7": ("Velvet Halo", {"glow": 0.03, "depth": 0.02}),
+    "min7": ("Dusk Orbit", {"wave": 0.03, "blend_cohesion": 0.02}),
+    "dominant7": ("Voltage Spear", {"beam_strength": 0.03, "gravity": 0.03}),
+    "dim7": ("Fracture Crown", {"fracture": 0.03, "grain": 0.02}),
+    "aug": ("Prism Spike", {"complexity": 0.03, "attack": 0.02}),
+    "ii-v-i": ("Cadence Stairs", {"cadence_pull": 0.03, "gravity": 0.03}),
+    "i-v-vi-iv": ("Anthem Lane", {"motion_speed": 0.02, "valence": 0.02}),
+}
+
 
 def render_visual_parameters(
     elements: list[TheoryElement],
@@ -221,6 +243,9 @@ def render_visual_parameters(
     phrase_variation, phrase_variation_intensity = _resolve_phrase_variation(aggregate_state)
     aggregate_state.phrase_variation = phrase_variation
     aggregate_state.phrase_variation_intensity = phrase_variation_intensity
+    voiceprints, voiceprint_intensity = _resolve_voiceprints(elements, aggregate_state)
+    aggregate_state.voiceprints = voiceprints
+    aggregate_state.voiceprint_intensity = voiceprint_intensity
     particles = configure_particles(
         density_seed=aggregate_state.particle_density,
         energy=aggregate_state.energy,
@@ -270,6 +295,8 @@ def render_visual_parameters(
         phrase_hook_energy=round(aggregate_state.phrase_hook_energy, 2),
         phrase_variation=aggregate_state.phrase_variation,
         phrase_variation_intensity=round(aggregate_state.phrase_variation_intensity, 2),
+        voiceprints=aggregate_state.voiceprints,
+        voiceprint_intensity=round(aggregate_state.voiceprint_intensity, 2),
         scene_cascade=aggregate_state.scene_cascade,
         scene_cascade_intensity=round(aggregate_state.scene_cascade_intensity, 2),
         active_bonuses=aggregate_state.active_bonuses,
@@ -354,6 +381,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             phrase_hook_energy=0.0,
             phrase_variation="neutral",
             phrase_variation_intensity=0.0,
+            voiceprints=[],
+            voiceprint_intensity=0.0,
             scene_cascade="neutral",
             scene_cascade_intensity=0.0,
             active_bonuses=[],
@@ -520,6 +549,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         phrase_hook_energy=0.0,
         phrase_variation="neutral",
         phrase_variation_intensity=0.0,
+        voiceprints=[],
+        voiceprint_intensity=0.0,
         scene_cascade="neutral",
         scene_cascade_intensity=0.0,
         active_bonuses=[],
@@ -1243,6 +1274,37 @@ def _resolve_phrase_variation(state: AggregateVisualState) -> tuple[str, float]:
         return label.casefold().replace(" ", "-"), round(intensity, 2)
 
     return "neutral", 0.0
+
+
+def _resolve_voiceprints(elements: list[TheoryElement], state: AggregateVisualState) -> tuple[list[str], float]:
+    if not elements:
+        return [], 0.0
+
+    voiceprints: list[str] = []
+    for element in elements:
+        voiceprint = VOICEPRINT_RULES.get(element.name.casefold())
+        if not voiceprint:
+            continue
+
+        label, bonus = voiceprint
+        _append_unique(voiceprints, label)
+        _apply_scaled_bonus(state, bonus, 0.34)
+
+    if not voiceprints:
+        return [], 0.0
+
+    intensity = min(
+        1.0,
+        0.34
+        + len(voiceprints) * 0.14
+        + state.blend_cohesion * 0.16
+        + state.complexity * 0.14
+        + state.scene_cascade_intensity * 0.08
+        + state.phrase_variation_intensity * 0.08,
+    )
+    state.depth = min(1.0, state.depth + intensity * 0.03)
+    state.pulse_density = min(1.0, state.pulse_density + intensity * 0.02)
+    return voiceprints[:4], round(intensity, 2)
 
 
 def _apply_scaled_bonus(

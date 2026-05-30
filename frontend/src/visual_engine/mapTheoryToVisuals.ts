@@ -74,6 +74,8 @@ const DEFAULT_VISUALS: VisualParameters = {
   phraseHookEnergy: 0,
   phraseVariation: "neutral",
   phraseVariationIntensity: 0,
+  voiceprints: [],
+  voiceprintIntensity: 0,
   sceneCascade: "neutral",
   sceneCascadeIntensity: 0,
   activeBonuses: [],
@@ -641,6 +643,8 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     phraseHookEnergy: 0,
     phraseVariation: "neutral" as VisualParameters["phraseVariation"],
     phraseVariationIntensity: 0,
+    voiceprints: [] as string[],
+    voiceprintIntensity: 0,
     sceneCascade: "neutral" as VisualParameters["sceneCascade"],
     sceneCascadeIntensity: 0,
     activeBonuses: [] as string[],
@@ -710,6 +714,7 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
   visual.phraseTrajectory = phraseTrajectory.trajectory;
   visual.phraseTrajectoryIntensity = phraseTrajectory.intensity;
   applyPhraseHooks(elements, visual);
+  const voiceprints = resolveVoiceprints(elements, visual);
   const animationState = dominantAnimationState(visual);
   const ringCount = Math.max(2, Math.min(8, Math.floor(2 + visual.rippleStrength * 3 + visual.complexity * 2)));
   const particles = {
@@ -759,6 +764,8 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     phraseHookEnergy: round(visual.phraseHookEnergy),
     phraseVariation: "neutral",
     phraseVariationIntensity: 0,
+    voiceprints,
+    voiceprintIntensity: round(resolveVoiceprintIntensity(voiceprints, visual)),
     sceneCascade: visual.sceneCascade,
     sceneCascadeIntensity: round(visual.sceneCascadeIntensity),
     activeBonuses: visual.activeBonuses,
@@ -1282,6 +1289,69 @@ function applyPhraseHooks(
     visual.depth = clamp01(visual.depth + hits * 0.02);
     visual.motionSpeed = clamp01(visual.motionSpeed + hits * 0.02);
   }
+}
+
+function resolveVoiceprints(
+  elements: TheoryElement[],
+  visual: {
+    blendCohesion: number;
+    complexity: number;
+    sceneCascadeIntensity: number;
+    phraseVariationIntensity: number;
+  }
+): string[] {
+  const voiceprintMap: Record<string, string> = {
+    major: "Sun Ribbon",
+    minor: "Night Ribbon",
+    pentatonic: "Neon Ticks",
+    "harmonic minor": "Altar Teeth",
+    "melodic minor": "Chrome Flow",
+    ionian: "Day Arch",
+    dorian: "Tide Braid",
+    phrygian: "Ember Veil",
+    lydian: "Sky Fan",
+    mixolydian: "Brass Rails",
+    maj7: "Velvet Halo",
+    min7: "Dusk Orbit",
+    dominant7: "Voltage Spear",
+    dim7: "Fracture Crown",
+    aug: "Prism Spike",
+    "ii-v-i": "Cadence Stairs",
+    "i-v-vi-iv": "Anthem Lane"
+  };
+  const voiceprints: string[] = [];
+
+  elements.forEach((element) => {
+    const label = voiceprintMap[element.name.toLowerCase()];
+    if (label && !voiceprints.includes(label)) {
+      voiceprints.push(label);
+    }
+  });
+
+  return voiceprints.slice(0, 4);
+}
+
+function resolveVoiceprintIntensity(
+  voiceprints: string[],
+  visual: {
+    blendCohesion: number;
+    complexity: number;
+    sceneCascadeIntensity: number;
+    phraseVariationIntensity: number;
+  }
+): number {
+  if (voiceprints.length === 0) {
+    return 0;
+  }
+
+  return clamp01(
+    0.34 +
+      voiceprints.length * 0.14 +
+      visual.blendCohesion * 0.16 +
+      visual.complexity * 0.14 +
+      visual.sceneCascadeIntensity * 0.08 +
+      visual.phraseVariationIntensity * 0.08
+  );
 }
 
 function applySceneCascadeEnhancements(

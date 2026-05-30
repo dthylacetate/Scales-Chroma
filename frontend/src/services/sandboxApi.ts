@@ -40,6 +40,8 @@ interface SandboxRenderResponse {
   phrase_hook_energy?: number;
   phrase_variation?: VisualParameters["phraseVariation"];
   phrase_variation_intensity?: number;
+  voiceprints?: string[];
+  voiceprint_intensity?: number;
   scene_cascade?: VisualParameters["sceneCascade"];
   scene_cascade_intensity?: number;
   active_bonuses?: string[];
@@ -139,6 +141,8 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
     phraseHookEnergy: response.phrase_hook_energy ?? 0,
     phraseVariation: response.phrase_variation ?? "neutral",
     phraseVariationIntensity: response.phrase_variation_intensity ?? 0,
+    voiceprints: response.voiceprints ?? [],
+    voiceprintIntensity: response.voiceprint_intensity ?? 0,
     sceneCascade:
       response.scene_cascade ??
       inferSceneCascade(

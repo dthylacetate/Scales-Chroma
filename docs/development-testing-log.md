@@ -1427,6 +1427,72 @@ Vite 构建通过
   - 页面会真实出现 `Phrase Variation`
   - 左上角会真实出现 `Variation: Choir Step`
   - 在同一条 Jazz 预览链路里，`Valence` 会从 `1.00` 降到 `0.50`
+
+## 最新一轮：Element Voiceprints 模块痕迹层
+
+这一轮继续往“每块积木都得被看见”这个方向推进。
+
+目标：
+
+- 不只让用户看到总签名、总轨迹、总级联。
+- 还要让用户能直接看见：当前组合里的每个模块，分别给舞台留下了什么独立痕迹。
+
+实现方式：
+
+- 后端 `/sandbox/render` 新增：
+  - `voiceprints`
+  - `voiceprint_intensity`
+- 当前已接入的模块痕迹包括：
+  - `Sky Fan`
+  - `Velvet Halo`
+  - `Cadence Stairs`
+  - `Tide Braid`
+  - `Voltage Spear`
+  - `Fracture Crown`
+  - `Prism Spike`
+  - `Anthem Lane`
+  - 以及其他音阶/调式/和弦/进行对应的独立舞台纹理
+- 前端新增 `frontend/src/visual_engine/stageVoiceprints.ts`
+- `RealtimeCanvasRenderer` 新增 voiceprint 演出层
+- `TheorySandbox` 新增右侧 `Element Voiceprints` 面板，左上角新增 `Voices: ...`
+
+这层现在的意义：
+
+- `Signature` 负责告诉你“这场整体像什么”。
+- `Phrase Trajectory / Hooks / Variation` 负责告诉你“这句话怎么走”。
+- `Element Voiceprints` 负责告诉你“每个模块分别在舞台上留下了什么痕迹”。
+
+对应测试：
+
+- 后端单元测试：
+  - 验证 `Lydian + Maj7 + II-V-I` 会返回 `Sky Fan / Velvet Halo / Cadence Stairs`
+- 后端 API 测试：
+  - 验证 `/sandbox/render` 会返回 `voiceprints` 与 `voiceprint_intensity`
+- 前端 service 测试：
+  - 验证 `renderSandboxVisual(...)` 会正确归一化 `voiceprints`
+- 前端 visual engine 测试：
+  - 新增 `stageVoiceprints.test.ts`
+- 前端 Canvas 测试：
+  - 验证渲染器会真的画出 voiceprint 层
+- 前端 UI 测试：
+  - 验证右侧 `Element Voiceprints` 面板与左上角 `Voices: 3` 会同时出现
+
+验证结果：
+
+- 后端：`97 passed, 1 warning`
+- 前端：`101 passed`
+- 前端 build：通过
+
+真实页面烟测补充：
+
+- `scripts/visual-smoke.mjs` 这轮继续升级，新增：
+  - 对 `Lydian -> Maj7 -> II-V-I` 等待 `Element Voiceprints`
+  - 等待 `Sky Fan`
+  - 等待 `Cadence Stairs`
+- 烟测结果通过，确认：
+  - 页面会真实出现 `Element Voiceprints`
+  - 左上角会真实出现 `Voices: 3`
+  - 同一条链路里 `hasVoiceprints: true`
 ```
 
 ## 当前覆盖能力

@@ -29,6 +29,7 @@ import { getStageProjectionScript } from "../visual_engine/stageProjectionScript
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { getStageSynergyGlyph } from "../visual_engine/stageSynergyGlyphs";
 import { getStageTakeoverMode } from "../visual_engine/stageTakeoverModes";
+import { getStageVoiceprints } from "../visual_engine/stageVoiceprints";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
 
 const THEORY_LIBRARY: TheoryElement[] = [
@@ -462,6 +463,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStagePhraseVariation(visual) ? (
                 <div className="text-[11px] text-[#c4f3ff]">Variation: {getStagePhraseVariation(visual)?.label}</div>
               ) : null}
+              {(visual.voiceprints?.length ?? 0) > 0 ? <div className="text-[11px] text-[#ffd7ff]">Voices: {visual.voiceprints?.length}</div> : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -591,6 +593,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <StagePhraseTrajectoryPanel visual={visual} />
           <PhraseHooksPanel visual={visual} />
           <PhraseVariationPanel visual={visual} />
+          <ElementVoiceprintsPanel visual={visual} />
           <GrowthImprintPanel visual={visual} />
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
@@ -1315,6 +1318,46 @@ function PhraseVariationPanel({ visual }: { visual: VisualParameters }) {
   );
 }
 
+function ElementVoiceprintsPanel({ visual }: { visual: VisualParameters }) {
+  const voiceprints = getStageVoiceprints(visual);
+  const intensity = visual.voiceprintIntensity ?? 0;
+
+  if (voiceprints.length === 0 || intensity <= 0.05) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#4d2d4b] bg-[#211821] p-3">
+      <div className="text-xs uppercase text-stone-400">Element Voiceprints</div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium text-stone-100">{voiceprints.length} Voices</div>
+          <div className="mt-1 text-xs text-stone-400">当前组合里的每个模块都会在舞台上留下自己的独立纹理。</div>
+        </div>
+        <div className="text-sm font-semibold text-[#f4b8ff]">{Math.round(intensity * 100)}%</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#170f16]">
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${Math.max(6, Math.round(intensity * 100))}%`,
+            background: "linear-gradient(90deg, rgba(244, 184, 255, 0.35) 0%, rgba(244, 184, 255, 1) 100%)"
+          }}
+        />
+      </div>
+      <div className="mt-3 grid gap-2">
+        {voiceprints.map((voiceprint) => (
+          <div key={voiceprint.label} className="rounded-md border border-white/5 bg-white/5 px-2 py-1.5 text-xs text-stone-300">
+            <div className="font-medium text-stone-100">{voiceprint.label}</div>
+            <div className="mt-1">{voiceprint.pattern}</div>
+            <div className="mt-1 text-stone-400">{voiceprint.impact}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
   const reading = buildGrowthImprintReading(visual);
 
@@ -1758,6 +1801,10 @@ function buildStageReading(
     visual.phraseVariation !== "neutral"
       ? `；Growth 还把当前句法进一步改写成 ${phraseVariationLabel(visual.phraseVariation)}，强度 ${Math.round(visual.phraseVariationIntensity * 100)}%`
       : "；当前 Growth 还没有把句法推进改写成独立变体";
+  const voiceprintText =
+    (visual.voiceprints?.length ?? 0) > 0
+      ? `；当前模块已经留下 ${visual.voiceprints?.join("、")} 这些独立舞台痕迹`
+      : "；当前模块还没有形成独立可读的舞台痕迹";
   const cascadeText =
     visual.sceneCascade !== "neutral"
       ? `；当前还触发了 ${sceneCascadeLabel(visual.sceneCascade)}，强度 ${Math.round(visual.sceneCascadeIntensity * 100)}%`
@@ -1768,7 +1815,7 @@ function buildStageReading(
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${variationText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${variationText}${voiceprintText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
   };
 }
 
