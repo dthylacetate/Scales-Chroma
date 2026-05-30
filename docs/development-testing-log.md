@@ -81,6 +81,34 @@
 - 前端：`59 passed`
 - 前端 build：通过
 
+下一轮继续补的是“Growth 改写 Scene Cascade”：
+
+- 目标：同一个三元组合在不同成长轨迹下，不只是多一层纹理，而是让级联本身继续分化。
+- 实现方式：
+  - 后端新增 `GROWTH_CASCADE_RULES`
+  - 当 `scene_cascade` 与 `growth_imprint` 命中特定组合时，会追加新的 `active_bonuses`
+  - 并进一步改写几何主导、色彩落点、深度或秩序感
+- 当前已落地的例子：
+  - `aurora-dais + jazz-lattice` -> `Choir Vault`
+  - `aurora-dais + neo-soul-veil` -> `Silken Halo`
+  - `velvet-arcade + neo-soul-veil` -> `Rose Arcade`
+  - `eclipse-altar + metal-forge` -> `Forge Throne`
+  - `prism-vortex + fusion-phase` -> `Phase Cloister`
+  - `tide-runway + pentatonic-drive` -> `Neon Causeway`
+
+对应验证：
+
+- 后端新增单元测试，确认同一 `Lydian + Maj7 + II-V-I` 在 Jazz Growth 解锁后：
+  - 仍然保持 `aurora-dais`
+  - 但会新增 `Choir Vault`
+  - 并把主导几何从 `soft-orb` 推向 `lattice`
+- 前端右侧 `Scene Cascade` 面板新增“成长染色”说明
+- 前端 Canvas 在不同 `growthImprint` 下会为同一个级联额外长出不同结构线和氛围层
+
+补测结果：
+
+- 后端：`87 passed, 1 warning`
+
 烟测补充说明：
 
 - 本地浏览器链路已经真实跑到注册、练习记录、连续 `/sandbox/render` 请求和截图落盘。
