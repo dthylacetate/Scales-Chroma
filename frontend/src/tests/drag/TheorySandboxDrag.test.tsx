@@ -11,7 +11,7 @@ describe("TheorySandbox drag composition", () => {
 
     const lane = screen.getByLabelText("乐理编排轨道");
     expect(within(lane).getByText("Dorian")).toBeInTheDocument();
-    expect(screen.getByText("wave")).toBeInTheDocument();
+    expect(screen.getByText("波形几何")).toBeInTheDocument();
   });
 
   it("lets the visual stage accept dragged theory blocks directly", () => {
@@ -21,7 +21,7 @@ describe("TheorySandbox drag composition", () => {
 
     const lane = screen.getByLabelText("乐理编排轨道");
     expect(within(lane).getByText("Maj7")).toBeInTheDocument();
-    expect(screen.getByText("soft-orb")).toBeInTheDocument();
+    expect(screen.getByText("软球体几何")).toBeInTheDocument();
   });
 
   it("removes a block from the composition lane", () => {
@@ -51,7 +51,7 @@ describe("TheorySandbox drag composition", () => {
 
     const lane = screen.getByLabelText("乐理编排轨道");
     expect(lane.textContent).toMatch(/Dim7.*Dorian/);
-    expect(screen.getByText("wave")).toBeInTheDocument();
+    expect(screen.getByText("波形几何")).toBeInTheDocument();
   });
 
   it("replaces a lane block when a library block is dropped on it", () => {
@@ -65,8 +65,8 @@ describe("TheorySandbox drag composition", () => {
     expect(within(lane).getByText("Maj7")).toBeInTheDocument();
     expect(within(lane).getByText("Phrygian")).toBeInTheDocument();
     expect(within(lane).queryByText("Dorian")).not.toBeInTheDocument();
-    expect(screen.getByText("soft-orb")).toBeInTheDocument();
-    expect(screen.getByText("flowing")).toBeInTheDocument();
+    expect(screen.getByText("软球体几何")).toBeInTheDocument();
+    expect(screen.getByText("流动动画")).toBeInTheDocument();
   });
 });
 
@@ -129,9 +129,9 @@ function replaceLaneBlock(sourceName: string, targetName: string): void {
 
 function libraryButtonName(name: string): string {
   const types: Record<string, string> = {
-    Dorian: "mode",
-    Dim7: "chord",
-    Maj7: "chord",
+    Dorian: "调式",
+    Dim7: "和弦",
+    Maj7: "和弦",
   };
 
   return `${name} ${types[name]}`;

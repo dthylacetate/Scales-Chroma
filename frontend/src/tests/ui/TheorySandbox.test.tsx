@@ -21,34 +21,54 @@ describe("TheorySandbox", () => {
     expect(screen.getByRole("button", { name: /Maj7/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Phrygian/ })).toBeInTheDocument();
     expect(screen.getByLabelText("实时音乐视觉舞台")).toBeInTheDocument();
-    expect(screen.getByText("Mood Axes")).toBeInTheDocument();
-    expect(screen.getAllByText("Valence").length).toBeGreaterThan(0);
+    expect(screen.getByText("情绪读数")).toBeInTheDocument();
+    expect(screen.getAllByText("明暗情绪").length).toBeGreaterThan(0);
   });
 
   it("renders the complete planned theory element library", () => {
     render(<TheorySandbox />);
 
+    expect(screen.getByRole("heading", { name: "音阶" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "调式" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "和弦类型" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "和弦进行" })).toBeInTheDocument();
+
     [
-      "Major scale",
-      "Minor scale",
-      "Pentatonic scale",
-      "Harmonic Minor scale",
-      "Melodic Minor scale",
-      "Ionian mode",
-      "Dorian mode",
-      "Phrygian mode",
-      "Lydian mode",
-      "Mixolydian mode",
-      "Maj7 chord",
-      "Min7 chord",
-      "Dominant7 chord",
-      "Dim7 chord",
-      "Aug chord",
-      "II-V-I progression",
-      "I-V-vi-IV progression"
+      "Major 音阶",
+      "Minor 音阶",
+      "Pentatonic 音阶",
+      "Harmonic Minor 音阶",
+      "Melodic Minor 音阶",
+      "Ionian 调式",
+      "Dorian 调式",
+      "Phrygian 调式",
+      "Lydian 调式",
+      "Mixolydian 调式",
+      "Maj7 和弦",
+      "Min7 和弦",
+      "Dominant7 和弦",
+      "Dim7 和弦",
+      "Aug 和弦",
+      "II-V-I 进行",
+      "I-V-vi-IV 进行"
     ].forEach((name) => {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     });
+  });
+
+  it("adds a custom chord progression and explains compatibility in plain language", () => {
+    render(<TheorySandbox />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Lydian 调式" }));
+    fireEvent.change(screen.getByLabelText("自定义进行"), { target: { value: "ii-V-I" } });
+
+    expect(screen.getByText(/很相容/)).toBeInTheDocument();
+    expect(screen.getByText(/有明显“回家”的感觉/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "加入自定义进行" }));
+
+    const lane = screen.getByLabelText("乐理编排轨道");
+    expect(lane.textContent).toContain("Custom ii-V-I");
   });
 
   it("updates visual readout when a theory element is selected", () => {
@@ -57,8 +77,8 @@ describe("TheorySandbox", () => {
     fireEvent.click(screen.getByRole("button", { name: /Dim7/ }));
 
     expect(screen.getAllByText("Dim7").length).toBeGreaterThan(0);
-    expect(screen.getByText("fracture")).toBeInTheDocument();
-    expect(screen.getByText("tense")).toBeInTheDocument();
+    expect(screen.getByText("碎裂几何")).toBeInTheDocument();
+    expect(screen.getByText("紧张动画")).toBeInTheDocument();
   });
 
   it("applies backend-enhanced visuals when an authenticated api session is provided", async () => {
@@ -116,16 +136,16 @@ describe("TheorySandbox", () => {
     render(<TheorySandbox {...AUTH_PROPS} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Trail")).toBeInTheDocument();
+      expect(screen.getByText("粒子拖尾")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("On")).toBeInTheDocument();
+    expect(screen.getByText("开启")).toBeInTheDocument();
     expect(screen.getAllByText("Blue Hour Run").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Velvet Arcade").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Silk Orbit").length).toBeGreaterThan(0);
-    expect(screen.getByText("Element Voiceprints")).toBeInTheDocument();
+    expect(screen.getByText("模块痕迹")).toBeInTheDocument();
     expect(screen.getAllByText("Tide Braid").length).toBeGreaterThan(0);
-    expect(screen.getByText("Element Roles")).toBeInTheDocument();
+    expect(screen.getByText("舞台席位")).toBeInTheDocument();
     expect(screen.getAllByText("Tide Lens").length).toBeGreaterThan(0);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://api.test/sandbox/render",
@@ -177,7 +197,7 @@ describe("TheorySandbox", () => {
     render(<TheorySandbox {...AUTH_PROPS} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Growth Lens Preview")).toBeInTheDocument();
+      expect(screen.getByText("成长路线预览")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /Neo Soul/ }));
@@ -261,8 +281,8 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Phrase Trajectory")).toBeInTheDocument();
     expect(screen.getByText("Phrase Hooks")).toBeInTheDocument();
     expect(screen.getByText("Phrase Variation")).toBeInTheDocument();
-    expect(screen.getByText("Element Voiceprints")).toBeInTheDocument();
-    expect(screen.getByText("Element Roles")).toBeInTheDocument();
+    expect(screen.getByText("模块痕迹")).toBeInTheDocument();
+    expect(screen.getByText("舞台席位")).toBeInTheDocument();
     expect(screen.getAllByText("Cathedral Descent").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Lift Arc").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Skyline Rise").length).toBeGreaterThan(0);
@@ -278,18 +298,18 @@ describe("TheorySandbox", () => {
     expect(screen.getAllByText("Bloom Haze").length).toBeGreaterThan(0);
     expect(screen.getByText(/顶部吊架、纵向窗格、拱形合唱廊/)).toBeInTheDocument();
     expect(screen.getByText(/顶部冷色吊灯和下压式礼堂光柱会持续往中心汇聚/)).toBeInTheDocument();
-    expect(screen.getByText(/Setpiece: Choir Vault/)).toBeInTheDocument();
-    expect(screen.getByText(/Cue: Cathedral Descent/)).toBeInTheDocument();
-    expect(screen.getByText(/Projection: Aisle Lattice/)).toBeInTheDocument();
-    expect(screen.getByText(/Motion: Choir Crowns/)).toBeInTheDocument();
-    expect(screen.getByText(/Takeover: Cathedral Iris/)).toBeInTheDocument();
-    expect(screen.getByText(/Glyph: Horizon Bloom/)).toBeInTheDocument();
-    expect(screen.getByText(/Climate: Bloom Haze/)).toBeInTheDocument();
-    expect(screen.getByText(/Trajectory: Lift Arc/)).toBeInTheDocument();
-    expect(screen.getByText(/Hooks: 2/)).toBeInTheDocument();
-    expect(screen.getByText(/Variation: Choir Step/)).toBeInTheDocument();
-    expect(screen.getByText(/Voices: 3/)).toBeInTheDocument();
-    expect(screen.getByText(/Roles: 3/)).toBeInTheDocument();
+    expect(screen.getByText(/大型装置：Choir Vault/)).toBeInTheDocument();
+    expect(screen.getByText(/导演节奏：Cathedral Descent/)).toBeInTheDocument();
+    expect(screen.getByText(/地面投影：Aisle Lattice/)).toBeInTheDocument();
+    expect(screen.getByText(/前景机构：Choir Crowns/)).toBeInTheDocument();
+    expect(screen.getByText(/换场方式：Cathedral Iris/)).toBeInTheDocument();
+    expect(screen.getByText(/组合徽记：Horizon Bloom/)).toBeInTheDocument();
+    expect(screen.getByText(/空气质感：Bloom Haze/)).toBeInTheDocument();
+    expect(screen.getByText(/整体走向：Lift Arc/)).toBeInTheDocument();
+    expect(screen.getByText(/连接动作：2/)).toBeInTheDocument();
+    expect(screen.getByText(/成长改写：Choir Step/)).toBeInTheDocument();
+    expect(screen.getByText(/模块痕迹：3/)).toBeInTheDocument();
+    expect(screen.getByText(/舞台席位：3/)).toBeInTheDocument();
     expect(screen.getByText(/成组下压，像礼堂灯柱一层层往中心落/)).toBeInTheDocument();
     expect(screen.getByText(/从前场两翼往上拱，再在舞台上方收成一个高点/)).toBeInTheDocument();
     expect(screen.getByText(/明亮开放的起点会先抬一小段/)).toBeInTheDocument();
@@ -451,7 +471,7 @@ describe("TheorySandbox", () => {
     render(<TheorySandbox {...AUTH_PROPS} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Off")).toBeInTheDocument();
+      expect(screen.getByText("关闭")).toBeInTheDocument();
     });
 
     fireEvent.change(screen.getByLabelText("练习时长"), { target: { value: "610" } });
@@ -460,7 +480,7 @@ describe("TheorySandbox", () => {
     fireEvent.click(screen.getByRole("button", { name: "记录练习" }));
 
     await waitFor(() => {
-      expect(screen.getByText("On")).toBeInTheDocument();
+      expect(screen.getByText("开启")).toBeInTheDocument();
     });
     expect(screen.getByText("Unlocked particle_trail")).toBeInTheDocument();
     expect(screen.getByText("Unlocked neon_glow")).toBeInTheDocument();
@@ -520,7 +540,7 @@ describe("TheorySandbox", () => {
     await waitFor(() => {
       expect(screen.getByText("Unlocked Effects")).toBeInTheDocument();
     });
-    expect(screen.getByText("粒子拖尾")).toBeInTheDocument();
+    expect(screen.getAllByText("粒子拖尾").length).toBeGreaterThan(0);
     expect(screen.getByText("拖尾粒子会延长动作残影，让速度感更明显。")).toBeInTheDocument();
     expect(screen.getByText("五声音阶累计练习达到 10 小时")).toBeInTheDocument();
   });
@@ -615,11 +635,11 @@ describe("TheorySandbox", () => {
     render(<TheorySandbox {...AUTH_PROPS} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Stage Reading")).toBeInTheDocument();
+      expect(screen.getByText("舞台解读")).toBeInTheDocument();
     });
-    expect(screen.getByText(/当前舞台由 Ionian 主导/)).toBeInTheDocument();
-    expect(screen.getByText("偏暖，情绪保持暧昧，柔亮扩散。")).toBeInTheDocument();
-    expect(screen.getByText(/层次很深/)).toBeInTheDocument();
+    expect(screen.getByText(/现在这组积木主要在表达/)).toBeInTheDocument();
+    expect(screen.getByText(/颜色偏暖/)).toBeInTheDocument();
+    expect(screen.getByText(/空间层次很深/)).toBeInTheDocument();
     expect(screen.getByText("日光穹庭")).toBeInTheDocument();
     expect(screen.getByText("成长染色：")).toBeInTheDocument();
     expect(screen.getByText(/当前级联又被 Jazz Lattice 染得更有和声窗格/)).toBeInTheDocument();
@@ -674,10 +694,10 @@ describe("TheorySandbox", () => {
     render(<TheorySandbox {...AUTH_PROPS} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Growth Imprint")).toBeInTheDocument();
+      expect(screen.getByText("成长风格")).toBeInTheDocument();
     });
     expect(screen.getByText("Neo Soul 幕纱")).toBeInTheDocument();
-    expect(screen.getByText(/Growth 已经把当前舞台往丝绒/)).toBeInTheDocument();
+    expect(screen.getAllByText(/成长路线/).length).toBeGreaterThan(0);
   });
 
   it("shows harmonic trait readouts for the current theory stack", async () => {
@@ -729,12 +749,12 @@ describe("TheorySandbox", () => {
     render(<TheorySandbox {...AUTH_PROPS} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Harmonic Traits")).toBeInTheDocument();
+      expect(screen.getByText("听感性格")).toBeInTheDocument();
     });
-    expect(screen.getByText("Openness")).toBeInTheDocument();
-    expect(screen.getByText("Attack")).toBeInTheDocument();
-    expect(screen.getByText("Swing")).toBeInTheDocument();
-    expect(screen.getByText("Gravity")).toBeInTheDocument();
+    expect(screen.getByText("打开程度")).toBeInTheDocument();
+    expect(screen.getByText("冲击感")).toBeInTheDocument();
+    expect(screen.getByText("律动摆动")).toBeInTheDocument();
+    expect(screen.getByText("落点牵引")).toBeInTheDocument();
   });
 
   it("shows a theory synergy panel when the stack has strong interaction", async () => {
@@ -786,12 +806,12 @@ describe("TheorySandbox", () => {
     render(<TheorySandbox {...AUTH_PROPS} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Theory Synergy")).toBeInTheDocument();
+      expect(screen.getByText("组合相容性")).toBeInTheDocument();
     });
-    expect(screen.getByText("Resonance")).toBeInTheDocument();
-    expect(screen.getByText("Cadence Pull")).toBeInTheDocument();
-    expect(screen.getByText("Modal Tension")).toBeInTheDocument();
-    expect(screen.getByText("Blend Cohesion")).toBeInTheDocument();
+    expect(screen.getByText("互相放大")).toBeInTheDocument();
+    expect(screen.getByText("回家感觉")).toBeInTheDocument();
+    expect(screen.getByText("摩擦张力")).toBeInTheDocument();
+    expect(screen.getByText("融合程度")).toBeInTheDocument();
     expect(screen.getByText("Cadential Lift")).toBeInTheDocument();
   });
 
@@ -871,7 +891,7 @@ describe("TheorySandbox", () => {
     fireEvent.click(screen.getByRole("button", { name: "Saved Dim7" }));
 
     expect(screen.getAllByText("Dim7").length).toBeGreaterThan(1);
-    expect(screen.getByText("fracture")).toBeInTheDocument();
+    expect(screen.getByText("碎裂几何")).toBeInTheDocument();
   });
 
   it("supports naming and overwriting a saved composition", async () => {

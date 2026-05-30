@@ -33,11 +33,11 @@ try {
   const stage = page.getByLabel("视觉舞台拖放区");
 
   await clearComposition(page);
-  await page.getByRole("button", { name: "Dorian mode", exact: true }).dragTo(stage);
-  await page.getByRole("button", { name: "Maj7 chord", exact: true }).dragTo(stage);
-  await page.getByText("Growth Imprint", { exact: true }).waitFor();
-  await page.getByText("Harmonic Traits", { exact: true }).waitFor();
-  await page.getByText("Theory Synergy", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Dorian 调式", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "Maj7 和弦", exact: true }).dragTo(stage);
+  await page.getByText("成长风格", { exact: true }).waitFor();
+  await page.getByText("听感性格", { exact: true }).waitFor();
+  await page.getByText("组合相容性", { exact: true }).waitFor();
   await page.getByText("Scene Cascade", { exact: true }).waitFor();
   await page.getByText("Neo Soul 幕纱", { exact: true }).waitFor();
   const growthText = await page.locator("body").innerText();
@@ -49,17 +49,17 @@ try {
 
   await clearComposition(page);
 
-  await page.getByRole("button", { name: "Lydian mode", exact: true }).dragTo(stage);
-  await page.getByRole("button", { name: "Maj7 chord", exact: true }).dragTo(stage);
-  await page.getByRole("button", { name: "II-V-I progression", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "Lydian 调式", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "Maj7 和弦", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "II-V-I 进行", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: /Jazz/ }).click();
   await page.getByText("预览镜头：Jazz Lattice", { exact: true }).waitFor();
   await page.getByText("Aurora Dais", { exact: true }).first().waitFor();
   await page.getByText("Phrase Trajectory", { exact: true }).waitFor();
   await page.getByText("Phrase Hooks", { exact: true }).waitFor();
   await page.getByText("Phrase Variation", { exact: true }).waitFor();
-  await page.getByText("Element Voiceprints", { exact: true }).waitFor();
-  await page.getByText("Element Roles", { exact: true }).waitFor();
+  await page.getByText("模块痕迹", { exact: true }).waitFor();
+  await page.getByText("舞台席位", { exact: true }).waitFor();
   await page.getByText("Lift Arc", { exact: true }).first().waitFor();
   await page.getByText("Skyline Rise", { exact: true }).first().waitFor();
   await page.getByText("Cadence Sweep", { exact: true }).first().waitFor();
@@ -76,20 +76,20 @@ try {
   const hasVoiceprints = true;
   const hasElementRoles = true;
   const solarText = await page.locator("body").innerText();
-  const solarValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
+  const solarValence = await page.getByText("明暗情绪", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-solar.png", fullPage: true });
 
   await clearComposition(page);
 
-  await page.getByRole("button", { name: "Dominant7 chord", exact: true }).dragTo(stage);
-  await page.getByRole("button", { name: "Harmonic Minor scale", exact: true }).dragTo(stage);
-  await page.getByRole("button", { name: "Dim7 chord", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "Dominant7 和弦", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "Harmonic Minor 音阶", exact: true }).dragTo(stage);
+  await page.getByRole("button", { name: "Dim7 和弦", exact: true }).dragTo(stage);
   await page.getByText("Phrase Trajectory", { exact: true }).waitFor();
   await page.getByText("Shadow Sink", { exact: true }).first().waitFor();
   await page.getByText("Eclipse Altar", { exact: true }).first().waitFor();
   const hasShadow = true;
   const hasShadowSink = true;
-  const shadowValence = await page.getByText("Valence", { exact: true }).first().locator("..").innerText();
+  const shadowValence = await page.getByText("明暗情绪", { exact: true }).first().locator("..").innerText();
   await page.screenshot({ path: "/tmp/scales-stage-shadow.png", fullPage: true });
 
   const pageText = await page.locator("body").innerText();
@@ -111,12 +111,12 @@ try {
         hasElementRoles,
         hasShadow,
         hasShadowSink,
-        hasStageReading: pageText.includes("STAGE READING") || pageText.includes("Stage Reading"),
+        hasStageReading: pageText.includes("舞台解读"),
         hasMoodAxes:
-          pageText.includes("VALENCE") &&
-          pageText.includes("AROUSAL") &&
-          pageText.includes("LUMINOSITY") &&
-          pageText.includes("GRIT"),
+          pageText.includes("明暗情绪") &&
+          pageText.includes("兴奋程度") &&
+          pageText.includes("发光空间") &&
+          pageText.includes("颗粒粗糙"),
         solarValence,
         shadowValence
       },

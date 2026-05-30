@@ -11,6 +11,7 @@ const canvasContext = {
   arc: vi.fn(),
   ellipse: vi.fn(),
   quadraticCurveTo: vi.fn(),
+  bezierCurveTo: vi.fn(),
   fill: vi.fn(),
   stroke: vi.fn(),
   save: vi.fn(),

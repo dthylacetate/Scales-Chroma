@@ -53,6 +53,20 @@ const THEORY_LIBRARY: TheoryElement[] = [
   { id: "i-v-vi-iv", type: "progression", name: "I-V-vi-IV" }
 ];
 
+const THEORY_GROUPS: Array<{ title: string; hint: string; types: TheoryElement["type"][] }> = [
+  { title: "音阶", hint: "先决定这段音乐的大颜色。", types: ["scale"] },
+  { title: "调式", hint: "决定它更明亮、神秘、漂浮还是有律动。", types: ["mode"] },
+  { title: "和弦类型", hint: "决定这一刻是柔和、紧张、尖锐还是稳定。", types: ["chord"] },
+  { title: "和弦进行", hint: "决定音乐怎么往前走、最终落到哪里。", types: ["progression"] }
+];
+
+const TYPE_LABELS: Record<TheoryElement["type"], string> = {
+  scale: "音阶",
+  mode: "调式",
+  chord: "和弦",
+  progression: "进行"
+};
+
 const VISUAL_BONUS_COPY: Record<string, string> = {
   "Celestial Bloom": "Lydian 与 Maj7 叠出更明亮、更抬升的和声光晕。",
   "Sunwake Atlas": "大调明亮感被进一步推向开阔、日照式的舞台展开。",
@@ -132,6 +146,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
   const [selected, setSelected] = useState<TheoryElement>(THEORY_LIBRARY[5]);
   const [composition, setComposition] = useState<TheoryElement[]>([]);
   const [invalidHint, setInvalidHint] = useState<string | null>(null);
+  const [customProgression, setCustomProgression] = useState("I-vi-IV-V");
   const [stageDropActive, setStageDropActive] = useState(false);
   const [laneDropActive, setLaneDropActive] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -367,29 +382,32 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
             <Sparkles aria-hidden="true" className="size-5 text-[#5bd0c7]" />
             <h1 className="text-xl font-semibold tracking-normal">Scales &amp; Chroma</h1>
           </div>
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-            {THEORY_LIBRARY.map((element) => (
-              <button
-                key={element.id}
-                draggable
-                className={`flex min-h-11 items-center justify-between rounded-md border px-3 text-left text-sm transition ${
-                  activeElement.id === element.id
-                    ? "border-[#ffd166] bg-[#ffd166] text-[#16110f]"
-                    : "border-[#3f3144] bg-[#201922] text-stone-100 hover:border-[#5bd0c7]"
-                }`}
-                type="button"
-                onClick={() => setSelected(element)}
-                onDragStart={(event) => {
-                  event.dataTransfer.setData("text/plain", element.id);
-                  event.dataTransfer.effectAllowed = "move";
-                }}
-              >
-                <span className="flex items-center gap-2 font-medium">
-                  <Grip aria-hidden="true" className="size-3.5 opacity-60" />
-                  {element.name}
-                </span>
-                <span className="text-xs uppercase opacity-70">{element.type}</span>
-              </button>
+          <div className="grid gap-3">
+            {THEORY_GROUPS.map((group) => (
+              <section key={group.title} className="grid gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold text-stone-100">{group.title}</h2>
+                  <p className="mt-0.5 text-xs text-stone-400">{group.hint}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                  {THEORY_LIBRARY.filter((element) => group.types.includes(element.type)).map((element) => (
+                    <TheoryElementButton
+                      key={element.id}
+                      active={activeElement.id === element.id}
+                      element={element}
+                      onSelect={setSelected}
+                    />
+                  ))}
+                </div>
+                {group.types.includes("progression") ? (
+                  <CustomProgressionBox
+                    activeElements={activeElements}
+                    customProgression={customProgression}
+                    onAdd={addCustomProgression}
+                    onChange={setCustomProgression}
+                  />
+                ) : null}
+              </section>
             ))}
           </div>
         </aside>
@@ -439,33 +457,33 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                 ))}
               </div>
               {getStageSetpiece(visual) ? (
-                <div className="text-[11px] text-stone-200">Setpiece: {getStageSetpiece(visual)?.label}</div>
+                <div className="text-[11px] text-stone-200">大型装置：{getStageSetpiece(visual)?.label}</div>
               ) : null}
               {getStageDirectorCue(visual) ? (
-                <div className="text-[11px] text-[#ffd9a8]">Cue: {getStageDirectorCue(visual)?.label}</div>
+                <div className="text-[11px] text-[#ffd9a8]">导演节奏：{getStageDirectorCue(visual)?.label}</div>
               ) : null}
               {getStageProjectionScript(visual) ? (
-                <div className="text-[11px] text-[#a6ebff]">Projection: {getStageProjectionScript(visual)?.label}</div>
+                <div className="text-[11px] text-[#a6ebff]">地面投影：{getStageProjectionScript(visual)?.label}</div>
               ) : null}
               {getStageMotionRig(visual) ? (
-                <div className="text-[11px] text-[#ffbdb8]">Motion: {getStageMotionRig(visual)?.label}</div>
+                <div className="text-[11px] text-[#ffbdb8]">前景机构：{getStageMotionRig(visual)?.label}</div>
               ) : null}
               {getStageTakeoverMode(visual) ? (
-                <div className="text-[11px] text-[#f0c6ff]">Takeover: {getStageTakeoverMode(visual)?.label}</div>
+                <div className="text-[11px] text-[#f0c6ff]">换场方式：{getStageTakeoverMode(visual)?.label}</div>
               ) : null}
               {getStageSynergyGlyph(visual) ? (
-                <div className="text-[11px] text-[#d8ff9c]">Glyph: {getStageSynergyGlyph(visual)?.label}</div>
+                <div className="text-[11px] text-[#d8ff9c]">组合徽记：{getStageSynergyGlyph(visual)?.label}</div>
               ) : null}
-              <div className="text-[11px] text-[#b8d7ff]">Climate: {getStageClimateProfile(visual).label}</div>
+              <div className="text-[11px] text-[#b8d7ff]">空气质感：{getStageClimateProfile(visual).label}</div>
               {getStagePhraseTrajectory(visual) ? (
-                <div className="text-[11px] text-[#ffd7c2]">Trajectory: {getStagePhraseTrajectory(visual)?.label}</div>
+                <div className="text-[11px] text-[#ffd7c2]">整体走向：{getStagePhraseTrajectory(visual)?.label}</div>
               ) : null}
-              {visual.phraseHooks.length > 0 ? <div className="text-[11px] text-[#f6e1a2]">Hooks: {visual.phraseHooks.length}</div> : null}
+              {visual.phraseHooks.length > 0 ? <div className="text-[11px] text-[#f6e1a2]">连接动作：{visual.phraseHooks.length}</div> : null}
               {getStagePhraseVariation(visual) ? (
-                <div className="text-[11px] text-[#c4f3ff]">Variation: {getStagePhraseVariation(visual)?.label}</div>
+                <div className="text-[11px] text-[#c4f3ff]">成长改写：{getStagePhraseVariation(visual)?.label}</div>
               ) : null}
-              {(visual.voiceprints?.length ?? 0) > 0 ? <div className="text-[11px] text-[#ffd7ff]">Voices: {visual.voiceprints?.length}</div> : null}
-              {(visual.elementRoles?.length ?? 0) > 0 ? <div className="text-[11px] text-[#c6ffec]">Roles: {visual.elementRoles?.length}</div> : null}
+              {(visual.voiceprints?.length ?? 0) > 0 ? <div className="text-[11px] text-[#ffd7ff]">模块痕迹：{visual.voiceprints?.length}</div> : null}
+              {(visual.elementRoles?.length ?? 0) > 0 ? <div className="text-[11px] text-[#c6ffec]">舞台席位：{visual.elementRoles?.length}</div> : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -552,7 +570,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                     }}
                   >
                     <span className="font-medium">{element.name}</span>
-                    <span className="text-xs uppercase text-stone-400">{element.type}</span>
+                    <span className="text-xs text-stone-400">{TYPE_LABELS[element.type]}</span>
                     <button
                       aria-label={`移除 ${element.name}`}
                       className="grid size-6 place-items-center rounded-sm text-stone-300 hover:bg-[#3a2b31] hover:text-white"
@@ -587,9 +605,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           {apiBaseUrl && authToken ? (
             <GrowthLensPreviewPanel previewGrowthImprint={previewGrowthImprint} onChange={setPreviewGrowthImprint} />
           ) : null}
-          <Readout label="Element" value={activeElement.name} />
-          <Readout label="Signature" value={visual.signature} />
-          <Readout label="Scene" value={sceneFamilyLabel(visual.sceneFamily)} />
+          <Readout label="当前模块" value={activeElement.name} />
+          <Readout label="舞台签名" value={visual.signature} />
+          <Readout label="场景类型" value={sceneFamilyLabel(visual.sceneFamily)} />
           <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
           <StageClimatePanel visual={visual} />
           <StagePhraseTrajectoryPanel visual={visual} />
@@ -608,25 +626,25 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <StageMotionRigPanel visual={visual} />
           <StageTakeoverPanel visual={visual} />
           <MoodAxesPanel visual={visual} />
-          <Readout label="Color" value={visual.color} swatch={visual.color} />
-          <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
-          <Readout label="Geometry" value={visual.geometry} />
-          <Readout label="Animation" value={visual.animationState} />
-          <Readout label="Glow" value={visual.glow.toFixed(2)} />
-          <Readout label="Energy" value={visual.energy.toFixed(2)} />
-          <Readout label="Complexity" value={visual.complexity.toFixed(2)} />
-          <Readout label="Temperature" value={visual.temperature.toFixed(2)} />
-          <Readout label="Valence" value={visual.valence.toFixed(2)} />
-          <Readout label="Arousal" value={visual.arousal.toFixed(2)} />
-          <Readout label="Luminosity" value={visual.luminosity.toFixed(2)} />
-          <Readout label="Grit" value={visual.grit.toFixed(2)} />
-          <Readout label="Symmetry" value={visual.symmetry.toFixed(2)} />
-          <Readout label="Depth" value={visual.depth.toFixed(2)} />
-          <Readout label="Pulse" value={visual.pulseDensity.toFixed(2)} />
-          <Readout label="Trail" value={visual.particles.trail ? "On" : "Off"} />
+          <Readout label="主色" value={visual.color} swatch={visual.color} />
+          <Readout label="辅色" value={visual.secondaryColor} swatch={visual.secondaryColor} />
+          <Readout label="几何形态" value={geometryLabel(visual.geometry)} />
+          <Readout label="动画状态" value={animationLabel(visual.animationState)} />
+          <Readout label="发光强度" value={visual.glow.toFixed(2)} />
+          <Readout label="能量" value={visual.energy.toFixed(2)} />
+          <Readout label="复杂度" value={visual.complexity.toFixed(2)} />
+          <Readout label="冷暖" value={visual.temperature.toFixed(2)} />
+          <Readout label="明暗情绪" value={visual.valence.toFixed(2)} />
+          <Readout label="兴奋程度" value={visual.arousal.toFixed(2)} />
+          <Readout label="发光空间" value={visual.luminosity.toFixed(2)} />
+          <Readout label="颗粒粗糙" value={visual.grit.toFixed(2)} />
+          <Readout label="对称感" value={visual.symmetry.toFixed(2)} />
+          <Readout label="空间深度" value={visual.depth.toFixed(2)} />
+          <Readout label="脉冲密度" value={visual.pulseDensity.toFixed(2)} />
+          <Readout label="粒子拖尾" value={visual.particles.trail ? "开启" : "关闭"} />
           {visual.activeBonuses.length > 0 ? (
             <div className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
-              <div className="text-xs uppercase text-stone-400">Active Bonuses</div>
+              <div className="text-xs text-stone-400">已触发加成</div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {visual.activeBonuses.map((bonus) => (
                   <span
@@ -845,7 +863,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
   );
 
   function addToComposition(elementId: string): void {
-    const nextElement = THEORY_LIBRARY.find((element) => element.id === elementId);
+    const nextElement = findTheoryElement(elementId);
 
     if (!nextElement) {
       return;
@@ -869,7 +887,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
   }
 
   function replaceCompositionBlock(elementId: string, targetIndex: number): void {
-    const nextElement = THEORY_LIBRARY.find((element) => element.id === elementId);
+    const nextElement = findTheoryElement(elementId);
 
     if (!nextElement || targetIndex < 0 || targetIndex >= composition.length) {
       return;
@@ -910,6 +928,40 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
       next.splice(targetIndex, 0, moved);
       return next;
     });
+  }
+
+  function addCustomProgression(): void {
+    const parsed = parseCustomProgression(customProgression);
+
+    if (!parsed.valid) {
+      setInvalidHint(parsed.message);
+      return;
+    }
+
+    addTheoryElementToComposition(parsed.element);
+  }
+
+  function findTheoryElement(elementId: string): TheoryElement | undefined {
+    if (elementId.startsWith("custom-progression:")) {
+      const source = elementId.replace("custom-progression:", "");
+      const parsed = parseCustomProgression(source);
+      return parsed.valid ? parsed.element : undefined;
+    }
+
+    return THEORY_LIBRARY.find((element) => element.id === elementId);
+  }
+
+  function addTheoryElementToComposition(nextElement: TheoryElement): void {
+    const lastElement = composition.at(-1);
+
+    if (lastElement?.id === nextElement.id) {
+      setInvalidHint("相邻位置不能重复同一个乐理积木");
+      return;
+    }
+
+    setInvalidHint(null);
+    setSelected(nextElement);
+    setComposition((current) => [...current, nextElement]);
   }
 
   async function submitPracticeRecord(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -1083,10 +1135,175 @@ function practiceResultToHistoryItem(result: PracticeRecordResult): PracticeReco
   };
 }
 
+type ParsedProgression =
+  | { valid: true; element: TheoryElement; tokens: string[] }
+  | { valid: false; message: string; tokens: string[] };
+
+function parseCustomProgression(rawValue: string): ParsedProgression {
+  const normalized = rawValue
+    .trim()
+    .replace(/[—–]/g, "-")
+    .replace(/\s+/g, "")
+    .replace(/→|>/g, "-");
+
+  if (!normalized) {
+    return { valid: false, message: "先输入一个进行，例如 I-vi-IV-V。", tokens: [] };
+  }
+
+  const tokens = normalized.split("-").filter(Boolean);
+  const allowed = new Set(["i", "ii", "iii", "iv", "v", "vi", "vii", "vii°", "viio", "viiø"]);
+  const invalidToken = tokens.find((token) => !allowed.has(token.toLowerCase()));
+
+  if (tokens.length < 2) {
+    return { valid: false, message: "至少需要两个级数，例如 I-V。", tokens };
+  }
+
+  if (tokens.length > 8) {
+    return { valid: false, message: "先控制在 8 个和弦以内，舞台会更容易读懂。", tokens };
+  }
+
+  if (invalidToken) {
+    return {
+      valid: false,
+      message: `暂时只支持罗马数字级数，${invalidToken} 还不能识别。可以试试 I、ii、IV、V、vi。`,
+      tokens
+    };
+  }
+
+  const displayName = tokens.join("-");
+  return {
+    valid: true,
+    tokens,
+    element: {
+      id: `custom-progression:${displayName}`,
+      type: "progression",
+      name: `Custom ${displayName}`
+    }
+  };
+}
+
+function judgeProgressionCompatibility(tokens: string[], elements: TheoryElement[]): { label: string; message: string } {
+  const lowerTokens = tokens.map((token) => token.toLowerCase());
+  const progressionText = lowerTokens.join("-");
+  const elementNames = new Set(elements.map((element) => element.name.toLowerCase()));
+  const hasBrightMode = ["lydian", "ionian", "major"].some((name) => elementNames.has(name));
+  const hasDarkMode = ["phrygian", "harmonic minor", "minor"].some((name) => elementNames.has(name));
+  const hasDominant = elementNames.has("dominant7");
+  const hasDim = elementNames.has("dim7");
+  const hasMaj7 = elementNames.has("maj7");
+  const hasMin7 = elementNames.has("min7");
+  const hasCadence = progressionText.includes("ii-v-i") || lowerTokens.some((token, index) => token === "v" && lowerTokens[index + 1] === "i");
+  const hasPopLoop = progressionText === "i-v-vi-iv" || progressionText === "i-vi-iv-v";
+  const hasManyDarkTurns = lowerTokens.filter((token) => ["ii", "iv", "vi", "vii", "vii°", "viio", "viiø"].includes(token)).length >= 3;
+
+  if (hasCadence && (hasMaj7 || hasBrightMode)) {
+    return { label: "很相容", message: "这个进行有明显“回家”的感觉，和明亮调式或 Maj7 放在一起会更稳定、更有完成感。" };
+  }
+
+  if (hasCadence && (hasDominant || hasMin7)) {
+    return { label: "相容", message: "这个进行有清楚的推进和落点，Dominant7 或 Min7 会让它更像爵士/布鲁斯里的转身。" };
+  }
+
+  if (hasPopLoop && hasBrightMode) {
+    return { label: "很相容", message: "这个循环很容易听懂，配明亮调式会更像流行歌曲副歌，舞台会更外放。" };
+  }
+
+  if (hasDarkMode && (hasDim || hasManyDarkTurns)) {
+    return { label: "偏紧张", message: "暗色调式加上很多小级数或减和弦，会更神秘、更压迫，不是不对，是情绪更重。" };
+  }
+
+  if (hasDominant && !lowerTokens.includes("v")) {
+    return { label: "可实验", message: "你选了 Dominant7，但进行里没有 V 级，听感可能会更悬。可以保留，也可以试试加入 V-I。" };
+  }
+
+  return { label: "可用", message: "这个进行可以加入舞台。系统会按它的长度、落点和当前调式/和弦一起判断视觉走向。" };
+}
+
 interface ReadoutProps {
   label: string;
   value: string;
   swatch?: string;
+}
+
+function TheoryElementButton({
+  active,
+  element,
+  onSelect
+}: {
+  active: boolean;
+  element: TheoryElement;
+  onSelect: (element: TheoryElement) => void;
+}) {
+  return (
+    <button
+      draggable
+      className={`flex min-h-11 items-center justify-between rounded-md border px-3 text-left text-sm transition ${
+        active
+          ? "border-[#ffd166] bg-[#ffd166] text-[#16110f]"
+          : "border-[#3f3144] bg-[#201922] text-stone-100 hover:border-[#5bd0c7]"
+      }`}
+      type="button"
+      onClick={() => onSelect(element)}
+      onDragStart={(event) => {
+        event.dataTransfer.setData("text/plain", element.id);
+        event.dataTransfer.effectAllowed = "move";
+      }}
+    >
+      <span className="flex items-center gap-2 font-medium">
+        <Grip aria-hidden="true" className="size-3.5 opacity-60" />
+        {element.name}
+      </span>
+      <span className="text-xs opacity-70">{TYPE_LABELS[element.type]}</span>
+    </button>
+  );
+}
+
+function CustomProgressionBox({
+  activeElements,
+  customProgression,
+  onAdd,
+  onChange
+}: {
+  activeElements: TheoryElement[];
+  customProgression: string;
+  onAdd: () => void;
+  onChange: (value: string) => void;
+}) {
+  const parsed = parseCustomProgression(customProgression);
+  const compatibility = parsed.valid ? judgeProgressionCompatibility(parsed.tokens, activeElements) : null;
+  const parseError = parsed.valid ? "" : parsed.message;
+
+  return (
+    <div className="rounded-md border border-[#3f3144] bg-[#201922] p-2">
+      <label className="flex flex-col gap-1 text-xs text-stone-400">
+        自定义进行
+        <input
+          className="h-9 rounded-md border border-[#3f3144] bg-[#151217] px-2 text-sm text-stone-100 outline-none transition focus:border-[#5bd0c7]"
+          placeholder="例如 I-vi-IV-V 或 ii-V-I"
+          value={customProgression}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </label>
+      <div className="mt-2 rounded-md border border-white/5 bg-white/5 px-2 py-1.5 text-xs text-stone-300">
+        {parsed.valid && compatibility ? (
+          <>
+            <span className="font-medium text-stone-100">{compatibility.label}：</span>
+            <span className="ml-1">{compatibility.message}</span>
+          </>
+        ) : (
+          <span className="text-[#ffb8c5]">{parseError}</span>
+        )}
+      </div>
+      <button
+        className="mt-2 h-9 w-full rounded-md border border-[#5bd0c7]/40 bg-[#182528] px-3 text-sm font-semibold text-[#b9fff7] transition hover:border-[#5bd0c7] disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={!parsed.valid}
+        type="button"
+        onClick={onAdd}
+      >
+        加入自定义进行
+      </button>
+    </div>
+  );
 }
 
 function Readout({ label, value, swatch }: ReadoutProps) {
@@ -1116,7 +1333,7 @@ function StageReadingPanel({
 
   return (
     <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
-      <div className="text-xs uppercase text-stone-400">Stage Reading</div>
+      <div className="text-xs text-stone-400">舞台解读</div>
       <div className="mt-2 text-sm font-medium text-stone-100">{reading.summary}</div>
       <div className="mt-3 grid gap-2">
         <ReadingLine label="情绪" value={reading.mood} />
@@ -1139,7 +1356,7 @@ function GrowthLensPreviewPanel({
 
   return (
     <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
-      <div className="text-xs uppercase text-stone-400">Growth Lens Preview</div>
+      <div className="text-xs text-stone-400">成长路线预览</div>
       <div className="mt-2 text-sm font-medium text-stone-100">{activeOption.label}</div>
       <div className="mt-1 text-xs text-stone-400">{activeOption.hint}</div>
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1170,29 +1387,29 @@ function GrowthLensPreviewPanel({
 function MoodAxesPanel({ visual }: { visual: VisualParameters }) {
   return (
     <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
-      <div className="text-xs uppercase text-stone-400">Mood Axes</div>
+      <div className="text-xs text-stone-400">情绪读数</div>
       <div className="mt-3 grid gap-2">
         <MoodAxisRow
           accent="#ffd166"
-          label="Valence"
+          label="明暗情绪"
           value={visual.valence}
           note={moodAxisLabel("valence", visual.valence)}
         />
         <MoodAxisRow
           accent="#ff8fa3"
-          label="Arousal"
+          label="兴奋程度"
           value={visual.arousal}
           note={moodAxisLabel("arousal", visual.arousal)}
         />
         <MoodAxisRow
           accent="#8fdcff"
-          label="Luminosity"
+          label="发光空间"
           value={visual.luminosity}
           note={moodAxisLabel("luminosity", visual.luminosity)}
         />
         <MoodAxisRow
           accent="#c7a6ff"
-          label="Grit"
+          label="颗粒粗糙"
           value={visual.grit}
           note={moodAxisLabel("grit", visual.grit)}
         />
@@ -1331,11 +1548,11 @@ function ElementVoiceprintsPanel({ visual }: { visual: VisualParameters }) {
 
   return (
     <section className="rounded-md border border-[#4d2d4b] bg-[#211821] p-3">
-      <div className="text-xs uppercase text-stone-400">Element Voiceprints</div>
+      <div className="text-xs text-stone-400">模块痕迹</div>
       <div className="mt-2 flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-medium text-stone-100">{voiceprints.length} Voices</div>
-          <div className="mt-1 text-xs text-stone-400">当前组合里的每个模块都会在舞台上留下自己的独立纹理。</div>
+          <div className="text-sm font-medium text-stone-100">{voiceprints.length} 个模块正在发声</div>
+          <div className="mt-1 text-xs text-stone-400">简单说：你拖进来的每个积木，都会在画面里留下自己的“笔迹”。</div>
         </div>
         <div className="text-sm font-semibold text-[#f4b8ff]">{Math.round(intensity * 100)}%</div>
       </div>
@@ -1371,11 +1588,11 @@ function ElementRolesPanel({ visual }: { visual: VisualParameters }) {
 
   return (
     <section className="rounded-md border border-[#244542] bg-[#182221] p-3">
-      <div className="text-xs uppercase text-stone-400">Element Roles</div>
+      <div className="text-xs text-stone-400">舞台席位</div>
       <div className="mt-2 flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-medium text-stone-100">{roles.length} Seats</div>
-          <div className="mt-1 text-xs text-stone-400">当前模块不仅留痕，还会各自占位并参与连线。</div>
+          <div className="text-sm font-medium text-stone-100">{roles.length} 个席位被占用</div>
+          <div className="mt-1 text-xs text-stone-400">简单说：这些积木不只是变颜色，还会分别站到舞台的不同位置。</div>
         </div>
         <div className="text-sm font-semibold text-[#9af0dd]">{Math.round(intensity * 100)}%</div>
       </div>
@@ -1406,7 +1623,7 @@ function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
 
   return (
     <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
-      <div className="text-xs uppercase text-stone-400">Growth Imprint</div>
+      <div className="text-xs text-stone-400">成长风格</div>
       <div className="mt-2 flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-medium text-stone-100">{reading.label}</div>
@@ -1434,12 +1651,12 @@ function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
 function HarmonicTraitsPanel({ visual }: { visual: VisualParameters }) {
   return (
     <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
-      <div className="text-xs uppercase text-stone-400">Harmonic Traits</div>
+      <div className="text-xs text-stone-400">听感性格</div>
       <div className="mt-3 grid gap-2">
-        <MoodAxisRow accent="#9fd7ff" label="Openness" value={visual.openness} note={traitAxisLabel("openness", visual.openness)} />
-        <MoodAxisRow accent="#ff9b7b" label="Attack" value={visual.attack} note={traitAxisLabel("attack", visual.attack)} />
-        <MoodAxisRow accent="#9af0dd" label="Swing" value={visual.swing} note={traitAxisLabel("swing", visual.swing)} />
-        <MoodAxisRow accent="#ffd166" label="Gravity" value={visual.gravity} note={traitAxisLabel("gravity", visual.gravity)} />
+        <MoodAxisRow accent="#9fd7ff" label="打开程度" value={visual.openness} note={traitAxisLabel("openness", visual.openness)} />
+        <MoodAxisRow accent="#ff9b7b" label="冲击感" value={visual.attack} note={traitAxisLabel("attack", visual.attack)} />
+        <MoodAxisRow accent="#9af0dd" label="律动摆动" value={visual.swing} note={traitAxisLabel("swing", visual.swing)} />
+        <MoodAxisRow accent="#ffd166" label="落点牵引" value={visual.gravity} note={traitAxisLabel("gravity", visual.gravity)} />
       </div>
     </section>
   );
@@ -1448,12 +1665,12 @@ function HarmonicTraitsPanel({ visual }: { visual: VisualParameters }) {
 function TheorySynergyPanel({ visual }: { visual: VisualParameters }) {
   return (
     <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
-      <div className="text-xs uppercase text-stone-400">Theory Synergy</div>
+      <div className="text-xs text-stone-400">组合相容性</div>
       <div className="mt-3 grid gap-2">
-        <MoodAxisRow accent="#8fdcff" label="Resonance" value={visual.synergyResonance} note={synergyAxisLabel("resonance", visual.synergyResonance)} />
-        <MoodAxisRow accent="#ffd166" label="Cadence Pull" value={visual.cadencePull} note={synergyAxisLabel("cadence", visual.cadencePull)} />
-        <MoodAxisRow accent="#ff8fa3" label="Modal Tension" value={visual.modalTension} note={synergyAxisLabel("tension", visual.modalTension)} />
-        <MoodAxisRow accent="#9af0dd" label="Blend Cohesion" value={visual.blendCohesion} note={synergyAxisLabel("blend", visual.blendCohesion)} />
+        <MoodAxisRow accent="#8fdcff" label="互相放大" value={visual.synergyResonance} note={synergyAxisLabel("resonance", visual.synergyResonance)} />
+        <MoodAxisRow accent="#ffd166" label="回家感觉" value={visual.cadencePull} note={synergyAxisLabel("cadence", visual.cadencePull)} />
+        <MoodAxisRow accent="#ff8fa3" label="摩擦张力" value={visual.modalTension} note={synergyAxisLabel("tension", visual.modalTension)} />
+        <MoodAxisRow accent="#9af0dd" label="融合程度" value={visual.blendCohesion} note={synergyAxisLabel("blend", visual.blendCohesion)} />
       </div>
       {visual.activeSynergies.length > 0 ? (
         <div className="mt-3 grid gap-2">
@@ -1797,30 +2014,30 @@ function buildStageReading(
   motion: string;
   drivers: string;
 } {
-  const warmth = visual.temperature >= 0.62 ? "偏暖" : visual.temperature <= 0.38 ? "偏冷" : "冷暖平衡";
-  const valence = visual.valence >= 0.7 ? "情绪更明朗" : visual.valence <= 0.3 ? "情绪更阴影化" : "情绪保持暧昧";
+  const warmth = visual.temperature >= 0.62 ? "颜色偏暖，像灯光更靠近橙黄" : visual.temperature <= 0.38 ? "颜色偏冷，像灯光更靠近蓝紫" : "冷暖比较平衡";
+  const valence = visual.valence >= 0.7 ? "整体比较明亮、积极" : visual.valence <= 0.3 ? "整体更暗、更有悬念" : "情绪介于明亮和阴影之间";
   const intensity =
     visual.arousal >= 0.72
-      ? "推进感很强"
+      ? "画面推进感很强"
       : visual.contrast >= 0.7
-        ? "张力明显"
+        ? "明暗反差明显"
         : visual.glow >= 0.76
-          ? "柔亮扩散"
-          : "相对克制";
+          ? "光会柔和地往外扩"
+          : "整体比较克制";
   const mood = `${warmth}，${valence}，${intensity}。`;
 
   const space =
     visual.depth >= 0.72 || visual.luminosity >= 0.74
-      ? `层次很深，${visual.symmetry >= 0.68 ? "而且镜像感很强，像完整搭起一个舞台空间。" : "但保留了不完全对称的漂移感。"}`
+      ? `空间层次很深，${visual.symmetry >= 0.68 ? "左右也比较对称，看起来像一座完整搭起来的舞台。" : "但没有完全对称，所以会保留一点漂移和即兴感。"}`
       : visual.symmetry >= 0.72
-        ? "更规整，对称骨架清晰，舞台会更像被设计过的礼堂或晶格场。"
-        : "更贴近前景，结构没有完全锁死，会更像即兴生成的场域。";
+        ? "结构比较规整，像有清楚骨架的礼堂或网格空间。"
+        : "结构更贴近前景，没有完全锁死，更像现场生成出来的画面。";
 
   const motion =
     visual.pulseDensity >= 0.72 || visual.arousal >= 0.76
-      ? `脉冲密度很高，配合 ${animationLabel(visual.animationState)} 会显得更推进、更有压迫感。`
+      ? `节奏点很多，配合 ${animationLabel(visual.animationState)} 会显得更往前冲。`
       : visual.rippleStrength >= 0.7
-        ? "波纹和相位更突出，整体更像连续流体在呼吸。"
+        ? "波纹更明显，整体像一层会呼吸的水面。"
         : `动作密度中等，重点更多落在 ${geometryLabel(visual.geometry)} 的形体变化上。`;
   const theoryTraits = `开放度${traitAxisLabel("openness", visual.openness)}，起音${traitAxisLabel("attack", visual.attack)}，摆动${traitAxisLabel("swing", visual.swing)}，牵引${traitAxisLabel("gravity", visual.gravity)}`;
   const synergyTraits = `共振${synergyAxisLabel("resonance", visual.synergyResonance)}，终止${synergyAxisLabel("cadence", visual.cadencePull)}，摩擦${synergyAxisLabel("tension", visual.modalTension)}，融合${synergyAxisLabel("blend", visual.blendCohesion)}`;
@@ -1830,39 +2047,39 @@ function buildStageReading(
     activeBonuses.length > 0 ? `；当前额外加成是 ${activeBonuses.join("、")}` : "；当前还没有触发额外组合加成";
   const growthText =
     visual.growthImprint !== "neutral"
-      ? `；Growth 已经把当前舞台往${growthImprintLabel(visual.growthImprint)}推了 ${Math.round(visual.growthImprintIntensity * 100)}%`
-      : "；当前 Growth 还没有形成独立印记";
+      ? `；成长路线正在把画面推向${growthImprintLabel(visual.growthImprint)}，强度约 ${Math.round(visual.growthImprintIntensity * 100)}%`
+      : "；当前还没有明显的成长路线覆盖";
   const trajectoryText =
     visual.phraseTrajectory !== "neutral"
-      ? `；当前顺序已经形成 ${phraseTrajectoryLabel(visual.phraseTrajectory)}，强度 ${Math.round(visual.phraseTrajectoryIntensity * 100)}%`
-      : "；当前顺序还没有形成独立推进轨迹";
+      ? `；这几个模块的排列顺序已经形成 ${phraseTrajectoryLabel(visual.phraseTrajectory)} 这种走向`
+      : "；当前排列顺序还没有形成特别明显的运动走向";
   const hookText =
     visual.phraseHooks.length > 0
-      ? `；相邻模块之间已经长出 ${visual.phraseHooks.join("、")} 这些桥接动作`
-      : "；相邻模块之间还没有长出独立桥接动作";
+      ? `；相邻模块之间已经有 ${visual.phraseHooks.join("、")} 这些连接动作`
+      : "；相邻模块之间还没有明显连接动作";
   const variationText =
     visual.phraseVariation !== "neutral"
-      ? `；Growth 还把当前句法进一步改写成 ${phraseVariationLabel(visual.phraseVariation)}，强度 ${Math.round(visual.phraseVariationIntensity * 100)}%`
-      : "；当前 Growth 还没有把句法推进改写成独立变体";
+      ? `；成长路线还把这条运动改写成 ${phraseVariationLabel(visual.phraseVariation)}`
+      : "；当前成长路线还没有改写整体运动方式";
   const voiceprintText =
     (visual.voiceprints?.length ?? 0) > 0
-      ? `；当前模块已经留下 ${visual.voiceprints?.join("、")} 这些独立舞台痕迹`
-      : "；当前模块还没有形成独立可读的舞台痕迹";
+      ? `；每个模块分别留下了 ${visual.voiceprints?.join("、")} 这些痕迹`
+      : "；当前模块还没有特别清楚的独立痕迹";
   const roleText =
     (visual.elementRoles?.length ?? 0) > 0
-      ? `；它们当前还分别占据 ${visual.elementRoles?.join("、")} 这些空间角色`
-      : "；当前模块还没有形成独立可读的空间角色";
+      ? `；它们还分别站在 ${visual.elementRoles?.join("、")} 这些舞台位置`
+      : "；当前模块还没有特别清楚的舞台站位";
   const cascadeText =
     visual.sceneCascade !== "neutral"
-      ? `；当前还触发了 ${sceneCascadeLabel(visual.sceneCascade)}，强度 ${Math.round(visual.sceneCascadeIntensity * 100)}%`
-      : "；当前还没有触发场景级联";
+      ? `；同时触发了 ${sceneCascadeLabel(visual.sceneCascade)} 这种大型场景`
+      : "；当前还没有触发大型场景";
 
   return {
-    summary: `当前舞台由 ${primaryDrivers} 主导，正在形成 ${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)} 读感${visual.phraseTrajectory !== "neutral" ? `，推进路径已经被拉成 ${phraseTrajectoryLabel(visual.phraseTrajectory)}` : ""}${visual.phraseVariation !== "neutral" ? `，而且被继续改写成 ${phraseVariationLabel(visual.phraseVariation)}` : ""}${visual.sceneCascade !== "neutral" ? `，并开始长出 ${sceneCascadeLabel(visual.sceneCascade)}` : ""}。`,
+    summary: `现在这组积木主要在表达：${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)}。你可以把它理解成“${primaryDrivers}”共同调出来的一种灯光和舞台运动。`,
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${variationText}${voiceprintText}${roleText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
+    drivers: `主要来源是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${hookText}${variationText}${voiceprintText}${roleText}${cascadeText}。不用懂乐理也可以先看结果：${theoryTraits}；组合之间的配合度是 ${synergyTraits}。`
   };
 }
 
