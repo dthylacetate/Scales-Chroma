@@ -60,6 +60,7 @@ describe("stage setpieces", () => {
 
     expect(setpiece?.label).toBe("Choir Vault");
     expect(setpiece?.rig).toContain("窗格");
+    expect(setpiece?.lighting).toContain("光柱");
   });
 
   it("falls back to the cascade setpiece when no growth-specific branch is active", () => {

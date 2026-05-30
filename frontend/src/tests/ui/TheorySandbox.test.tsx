@@ -228,6 +228,7 @@ describe("TheorySandbox", () => {
 
     expect(screen.getAllByText("Choir Vault").length).toBeGreaterThan(0);
     expect(screen.getByText(/顶部吊架、纵向窗格、拱形合唱廊/)).toBeInTheDocument();
+    expect(screen.getByText(/顶部冷色吊灯和下压式礼堂光柱会持续往中心汇聚/)).toBeInTheDocument();
     expect(screen.getByText(/Setpiece: Choir Vault/)).toBeInTheDocument();
   });
 

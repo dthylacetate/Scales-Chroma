@@ -19,6 +19,7 @@ export interface StageSetpiece {
   label: string;
   cue: string;
   rig: string;
+  lighting: string;
   impact: string;
 }
 
@@ -30,6 +31,7 @@ const ACTIVE_BONUS_SETPIECES: Array<{ needle: string; setpiece: StageSetpiece }>
       label: "Choir Vault",
       cue: "同一座 Aurora Dais 被 Jazz 路线继续推成和声窗格与悬挂穹顶。",
       rig: "顶部吊架、纵向窗格、拱形合唱廊。",
+      lighting: "顶部冷色吊灯和下压式礼堂光柱会持续往中心汇聚。",
       impact: "更像一座被声部秩序接管的礼堂，而不是只有发光拱门。 "
     }
   },
@@ -40,6 +42,7 @@ const ACTIVE_BONUS_SETPIECES: Array<{ needle: string; setpiece: StageSetpiece }>
       label: "Silken Halo",
       cue: "同一座 Aurora Dais 被 Neo Soul 路线继续软化成柔幕和环抱式灯纱。",
       rig: "双侧帘幕、贴身光环、柔性前景幕布。",
+      lighting: "双侧幕光会更柔地包过来，像近距离呼吸的丝绒侧洗。",
       impact: "舞台会更近、更圆、更像一层会呼吸的织物把空间包起来。 "
     }
   },
@@ -50,6 +53,7 @@ const ACTIVE_BONUS_SETPIECES: Array<{ needle: string; setpiece: StageSetpiece }>
       label: "Rose Arcade",
       cue: "Velvet Arcade 又被 Neo Soul 路线改写成更浪漫的走廊和玫瑰色拱券。",
       rig: "拱廊窗、柔性立柱、贴地灯带。",
+      lighting: "地面脚灯和拱券侧洗会让整条回廊更像暖色慢舞场。 ",
       impact: "同样是长廊结构，但这里更强调身体感和近距离包裹。 "
     }
   },
@@ -60,6 +64,7 @@ const ACTIVE_BONUS_SETPIECES: Array<{ needle: string; setpiece: StageSetpiece }>
       label: "Blue Cloister",
       cue: "Velvet Arcade 被 Jazz 路线继续拉向更冷静、更讲究秩序的修道院回廊。",
       rig: "纵向窗格、冷色回廊、节制型灯带。",
+      lighting: "冷色窗格灯会按秩序轮流下扫，强调声部式的前后层次。",
       impact: "空间会更规整，像让声部行进路线直接可视化。 "
     }
   },
@@ -70,6 +75,7 @@ const ACTIVE_BONUS_SETPIECES: Array<{ needle: string; setpiece: StageSetpiece }>
       label: "Forge Throne",
       cue: "Eclipse Altar 被 Metal 路线压成更硬、更像高台王座的熔炉结构。",
       rig: "中央王座、侧向锻柱、上压式火口。",
+      lighting: "下打熔口和斜向硬光会轮番砸下来，像锻炉里不断翻起的热浪。",
       impact: "暗色祭坛不再只是神秘，而会更像真正带重量的压迫现场。 "
     }
   },
@@ -80,6 +86,7 @@ const ACTIVE_BONUS_SETPIECES: Array<{ needle: string; setpiece: StageSetpiece }>
       label: "Phase Cloister",
       cue: "Prism Vortex 被 Fusion 路线折成相位走廊，开始出现多层回返通道。",
       rig: "折射门框、回旋通道、相位环走廊。",
+      lighting: "折返扫描光会在门框之间来回跳，相位感会明显比普通旋涡更强。 ",
       impact: "同样的棱镜旋涡会更像一个在自我复写的系统内部。 "
     }
   },
@@ -90,6 +97,7 @@ const ACTIVE_BONUS_SETPIECES: Array<{ needle: string; setpiece: StageSetpiece }>
       label: "Neon Causeway",
       cue: "Tide Runway 被 Pentatonic 路线拉成更明确的霓虹跑道和巡航车道。",
       rig: "跑道灯钉、护栏光带、远端冲刺线。",
+      lighting: "侧边护栏和远端灯点会像赛道一样连续往前送，让速度感更成体系。",
       impact: "推进感会从‘有点快’升级成真正像在向前压过去。 "
     }
   }
@@ -101,6 +109,7 @@ const CASCADE_SETPIECES: Record<Exclude<VisualParameters["sceneCascade"], "neutr
     label: "Aurora Dais",
     cue: "明亮三元结构把舞台托成高台、穹顶和拱幕。",
     rig: "抬升台阶、穹顶拱幕、礼台光环。",
+    lighting: "上方礼台光柱会按层次一层层打开，把中心人物感托起来。",
     impact: "像把单个光团升级成能容纳整场和声表演的礼台。 "
   },
   "velvet-arcade": {
@@ -108,6 +117,7 @@ const CASCADE_SETPIECES: Record<Exclude<VisualParameters["sceneCascade"], "neutr
     label: "Velvet Arcade",
     cue: "流动型三元结构会把舞台拉成柔性的长廊空间。",
     rig: "拱廊走道、垂直立柱、前景慢速灯带。",
+    lighting: "慢速侧洗和脚灯会顺着长廊推进，让空间像在轻轻往前漂。 ",
     impact: "空间会更像可以穿过的一条演出路径。 "
   },
   "forge-ritual": {
@@ -115,6 +125,7 @@ const CASCADE_SETPIECES: Record<Exclude<VisualParameters["sceneCascade"], "neutr
     label: "Forge Ritual",
     cue: "高张力组合会把舞台压成锻造架和火口结构。",
     rig: "锻造横梁、碎片雨、熔口热区。",
+    lighting: "上压式硬光和下打热口会一起把空间变成工地般的高压现场。 ",
     impact: "舞台会更像一套真正的重型装置，而不是单纯暗一点。 "
   },
   "prism-vortex": {
@@ -122,6 +133,7 @@ const CASCADE_SETPIECES: Record<Exclude<VisualParameters["sceneCascade"], "neutr
     label: "Prism Vortex",
     cue: "现代张力三元结构会把舞台扭成棱镜通道和折射核心。",
     rig: "旋转门框、折射三角、相位回圈。",
+    lighting: "折射光条会以不同角度轮流扫过，像系统内部的信号在同步。 ",
     impact: "舞台会有更强的系统感和未来空间感。 "
   },
   "tide-runway": {
@@ -129,6 +141,7 @@ const CASCADE_SETPIECES: Record<Exclude<VisualParameters["sceneCascade"], "neutr
     label: "Tide Runway",
     cue: "推进型三元组合会把舞台拉成纵深很长的地平跑道。",
     rig: "前冲跑道、节拍护栏、远端灯点。",
+    lighting: "跑道边灯会向远端连续递进，让速度和方向都更直接。 ",
     impact: "速度感会更像真的有方向，而不是只在中心打转。 "
   },
   "eclipse-altar": {
@@ -136,6 +149,7 @@ const CASCADE_SETPIECES: Record<Exclude<VisualParameters["sceneCascade"], "neutr
     label: "Eclipse Altar",
     cue: "暗色高摩擦结构会把舞台搭成祭坛和环形影纹。",
     rig: "祭坛圆环、辐条阴影、仪式化地面。",
+    lighting: "低位暗光和祭坛边缘的冷色描边会把仪式感慢慢压上来。 ",
     impact: "空间会从‘偏黑’变成真正有宗教感的仪式现场。 "
   }
 };

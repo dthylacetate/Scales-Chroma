@@ -130,6 +130,7 @@ export class RealtimeCanvasRenderer {
     this.drawTheorySynergyLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneCascadeLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageSetpieceLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStageLightingCueLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -863,6 +864,51 @@ export class RealtimeCanvasRenderer {
     this.context.restore();
   }
 
+  private drawStageLightingCueLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const setpiece = getStageSetpiece(visual);
+
+    if (!setpiece) {
+      return;
+    }
+
+    this.context.save();
+
+    switch (setpiece.kind) {
+      case "choir-vault":
+      case "aurora-dais":
+      case "blue-cloister":
+        this.drawOverheadChoirLights(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "silken-halo":
+      case "rose-arcade":
+      case "velvet-arcade":
+        this.drawVelvetWashLights(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "forge-throne":
+      case "eclipse-altar":
+        this.drawForgePressureLights(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "phase-cloister":
+      case "prism-vortex":
+        this.drawPrismSweepLights(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "neon-causeway":
+      case "tide-runway":
+        this.drawRunwayCueLights(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
   private drawAuroraDaisCascade(
     visual: VisualParameters,
     width: number,
@@ -1469,6 +1515,165 @@ export class RealtimeCanvasRenderer {
       this.context.moveTo(x, height);
       this.context.lineTo(centerX + (x - centerX) * 0.08, horizonY);
       this.context.stroke();
+    }
+  }
+
+  private drawOverheadChoirLights(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const lightCount = Math.max(3, Math.round(3 + visual.depth * 3));
+    for (let index = 0; index < lightCount; index += 1) {
+      const progress = (index + 1) / (lightCount + 1);
+      const topX = progress * width;
+      const targetX = centerX - radius * 0.4 + progress * radius * 0.8 + Math.sin(time * 0.6 + index) * radius * 0.05;
+      const targetY = centerY + radius * 0.16;
+      const cone = this.context.createLinearGradient(topX, 0, targetX, targetY);
+      cone.addColorStop(0, alphaHex(visual.secondaryColor, 0.16 + visual.glow * 0.06));
+      cone.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+      this.context.fillStyle = cone;
+      this.context.beginPath();
+      this.context.moveTo(topX - radius * 0.08, 0);
+      this.context.lineTo(topX + radius * 0.08, 0);
+      this.context.lineTo(targetX + radius * 0.2, targetY);
+      this.context.lineTo(targetX - radius * 0.2, targetY);
+      this.context.closePath();
+      this.context.fill();
+    }
+  }
+
+  private drawVelvetWashLights(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const leftWash = this.context.createLinearGradient(0, 0, centerX, height);
+    leftWash.addColorStop(0, alphaHex(visual.secondaryColor, 0.14 + visual.glow * 0.05));
+    leftWash.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+    this.context.fillStyle = leftWash;
+    this.context.beginPath();
+    this.context.moveTo(0, 0);
+    this.context.lineTo(radius * 0.24, 0);
+    this.context.lineTo(centerX - radius * 0.1, height);
+    this.context.lineTo(0, height);
+    this.context.closePath();
+    this.context.fill();
+
+    const rightWash = this.context.createLinearGradient(width, 0, centerX, height);
+    rightWash.addColorStop(0, alphaHex(visual.secondaryColor, 0.14 + visual.glow * 0.05));
+    rightWash.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+    this.context.fillStyle = rightWash;
+    this.context.beginPath();
+    this.context.moveTo(width, 0);
+    this.context.lineTo(width - radius * 0.24, 0);
+    this.context.lineTo(centerX + radius * 0.1, height);
+    this.context.lineTo(width, height);
+    this.context.closePath();
+    this.context.fill();
+
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + visual.glow * 0.06);
+    this.context.lineWidth = Math.max(1, 1 + visual.glow * 1.4);
+    const footY = centerY + radius * 0.94;
+    for (let index = 0; index < 5; index += 1) {
+      const x = centerX - radius * 1.02 + (index / 4) * radius * 2.04;
+      this.context.beginPath();
+      this.context.moveTo(x, footY);
+      this.context.lineTo(x + Math.sin(time * 0.8 + index) * radius * 0.04, footY - radius * 0.14);
+      this.context.stroke();
+    }
+  }
+
+  private drawForgePressureLights(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const sideCount = 3;
+    for (let index = 0; index < sideCount; index += 1) {
+      const leftX = radius * (0.2 + index * 0.18);
+      const rightX = width - leftX;
+      const targetY = centerY + radius * (0.16 + index * 0.08);
+      this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.2 + visual.contrast * 0.06);
+      this.context.lineWidth = Math.max(1.4, 1.2 + visual.contrast * 1.8);
+      this.context.beginPath();
+      this.context.moveTo(leftX, radius * 0.08);
+      this.context.lineTo(centerX - radius * 0.2, targetY);
+      this.context.stroke();
+      this.context.beginPath();
+      this.context.moveTo(rightX, radius * 0.08);
+      this.context.lineTo(centerX + radius * 0.2, targetY);
+      this.context.stroke();
+    }
+
+    const underGlow = this.context.createRadialGradient(centerX, height, radius * 0.2, centerX, height, radius * 1.2);
+    underGlow.addColorStop(0, alphaHex(visual.color, 0.2 + visual.energy * 0.06));
+    underGlow.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+    this.context.fillStyle = underGlow;
+    this.context.fillRect(0, centerY + radius * 0.42, width, height - (centerY + radius * 0.42));
+  }
+
+  private drawPrismSweepLights(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.translate(centerX, centerY);
+    const sweepCount = 4;
+    for (let index = 0; index < sweepCount; index += 1) {
+      const angle = time * 0.4 + index * (Math.PI / 2);
+      const targetX = Math.cos(angle) * radius * 1.3;
+      const targetY = Math.sin(angle) * radius * 0.96;
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.18 + visual.beamStrength * 0.06);
+      this.context.lineWidth = Math.max(1.2, 1 + visual.beamStrength * 1.8);
+      this.context.beginPath();
+      this.context.moveTo(0, 0);
+      this.context.lineTo(targetX, targetY);
+      this.context.stroke();
+    }
+  }
+
+  private drawRunwayCueLights(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const horizonY = centerY + radius * 0.76;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.18 + visual.energy * 0.06);
+    this.context.lineWidth = Math.max(1, 1 + visual.energy * 1.4);
+    for (let index = 0; index < 6; index += 1) {
+      const x = ((index + 1) / 7) * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(x + Math.sin(time * 1 + index) * radius * 0.03, horizonY);
+      this.context.stroke();
+    }
+    for (let index = 0; index < 8; index += 1) {
+      const x = centerX - radius * 1.1 + (index / 7) * radius * 2.2;
+      this.context.beginPath();
+      this.context.fillStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.18 + visual.energy * 0.06);
+      this.context.arc(x, horizonY + radius * 0.06, 1.6 + visual.energy * 2.2, 0, Math.PI * 2);
+      this.context.fill();
     }
   }
 

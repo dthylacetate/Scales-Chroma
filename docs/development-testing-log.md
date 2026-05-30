@@ -199,6 +199,49 @@
 - 这轮没有改后端协议，所以没有重跑后端整套测试。
 - 当前 1 个 React `act(...)` 提示仍然来自旧的组合保存测试，不是这轮 setpiece 变更引入的。
 
+## 最新一轮：Stage Setpiece 灯光 Cue 层
+
+上一轮把大型 setpiece 的骨架立起来之后，这一轮继续处理“为什么它们还不够像一整套 show cue”。
+
+目标：
+
+- 让 `Choir Vault / Silken Halo / Forge Throne / Phase Cloister / Neon Causeway` 这些大型装置，不只是有不同线框，而是连灯光行为都不同。
+
+实现方式：
+
+- `stageSetpieces.ts` 的 `StageSetpiece` 结构新增 `lighting`
+- `TheorySandbox` 的 `Stage Setpiece` 面板新增“灯光调度”
+- `RealtimeCanvasRenderer` 新增 `drawStageLightingCueLayer(...)`
+
+当前已接入的灯光家族：
+
+- `Choir Vault / Aurora Dais / Blue Cloister`
+  - 顶部下压式礼堂光柱
+- `Silken Halo / Rose Arcade / Velvet Arcade`
+  - 侧洗幕光 + 脚灯
+- `Forge Throne / Eclipse Altar`
+  - 下打热口 + 斜向硬光
+- `Phase Cloister / Prism Vortex`
+  - 折返扫描光
+- `Neon Causeway / Tide Runway`
+  - 跑道边灯 + 远端冲刺灯点
+
+对应验证：
+
+- `stageSetpieces.test.ts`
+  - 新增对 `lighting` 文案的断言
+- `TheorySandbox.test.tsx`
+  - 新增对 `Stage Setpiece` 面板“灯光调度”文案的断言
+- 前端整模块测试
+  - `64 passed`
+- 前端 build
+  - 通过
+
+这一轮的价值不在于多一个面板，而在于：
+
+- 同样叫“大型舞台”，现在它们不只是不同结构，还会像不同灯光导演在接管现场。
+- 这让 Growth 分叉和三元组合级联的差异，从“场景名字不同”继续推进到“整场演出的控制方式不同”。
+
 烟测补充说明：
 
 - 本地浏览器链路已经真实跑到注册、练习记录、连续 `/sandbox/render` 请求和截图落盘。

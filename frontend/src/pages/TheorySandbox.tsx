@@ -1263,6 +1263,7 @@ function StageSetpiecePanel({ visual }: { visual: VisualParameters }) {
       <div className="mt-1 text-xs text-stone-400">{setpiece.cue}</div>
       <div className="mt-3 grid gap-2">
         <ReadingLine label="装置骨架" value={setpiece.rig} />
+        <ReadingLine label="灯光调度" value={setpiece.lighting} />
         <ReadingLine label="体感变化" value={setpiece.impact} />
       </div>
     </section>
