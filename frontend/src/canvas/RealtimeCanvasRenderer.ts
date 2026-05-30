@@ -1,5 +1,6 @@
 import type { VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
+import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 
 export interface CanvasFrameScheduler {
@@ -133,6 +134,7 @@ export class RealtimeCanvasRenderer {
     this.drawStageSetpieceLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageLightingCueLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageDirectorCueLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStageProjectionScriptLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -1177,6 +1179,254 @@ export class RealtimeCanvasRenderer {
     this.context.beginPath();
     this.context.arc(centerX, centerY + radius * 0.02, radius * (0.58 + visual.gravity * 0.14), 0, Math.PI * 2);
     this.context.fill();
+  }
+
+  private drawStageProjectionScriptLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const script = getStageProjectionScript(visual);
+
+    if (!script) {
+      return;
+    }
+
+    this.context.save();
+
+    switch (script.kind) {
+      case "aisle-lattice":
+        this.drawAisleLatticeProjection(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "velvet-bloom":
+        this.drawVelvetBloomProjection(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "ember-grid":
+        this.drawEmberGridProjection(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "prism-circuit":
+        this.drawPrismCircuitProjection(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "velocity-markers":
+        this.drawVelocityMarkersProjection(visual, width, height, centerX, centerY, radius, time);
+        break;
+      case "eclipse-seal":
+        this.drawEclipseSealProjection(visual, width, height, centerX, centerY, radius, time);
+        break;
+    }
+
+    this.context.restore();
+  }
+
+  private drawAisleLatticeProjection(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const travel = 0.5 + 0.5 * Math.sin(time * (0.76 + visual.motionSpeed * 0.3));
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.1 + visual.depth * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.008);
+
+    for (let index = 0; index < 7; index += 1) {
+      const progress = index / 6;
+      const laneOffset = radius * (0.18 + progress * 1.02);
+      this.context.beginPath();
+      this.context.moveTo(centerX - laneOffset, centerY + radius * 0.24);
+      this.context.lineTo(centerX - radius * (1.08 + progress * 0.18), height);
+      this.context.moveTo(centerX + laneOffset, centerY + radius * 0.24);
+      this.context.lineTo(centerX + radius * (1.08 + progress * 0.18), height);
+      this.context.stroke();
+    }
+
+    for (let index = 0; index < 5; index += 1) {
+      const step = index / 4;
+      const y = centerY + radius * (0.28 + step * 0.8);
+      this.context.beginPath();
+      this.context.ellipse(centerX, y, radius * (0.28 + step * 0.44), radius * (0.06 + travel * 0.018), 0, 0, Math.PI * 2);
+      this.context.stroke();
+    }
+  }
+
+  private drawVelvetBloomProjection(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const bloom = 0.5 + 0.5 * Math.sin(time * (1.12 + visual.motionSpeed * 0.52));
+    this.context.strokeStyle = alphaHex(visual.color, 0.12 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.2, radius * 0.01);
+
+    for (let index = 0; index < 6; index += 1) {
+      const angle = (Math.PI * 2 * index) / 6 + time * 0.08;
+      const petalX = centerX + Math.cos(angle) * radius * 0.38;
+      const petalY = centerY + radius * 0.52 + Math.sin(angle) * radius * 0.12;
+      this.context.beginPath();
+      this.context.ellipse(
+        petalX,
+        petalY,
+        radius * (0.14 + bloom * 0.02),
+        radius * (0.05 + bloom * 0.012),
+        angle,
+        0,
+        Math.PI * 2
+      );
+      this.context.stroke();
+    }
+
+    for (const direction of [-1, 1]) {
+      this.context.beginPath();
+      this.context.moveTo(centerX + direction * radius * 0.18, centerY + radius * 0.22);
+      this.context.bezierCurveTo(
+        centerX + direction * radius * 0.64,
+        centerY + radius * 0.42,
+        centerX + direction * radius * 0.92,
+        centerY + radius * 0.72,
+        centerX + direction * radius * 0.38,
+        centerY + radius * 1.08
+      );
+      this.context.stroke();
+    }
+  }
+
+  private drawEmberGridProjection(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const pulse = Math.pow(Math.max(0, Math.sin(time * (1.2 + visual.attack * 1.8))), 2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.grit * 0.12);
+    this.context.lineWidth = Math.max(1.4, radius * 0.012);
+
+    for (let row = 0; row < 4; row += 1) {
+      for (let column = 0; column < 5; column += 1) {
+        const x = centerX - radius * 0.72 + column * radius * 0.36;
+        const y = centerY + radius * 0.42 + row * radius * 0.18;
+        const size = radius * (0.08 + (row + column) * 0.004 + pulse * 0.01);
+        this.context.beginPath();
+        this.context.moveTo(x, y - size);
+        this.context.lineTo(x + size, y);
+        this.context.lineTo(x, y + size);
+        this.context.lineTo(x - size, y);
+        this.context.closePath();
+        this.context.stroke();
+      }
+    }
+
+    this.context.fillStyle = alphaHex(visual.color, 0.08 + pulse * 0.14);
+    this.context.fillRect(centerX - radius * 0.64, centerY + radius * 0.88, radius * 1.28, radius * 0.08);
+  }
+
+  private drawPrismCircuitProjection(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const sweep = (time * (0.34 + visual.motionSpeed * 0.1)) % 1;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.glow * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.009);
+
+    for (let index = 0; index < 6; index += 1) {
+      const offset = -radius * 0.8 + index * radius * 0.32;
+      this.context.beginPath();
+      this.context.moveTo(centerX + offset, centerY + radius * 0.3);
+      this.context.lineTo(centerX + offset + radius * 0.26, centerY + radius * 0.98);
+      this.context.lineTo(centerX + offset + radius * 0.6, centerY + radius * 0.72);
+      this.context.stroke();
+    }
+
+    for (let index = 0; index < 5; index += 1) {
+      const progress = (sweep + index / 5) % 1;
+      const x = centerX - radius * 0.84 + progress * radius * 1.68;
+      const y = centerY + radius * (0.44 + (index % 2) * 0.18);
+      this.context.fillStyle = alphaHex(visual.color, 0.08 + (1 - progress) * 0.12);
+      this.context.beginPath();
+      this.context.arc(x, y, radius * 0.024, 0, Math.PI * 2);
+      this.context.fill();
+    }
+  }
+
+  private drawVelocityMarkersProjection(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const chase = (time * (0.5 + visual.motionSpeed * 0.16)) % 1;
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.energy * 0.08);
+    this.context.lineWidth = Math.max(1.1, radius * 0.009);
+
+    for (let index = 0; index < 7; index += 1) {
+      const step = (chase + index / 7) % 1;
+      const y = centerY + radius * (0.92 - step * 1.02);
+      const halfWidth = radius * (0.92 - step * 0.66);
+      this.context.beginPath();
+      this.context.moveTo(centerX - halfWidth, y);
+      this.context.lineTo(centerX - halfWidth * 0.72, y - radius * 0.06);
+      this.context.moveTo(centerX + halfWidth, y);
+      this.context.lineTo(centerX + halfWidth * 0.72, y - radius * 0.06);
+      this.context.stroke();
+    }
+
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY + radius * (0.78 - index * 0.22);
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 0.08, y);
+      this.context.lineTo(centerX, y - radius * 0.06);
+      this.context.lineTo(centerX + radius * 0.08, y);
+      this.context.stroke();
+    }
+  }
+
+  private drawEclipseSealProjection(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const ringShift = 0.5 + 0.5 * Math.sin(time * (0.58 + visual.gravity * 0.22));
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.1 + visual.grit * 0.12);
+    this.context.lineWidth = Math.max(1.1, radius * 0.01);
+
+    for (let index = 0; index < 4; index += 1) {
+      const ringRadius = radius * (0.26 + index * 0.14 + ringShift * 0.018);
+      this.context.beginPath();
+      this.context.arc(centerX, centerY + radius * 0.56, ringRadius, 0, Math.PI * 2);
+      this.context.stroke();
+    }
+
+    for (let index = 0; index < 8; index += 1) {
+      const angle = (Math.PI * 2 * index) / 8 + time * 0.05;
+      this.context.beginPath();
+      this.context.moveTo(centerX + Math.cos(angle) * radius * 0.18, centerY + radius * 0.56 + Math.sin(angle) * radius * 0.18);
+      this.context.lineTo(centerX + Math.cos(angle) * radius * 0.68, centerY + radius * 0.56 + Math.sin(angle) * radius * 0.68);
+      this.context.stroke();
+    }
   }
 
   private drawAuroraDaisCascade(

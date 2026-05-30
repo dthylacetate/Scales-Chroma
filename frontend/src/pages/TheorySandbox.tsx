@@ -20,6 +20,7 @@ import {
 import { renderSandboxVisual } from "../services/sandboxApi";
 import type { TheoryElement, VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
+import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { mapTheoryToVisuals } from "../visual_engine/mapTheoryToVisuals";
 
@@ -430,6 +431,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
               {getStageDirectorCue(visual) ? (
                 <div className="text-[11px] text-[#ffd9a8]">Cue: {getStageDirectorCue(visual)?.label}</div>
               ) : null}
+              {getStageProjectionScript(visual) ? (
+                <div className="text-[11px] text-[#a6ebff]">Projection: {getStageProjectionScript(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -561,6 +565,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <SceneCascadePanel visual={visual} />
           <StageSetpiecePanel visual={visual} />
           <StageDirectorCuePanel visual={visual} />
+          <StageProjectionScriptPanel visual={visual} />
           <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
@@ -1290,6 +1295,26 @@ function StageDirectorCuePanel({ visual }: { visual: VisualParameters }) {
         <ReadingLine label="节奏推进" value={cue.rhythm} />
         <ReadingLine label="运动调度" value={cue.motion} />
         <ReadingLine label="舞台体感" value={cue.impact} />
+      </div>
+    </section>
+  );
+}
+
+function StageProjectionScriptPanel({ visual }: { visual: VisualParameters }) {
+  const script = getStageProjectionScript(visual);
+
+  if (!script) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#25424d] bg-[#182126] p-3">
+      <div className="text-xs uppercase text-stone-400">Stage Projection Script</div>
+      <div className="mt-2 text-sm font-medium text-stone-100">{script.label}</div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="地面图样" value={script.pattern} />
+        <ReadingLine label="推进方式" value={script.drift} />
+        <ReadingLine label="现场体感" value={script.impact} />
       </div>
     </section>
   );

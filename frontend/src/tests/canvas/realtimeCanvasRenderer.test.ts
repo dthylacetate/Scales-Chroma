@@ -288,6 +288,34 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.lineTo).toHaveBeenCalled();
     expect(context?.stroke).toHaveBeenCalled();
   });
+
+  it("draws stage projection scripts for setpiece-driven floor identities", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      activeBonuses: ["Aurora Choir", "Choir Vault"],
+      sceneCascade: "aurora-dais",
+      sceneCascadeIntensity: 0.95
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.ellipse).toHaveBeenCalled();
+    expect(context?.lineTo).toHaveBeenCalled();
+    expect(context?.stroke).toHaveBeenCalled();
+  });
 });
 
 function createCanvas(): HTMLCanvasElement {

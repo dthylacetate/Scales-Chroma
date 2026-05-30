@@ -308,6 +308,65 @@
 - 现在不同 Growth 分叉不只是“舞台结构不同、灯不同”，连节奏推进和运动调度都不同。
 - 这让大型舞台人格更接近真正的演出系统，而不是一组静态视觉皮肤。
 
+## 最新一轮：Stage Projection Script 地面投影层
+
+上一轮把导演调度层接起来之后，舞台的上方和中层已经很明显了，但脚下仍然不够“像一个完整 show”。
+
+目标：
+
+- 让不同路线连地面图样、前景投影和推进方向都完全分家。
+
+实现方式：
+
+- 新增 `frontend/src/visual_engine/stageProjectionScripts.ts`
+- 继续以 `getStageSetpiece(...)` 为入口，把 setpiece 映射到不同的 projection script
+- `TheorySandbox` 新增 `Stage Projection Script` 面板
+- 舞台左上角角标新增 `Projection: ...`
+- `RealtimeCanvasRenderer` 新增 `drawStageProjectionScriptLayer(...)`
+
+当前已接入的投影家族：
+
+- `Aisle Lattice`
+  - 适用于 `Choir Vault / Aurora Dais / Blue Cloister`
+  - 体现礼堂式地网、步道和 choir mark
+- `Velvet Bloom`
+  - 适用于 `Silken Halo / Rose Arcade / Velvet Arcade`
+  - 体现丝绒花窗、花瓣环和拖尾灯带
+- `Ember Grid`
+  - 适用于 `Forge Throne`
+  - 体现锻炉格栅和发烫热区
+- `Prism Circuit`
+  - 适用于 `Phase Cloister / Prism Vortex`
+  - 体现折返回路、相位节点和电路线
+- `Velocity Markers`
+  - 适用于 `Neon Causeway / Tide Runway`
+  - 体现跑道编号、刻度和冲刺箭头
+- `Eclipse Seal`
+  - 适用于 `Eclipse Altar`
+  - 体现封印圆环、辐条和慢速回亮的仪式图样
+
+对应验证：
+
+- 新增 `frontend/src/tests/canvas/stageProjectionScripts.test.ts`
+  - 验证 `Choir Vault` 会映射到 `Aisle Lattice`
+  - 验证 `Neon Causeway` 会映射到 `Velocity Markers`
+  - 验证无 setpiece 时返回 `null`
+- 更新 `TheorySandbox.test.tsx`
+  - 验证右侧出现 `Stage Projection Script`
+  - 验证舞台角标出现 `Projection: Aisle Lattice`
+  - 验证 projection 文案真实渲染
+- 更新 `realtimeCanvasRenderer.test.ts`
+  - 验证 setpiece 驱动的 floor identity 会进入 Canvas 绘制
+- 前端整模块测试
+  - `71 passed`
+- 前端 build
+  - 通过
+
+这一轮的价值：
+
+- 现在不同 Growth 分叉不只是“头顶灯不一样、骨架不一样”，连脚下的空间语法都不一样。
+- 这让舞台更像完整的演出现场，而不是把所有变化都堆在中心发光体上。
+
 ## 当前测试结构
 
 ### 后端
