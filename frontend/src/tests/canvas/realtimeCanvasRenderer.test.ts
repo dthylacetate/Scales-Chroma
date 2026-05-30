@@ -100,6 +100,36 @@ describe("RealtimeCanvasRenderer", () => {
     expect(renderer.isRunning()).toBe(false);
   });
 
+  it("keeps a single render loop while morphing toward new visual states", () => {
+    const canvas = createCanvas();
+    const callbacks: FrameRequestCallback[] = [];
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame,
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start(visual);
+    renderer.start({
+      ...visual,
+      signature: "Aurora Choir",
+      sceneCascade: "aurora-dais",
+      sceneCascadeIntensity: 0.96,
+      sceneFamily: "solar-garden",
+      color: "#ffe56d"
+    });
+
+    expect(requestFrame).toHaveBeenCalledTimes(1);
+    callbacks[0]?.(16);
+    const context = canvas.getContext("2d");
+    expect(context?.fillRect).toHaveBeenCalled();
+    expect(renderer.isRunning()).toBe(true);
+  });
+
   it("resizes backing canvas with device pixel ratio", () => {
     const canvas = createCanvas();
     const renderer = new RealtimeCanvasRenderer(canvas, {

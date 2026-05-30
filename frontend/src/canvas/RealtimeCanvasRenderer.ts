@@ -13,6 +13,11 @@ export class RealtimeCanvasRenderer {
   private readonly devicePixelRatio: number;
   private frameHandle: number | null = null;
   private currentVisual: VisualParameters | null = null;
+  private targetVisual: VisualParameters | null = null;
+  private transitionStartMs: number | null = null;
+  private lastTimestamp = 0;
+  private transitionImpact = 0;
+  private transitionImpactStartMs: number | null = null;
   private running = false;
 
   constructor(
@@ -36,7 +41,20 @@ export class RealtimeCanvasRenderer {
   }
 
   start(visual: VisualParameters): void {
-    this.currentVisual = visual;
+    if (!this.currentVisual) {
+      this.currentVisual = visual;
+      this.targetVisual = visual;
+    } else if (this.running) {
+      const fromVisual = this.resolveVisualAtTimestamp(this.lastTimestamp || 0);
+      this.transitionImpact = this.computeTransitionImpact(fromVisual, visual);
+      this.transitionImpactStartMs = this.lastTimestamp || 0;
+      this.currentVisual = fromVisual;
+      this.targetVisual = visual;
+      this.transitionStartMs = this.lastTimestamp || 0;
+    } else {
+      this.currentVisual = visual;
+      this.targetVisual = visual;
+    }
 
     if (this.running) {
       return;
@@ -53,6 +71,11 @@ export class RealtimeCanvasRenderer {
 
     this.frameHandle = null;
     this.currentVisual = null;
+    this.targetVisual = null;
+    this.transitionStartMs = null;
+    this.lastTimestamp = 0;
+    this.transitionImpact = 0;
+    this.transitionImpactStartMs = null;
     this.running = false;
   }
 
@@ -77,7 +100,9 @@ export class RealtimeCanvasRenderer {
       return;
     }
 
-    this.draw(this.currentVisual, timestamp);
+    this.lastTimestamp = timestamp;
+    const resolvedVisual = this.resolveVisualAtTimestamp(timestamp);
+    this.draw(resolvedVisual, timestamp);
     this.frameHandle = this.requestFrame(this.renderFrame);
   };
 
@@ -108,8 +133,89 @@ export class RealtimeCanvasRenderer {
     this.drawGeometry(visual, centerX, centerY, radius, time);
     this.drawBonusMotifs(visual, centerX, centerY, radius, time);
     this.drawPulseConstellation(visual, centerX, centerY, radius, time);
+    this.drawTransitionImpact(visual, width, height, centerX, centerY, radius, time);
     this.drawParticles(visual, centerX, centerY, radius, time);
     this.drawGrain(visual, width, height, time);
+  }
+
+  private resolveVisualAtTimestamp(timestamp: number): VisualParameters {
+    if (!this.currentVisual) {
+      throw new Error("Renderer visual state is unavailable");
+    }
+
+    if (!this.targetVisual || this.targetVisual === this.currentVisual || this.transitionStartMs === null) {
+      return this.currentVisual;
+    }
+
+    const progress = Math.max(0, Math.min(1, (timestamp - this.transitionStartMs) / 900));
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const interpolated = interpolateVisuals(this.currentVisual, this.targetVisual, eased);
+
+    if (progress >= 1) {
+      this.currentVisual = this.targetVisual;
+      this.targetVisual = this.targetVisual;
+      this.transitionStartMs = null;
+      return this.currentVisual;
+    }
+
+    return interpolated;
+  }
+
+  private computeTransitionImpact(fromVisual: VisualParameters, toVisual: VisualParameters): number {
+    const sceneShift = fromVisual.sceneFamily !== toVisual.sceneFamily ? 0.26 : 0;
+    const signatureShift = fromVisual.signature !== toVisual.signature ? 0.2 : 0;
+    const growthShift = fromVisual.growthImprint !== toVisual.growthImprint ? 0.18 : 0;
+    const cascadeShift = fromVisual.sceneCascade !== toVisual.sceneCascade ? 0.26 : 0;
+    const energyShift = Math.abs(fromVisual.energy - toVisual.energy) * 0.22;
+    const tensionShift = Math.abs(fromVisual.modalTension - toVisual.modalTension) * 0.18;
+    return Math.max(0, Math.min(1, 0.12 + sceneShift + signatureShift + growthShift + cascadeShift + energyShift + tensionShift));
+  }
+
+  private drawTransitionImpact(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    if (this.transitionImpact <= 0.02 || this.transitionImpactStartMs === null) {
+      return;
+    }
+
+    const elapsed = Math.max(0, this.lastTimestamp - this.transitionImpactStartMs);
+    const progress = Math.max(0, Math.min(1, elapsed / 1100));
+    if (progress >= 1) {
+      this.transitionImpact = 0;
+      this.transitionImpactStartMs = null;
+      return;
+    }
+
+    const fade = 1 - progress;
+    const waveRadius = radius * (0.8 + progress * (2.4 + this.transitionImpact));
+    const wash = this.context.createRadialGradient(centerX, centerY, radius * 0.18, centerX, centerY, waveRadius);
+    wash.addColorStop(0, alphaHex(visual.secondaryColor, 0.08 * fade + this.transitionImpact * 0.08));
+    wash.addColorStop(0.45, alphaHex(visual.color, 0.05 * fade + this.transitionImpact * 0.06));
+    wash.addColorStop(1, alphaHex(visual.backgroundColor, 0));
+    this.context.fillStyle = wash;
+    this.context.fillRect(0, 0, width, height);
+
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + this.transitionImpact * 4 * fade);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.2 * fade + this.transitionImpact * 0.1);
+    for (let index = 0; index < 3; index += 1) {
+      this.context.beginPath();
+      this.context.arc(
+        centerX,
+        centerY + Math.sin(time * 0.8 + index) * radius * 0.04,
+        waveRadius * (0.7 + index * 0.16),
+        0,
+        Math.PI * 2
+      );
+      this.context.stroke();
+    }
+    this.context.restore();
   }
 
   private drawBackground(
@@ -2070,6 +2176,65 @@ function mixHex(base: string, accent: string, ratio: number): string {
   const accentRgb = hexToRgb(accent);
   const mix = (left: number, right: number) => Math.round(left + (right - left) * ratio);
   return rgbToHex(mix(baseRgb[0], accentRgb[0]), mix(baseRgb[1], accentRgb[1]), mix(baseRgb[2], accentRgb[2]));
+}
+
+function interpolateVisuals(
+  fromVisual: VisualParameters,
+  toVisual: VisualParameters,
+  progress: number
+): VisualParameters {
+  const numeric = (from: number, to: number) => from + (to - from) * progress;
+  const discrete = <T,>(from: T, to: T, threshold = 0.5): T => (progress >= threshold ? to : from);
+  const mergedBonuses = progress >= 0.45 ? toVisual.activeBonuses : fromVisual.activeBonuses;
+  const mergedSynergies = progress >= 0.45 ? toVisual.activeSynergies : fromVisual.activeSynergies;
+
+  return {
+    color: mixHex(fromVisual.color, toVisual.color, progress),
+    secondaryColor: mixHex(fromVisual.secondaryColor, toVisual.secondaryColor, progress),
+    backgroundColor: mixHex(fromVisual.backgroundColor, toVisual.backgroundColor, progress),
+    glow: numeric(fromVisual.glow, toVisual.glow),
+    contrast: numeric(fromVisual.contrast, toVisual.contrast),
+    energy: numeric(fromVisual.energy, toVisual.energy),
+    complexity: numeric(fromVisual.complexity, toVisual.complexity),
+    temperature: numeric(fromVisual.temperature, toVisual.temperature),
+    valence: numeric(fromVisual.valence, toVisual.valence),
+    arousal: numeric(fromVisual.arousal, toVisual.arousal),
+    luminosity: numeric(fromVisual.luminosity, toVisual.luminosity),
+    grit: numeric(fromVisual.grit, toVisual.grit),
+    openness: numeric(fromVisual.openness, toVisual.openness),
+    attack: numeric(fromVisual.attack, toVisual.attack),
+    swing: numeric(fromVisual.swing, toVisual.swing),
+    gravity: numeric(fromVisual.gravity, toVisual.gravity),
+    synergyResonance: numeric(fromVisual.synergyResonance, toVisual.synergyResonance),
+    cadencePull: numeric(fromVisual.cadencePull, toVisual.cadencePull),
+    modalTension: numeric(fromVisual.modalTension, toVisual.modalTension),
+    blendCohesion: numeric(fromVisual.blendCohesion, toVisual.blendCohesion),
+    symmetry: numeric(fromVisual.symmetry, toVisual.symmetry),
+    depth: numeric(fromVisual.depth, toVisual.depth),
+    pulseDensity: numeric(fromVisual.pulseDensity, toVisual.pulseDensity),
+    motionSpeed: numeric(fromVisual.motionSpeed, toVisual.motionSpeed),
+    ringCount: Math.round(numeric(fromVisual.ringCount, toVisual.ringCount)),
+    rippleStrength: numeric(fromVisual.rippleStrength, toVisual.rippleStrength),
+    beamStrength: numeric(fromVisual.beamStrength, toVisual.beamStrength),
+    grain: numeric(fromVisual.grain, toVisual.grain),
+    signature: discrete(fromVisual.signature, toVisual.signature, 0.42),
+    sceneFamily: discrete(fromVisual.sceneFamily, toVisual.sceneFamily, 0.48),
+    growthImprint: discrete(fromVisual.growthImprint, toVisual.growthImprint, 0.48),
+    growthImprintIntensity: numeric(fromVisual.growthImprintIntensity, toVisual.growthImprintIntensity),
+    sceneCascade: discrete(fromVisual.sceneCascade, toVisual.sceneCascade, 0.48),
+    sceneCascadeIntensity: numeric(fromVisual.sceneCascadeIntensity, toVisual.sceneCascadeIntensity),
+    activeBonuses: mergedBonuses,
+    activeSynergies: mergedSynergies,
+    particles: {
+      density: numeric(fromVisual.particles.density, toVisual.particles.density),
+      trail: discrete(fromVisual.particles.trail, toVisual.particles.trail, 0.55),
+      size: numeric(fromVisual.particles.size, toVisual.particles.size),
+      speed: numeric(fromVisual.particles.speed, toVisual.particles.speed),
+      spread: numeric(fromVisual.particles.spread, toVisual.particles.spread)
+    },
+    geometry: discrete(fromVisual.geometry, toVisual.geometry, 0.52),
+    animationState: discrete(fromVisual.animationState, toVisual.animationState, 0.52)
+  };
 }
 
 function alphaHex(hex: string, alpha: number): string {

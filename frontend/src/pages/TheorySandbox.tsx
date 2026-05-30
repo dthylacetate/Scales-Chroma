@@ -174,13 +174,16 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
 
     const renderer = new RealtimeCanvasRenderer(canvas);
     renderer.resize(canvas.clientWidth || 720, canvas.clientHeight || 420);
-    renderer.start(visual);
     rendererRef.current = renderer;
 
     return () => {
       renderer.stop();
       rendererRef.current = null;
     };
+  }, []);
+
+  useEffect(() => {
+    rendererRef.current?.start(visual);
   }, [visual]);
 
   useEffect(() => {
