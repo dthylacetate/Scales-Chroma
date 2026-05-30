@@ -494,6 +494,63 @@
 - 现在不同路线不只是舞台装置、灯光和换场不同，连空气介质和体感都不同。
 - 整个中间舞台开始更像一个真正被不同物理/情绪环境占领的演出空间，而不是只有图层数量在增加。
 
+## 最新一轮：Phrase Trajectory 顺序推进层
+
+这一轮继续处理一个很贴近交互手感的问题：之前很多组合虽然参数已经很丰富，但“同一组模块换个顺序”带来的差异还不够直接。
+
+目标：
+
+- 让拖拽顺序本身也变成正式的视觉语言。
+- 让用户重新排列模块时，不只是看到数值轻微浮动，而是能看到舞台主弧线和推进路径明显变化。
+
+实现方式：
+
+- 后端 `VisualParameters` 新增 `phrase_trajectory` 与 `phrase_trajectory_intensity`
+- `renderer.py` 新增 `_resolve_phrase_trajectory(...)`
+- 这层不再只看“有哪些模块”，还会看“谁在前面、谁在后面、这条路径是怎么走到落点的”
+- 前端新增 `frontend/src/visual_engine/stagePhraseTrajectories.ts`
+- `RealtimeCanvasRenderer` 新增 `drawStagePhraseTrajectoryLayer(...)`
+- `TheorySandbox` 右侧新增 `Phrase Trajectory` 面板，舞台左上角新增 `Trajectory: ...`
+
+当前已接入的顺序轨迹：
+
+- `Lift Arc`
+- `Velvet Drift`
+- `Forge Drop`
+- `Prism Climb`
+- `Runway Drive`
+- `Shadow Sink`
+
+当前规则示例：
+
+- `Lydian -> Maj7 -> II-V-I` 更容易被推成 `Lift Arc`
+- `Pentatonic -> Mixolydian -> Dominant7` 更容易被推成 `Runway Drive`
+- `Dominant7 -> Dim7 -> Harmonic Minor` 会更容易沉成 `Shadow Sink`
+
+对应测试：
+
+- 后端单元测试：
+  - 验证不同顺序会得到不同的 `phrase_trajectory`
+  - 验证 `lift-arc` 与 `shadow-sink` 会同时抬高不同参数
+- 后端 API 测试：
+  - 验证 `/sandbox/render` 会返回 `phrase_trajectory` 和 `phrase_trajectory_intensity`
+- 前端 canvas/profile 测试：
+  - 新增 `stagePhraseTrajectories.test.ts`
+  - `realtimeCanvasRenderer.test.ts` 新增对主弧线路径绘制的断言
+- 前端 UI 测试：
+  - 验证右侧 `Phrase Trajectory` 面板与左上角 `Trajectory: ...` 会同时出现
+
+本轮验证结果：
+
+- 后端：`94 passed, 1 warning`
+- 前端：`91 passed`
+- 前端 build：通过
+
+这一层的价值在于：
+
+- 它把“拖拽顺序”从弱影响变成了能被用户直接感知的主导因素。
+- 这会让乐理沙盘更像真正可以编排的舞台，而不是把几个模块丢进去之后只能看它们静态叠加。
+
 - 新增 `frontend/src/visual_engine/stageDirectorCues.ts`
 - 用 `getStageSetpiece(...)` 作为入口，把 setpiece 继续映射到不同的 director cue
 - `TheorySandbox` 新增 `Stage Director Cue` 面板

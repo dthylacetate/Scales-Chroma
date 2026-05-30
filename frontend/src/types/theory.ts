@@ -47,6 +47,8 @@ export interface VisualParameters {
     | "shadow-sanctum";
   growthImprint: "neutral" | "pentatonic-drive" | "jazz-lattice" | "metal-forge" | "neo-soul-veil" | "fusion-phase";
   growthImprintIntensity: number;
+  phraseTrajectory: "neutral" | "lift-arc" | "velvet-drift" | "forge-drop" | "prism-climb" | "runway-drive" | "shadow-sink";
+  phraseTrajectoryIntensity: number;
   sceneCascade:
     | "neutral"
     | "aurora-dais"

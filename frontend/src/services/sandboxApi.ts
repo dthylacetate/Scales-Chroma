@@ -34,6 +34,8 @@ interface SandboxRenderResponse {
   scene_family?: VisualParameters["sceneFamily"];
   growth_imprint?: VisualParameters["growthImprint"];
   growth_imprint_intensity?: number;
+  phrase_trajectory?: VisualParameters["phraseTrajectory"];
+  phrase_trajectory_intensity?: number;
   scene_cascade?: VisualParameters["sceneCascade"];
   scene_cascade_intensity?: number;
   active_bonuses?: string[];
@@ -127,6 +129,8 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
     growthImprintIntensity:
       response.growth_imprint_intensity ??
       inferGrowthImprintIntensity(response.signature ?? "Pulse Field", response.active_bonuses ?? []),
+    phraseTrajectory: response.phrase_trajectory ?? "neutral",
+    phraseTrajectoryIntensity: response.phrase_trajectory_intensity ?? 0,
     sceneCascade:
       response.scene_cascade ??
       inferSceneCascade(

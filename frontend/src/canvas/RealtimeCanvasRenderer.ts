@@ -2,6 +2,7 @@ import type { VisualParameters } from "../types/theory";
 import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
+import { getStagePhraseTrajectory } from "../visual_engine/stagePhraseTrajectories";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { getStageSynergyGlyph } from "../visual_engine/stageSynergyGlyphs";
@@ -130,6 +131,7 @@ export class RealtimeCanvasRenderer {
     this.drawBackground(visual, width, height, centerX, centerY, radius, time);
     this.drawAtmosphereLayers(visual, width, height, centerX, centerY, radius, time);
     this.drawStageClimateLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawStagePhraseTrajectoryLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
@@ -181,6 +183,7 @@ export class RealtimeCanvasRenderer {
     const growthShift = fromVisual.growthImprint !== toVisual.growthImprint ? 0.18 : 0;
     const cascadeShift = fromVisual.sceneCascade !== toVisual.sceneCascade ? 0.26 : 0;
     const setpieceShift = getStageSetpiece(fromVisual)?.kind !== getStageSetpiece(toVisual)?.kind ? 0.18 : 0;
+    const trajectoryShift = getStagePhraseTrajectory(fromVisual)?.kind !== getStagePhraseTrajectory(toVisual)?.kind ? 0.14 : 0;
     const motionShift = getStageMotionRig(fromVisual)?.kind !== getStageMotionRig(toVisual)?.kind ? 0.12 : 0;
     const projectionShift = getStageProjectionScript(fromVisual)?.kind !== getStageProjectionScript(toVisual)?.kind ? 0.12 : 0;
     const takeoverShift = getStageTakeoverMode(fromVisual)?.kind !== getStageTakeoverMode(toVisual)?.kind ? 0.12 : 0;
@@ -190,7 +193,7 @@ export class RealtimeCanvasRenderer {
       0,
       Math.min(
         1,
-        0.12 + sceneShift + signatureShift + growthShift + cascadeShift + setpieceShift + motionShift + projectionShift + takeoverShift + energyShift + tensionShift
+        0.12 + sceneShift + signatureShift + growthShift + cascadeShift + setpieceShift + trajectoryShift + motionShift + projectionShift + takeoverShift + energyShift + tensionShift
       )
     );
   }
@@ -704,6 +707,170 @@ export class RealtimeCanvasRenderer {
       this.context.ellipse(x, y, radius * 0.46, radius * 0.14, 0, 0, Math.PI * 2);
       this.context.fill();
     }
+  }
+
+  private drawStagePhraseTrajectoryLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const trajectory = getStagePhraseTrajectory(visual);
+
+    if (!trajectory) {
+      return;
+    }
+
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + visual.phraseTrajectoryIntensity * 2.2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.12 + visual.phraseTrajectoryIntensity * 0.12);
+    this.context.fillStyle = alphaHex(visual.color, 0.05 + visual.phraseTrajectoryIntensity * 0.04);
+
+    switch (trajectory.kind) {
+      case "lift-arc":
+        this.drawLiftArcTrajectory(centerX, centerY, radius);
+        break;
+      case "velvet-drift":
+        this.drawVelvetDriftTrajectory(width, centerX, centerY, radius, time);
+        break;
+      case "forge-drop":
+        this.drawForgeDropTrajectory(width, centerX, centerY, radius, time);
+        break;
+      case "prism-climb":
+        this.drawPrismClimbTrajectory(centerX, centerY, radius, time);
+        break;
+      case "runway-drive":
+        this.drawRunwayDriveTrajectory(width, height, centerX, centerY, radius, time);
+        break;
+      case "shadow-sink":
+        this.drawShadowSinkTrajectory(centerX, centerY, radius);
+        break;
+    }
+
+    this.context.restore();
+  }
+
+  private drawLiftArcTrajectory(centerX: number, centerY: number, radius: number): void {
+    for (let index = 0; index < 3; index += 1) {
+      const lift = radius * (1.06 + index * 0.12);
+      this.context.beginPath();
+      this.context.moveTo(centerX - lift, centerY + radius * 0.7);
+      this.context.bezierCurveTo(
+        centerX - radius * 0.82,
+        centerY - radius * (0.22 + index * 0.06),
+        centerX - radius * 0.18,
+        centerY - radius * (0.96 + index * 0.04),
+        centerX,
+        centerY - radius * 1.12
+      );
+      this.context.stroke();
+      this.context.beginPath();
+      this.context.moveTo(centerX + lift, centerY + radius * 0.7);
+      this.context.bezierCurveTo(
+        centerX + radius * 0.82,
+        centerY - radius * (0.22 + index * 0.06),
+        centerX + radius * 0.18,
+        centerY - radius * (0.96 + index * 0.04),
+        centerX,
+        centerY - radius * 1.12
+      );
+      this.context.stroke();
+    }
+
+    this.context.fillRect(centerX - radius * 0.06, centerY - radius * 1.04, radius * 0.12, radius * 0.24);
+  }
+
+  private drawVelvetDriftTrajectory(width: number, centerX: number, centerY: number, radius: number, time: number): void {
+    for (let index = 0; index < 4; index += 1) {
+      const y = centerY - radius * 0.48 + index * radius * 0.34;
+      this.context.beginPath();
+      this.context.moveTo(centerX - radius * 1.22, y);
+      this.context.bezierCurveTo(
+        centerX - radius * 0.64,
+        y - radius * (0.18 + Math.sin(time * 0.3 + index) * 0.06),
+        centerX + radius * 0.24,
+        y + radius * (0.22 + Math.cos(time * 0.28 + index) * 0.06),
+        width - radius * 0.18,
+        y - radius * 0.06
+      );
+      this.context.stroke();
+    }
+  }
+
+  private drawForgeDropTrajectory(width: number, centerX: number, centerY: number, radius: number, time: number): void {
+    for (let index = 0; index < 5; index += 1) {
+      const x = centerX - radius * 0.92 + index * radius * 0.46;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 1.08);
+      this.context.lineTo(x + Math.sin(time * 0.4 + index) * radius * 0.06, centerY + radius * 0.56);
+      this.context.stroke();
+    }
+    this.context.fillRect(centerX - radius * 0.36, centerY + radius * 0.46, radius * 0.72, radius * 0.12);
+  }
+
+  private drawPrismClimbTrajectory(centerX: number, centerY: number, radius: number, time: number): void {
+    for (let index = 0; index < 5; index += 1) {
+      const startX = centerX - radius * 0.94 + index * radius * 0.24;
+      const startY = centerY + radius * 0.82 - index * radius * 0.26;
+      this.context.beginPath();
+      this.context.moveTo(startX, startY);
+      this.context.lineTo(startX + radius * 0.26, startY - radius * 0.2);
+      this.context.lineTo(startX + radius * 0.38, startY - radius * 0.44);
+      this.context.lineTo(startX + radius * 0.62, startY - radius * 0.64);
+      this.context.stroke();
+    }
+    this.context.beginPath();
+    this.context.arc(centerX + Math.sin(time * 0.3) * radius * 0.08, centerY - radius * 0.82, radius * 0.08, 0, Math.PI * 2);
+    this.context.fill();
+  }
+
+  private drawRunwayDriveTrajectory(
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    for (let index = 0; index < 7; index += 1) {
+      const progress = index / 6;
+      const x = progress * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.lineTo(centerX + (x - centerX) * 0.1, centerY - radius * 0.18);
+      this.context.stroke();
+    }
+    this.context.beginPath();
+    this.context.moveTo(centerX, height);
+    this.context.lineTo(centerX, centerY - radius * 0.32);
+    this.context.stroke();
+  }
+
+  private drawShadowSinkTrajectory(centerX: number, centerY: number, radius: number): void {
+    for (let index = 0; index < 4; index += 1) {
+      this.context.beginPath();
+      this.context.ellipse(
+        centerX,
+        centerY + radius * (0.18 + index * 0.12),
+        radius * (0.96 - index * 0.14),
+        radius * 0.18,
+        0,
+        0,
+        Math.PI * 2
+      );
+      this.context.stroke();
+    }
+    for (let index = 0; index < 5; index += 1) {
+      const x = centerX - radius * 0.82 + index * radius * 0.4;
+      this.context.beginPath();
+      this.context.moveTo(x, centerY - radius * 0.74);
+      this.context.lineTo(centerX + (x - centerX) * 0.16, centerY + radius * 0.72);
+      this.context.stroke();
+    }
+    this.context.fillRect(centerX - radius * 0.08, centerY + radius * 0.56, radius * 0.16, radius * 0.22);
   }
 
   private drawStageArchitecture(
@@ -4182,6 +4349,8 @@ function interpolateVisuals(
     sceneFamily: discrete(fromVisual.sceneFamily, toVisual.sceneFamily, 0.48),
     growthImprint: discrete(fromVisual.growthImprint, toVisual.growthImprint, 0.48),
     growthImprintIntensity: numeric(fromVisual.growthImprintIntensity, toVisual.growthImprintIntensity),
+    phraseTrajectory: discrete(fromVisual.phraseTrajectory, toVisual.phraseTrajectory, 0.48),
+    phraseTrajectoryIntensity: numeric(fromVisual.phraseTrajectoryIntensity, toVisual.phraseTrajectoryIntensity),
     sceneCascade: discrete(fromVisual.sceneCascade, toVisual.sceneCascade, 0.48),
     sceneCascadeIntensity: numeric(fromVisual.sceneCascadeIntensity, toVisual.sceneCascadeIntensity),
     activeBonuses: mergedBonuses,

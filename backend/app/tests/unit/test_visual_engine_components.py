@@ -341,3 +341,28 @@ def test_renderer_can_preview_a_growth_imprint_without_real_unlocks() -> None:
     assert visual.scene_cascade == "aurora-dais"
     assert "Silken Halo" in visual.active_bonuses
     assert visual.glow > 0.9
+
+
+def test_renderer_uses_element_order_to_shape_phrase_trajectory() -> None:
+    bright_arc = render_visual_parameters(
+        [
+            TheoryElement(id="lydian", type="mode", name="Lydian"),
+            TheoryElement(id="maj7", type="chord", name="Maj7"),
+            TheoryElement(id="ii-v-i", type="progression", name="II-V-I"),
+        ]
+    )
+    dark_sink = render_visual_parameters(
+        [
+            TheoryElement(id="dominant7", type="chord", name="Dominant7"),
+            TheoryElement(id="dim7", type="chord", name="Dim7"),
+            TheoryElement(id="harmonic-minor", type="scale", name="Harmonic Minor"),
+        ]
+    )
+
+    assert bright_arc.phrase_trajectory == "lift-arc"
+    assert bright_arc.phrase_trajectory_intensity > 0.8
+    assert bright_arc.beam_strength > 0.78
+    assert dark_sink.phrase_trajectory == "shadow-sink"
+    assert dark_sink.phrase_trajectory_intensity > 0.75
+    assert dark_sink.depth > 0.8
+    assert bright_arc.phrase_trajectory != dark_sink.phrase_trajectory

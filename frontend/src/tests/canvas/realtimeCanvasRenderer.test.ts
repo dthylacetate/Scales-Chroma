@@ -28,6 +28,8 @@ const visual: VisualParameters = {
   sceneFamily: "jazz-cathedral",
   growthImprint: "jazz-lattice",
   growthImprintIntensity: 0.82,
+  phraseTrajectory: "lift-arc",
+  phraseTrajectoryIntensity: 0.84,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.88,
   openness: 0.82,
@@ -369,6 +371,32 @@ describe("RealtimeCanvasRenderer", () => {
     expect(context?.fillRect).toHaveBeenCalled();
   });
 
+  it("draws a phrase trajectory layer when the module order has locked a path", () => {
+    const canvas = createCanvas();
+    let shouldRenderImmediately = true;
+    const renderer = new RealtimeCanvasRenderer(canvas, {
+      requestFrame: (callback) => {
+        if (shouldRenderImmediately) {
+          shouldRenderImmediately = false;
+          callback(16);
+        }
+        return 1;
+      },
+      cancelFrame: vi.fn()
+    });
+
+    renderer.resize(320, 180);
+    renderer.start({
+      ...visual,
+      phraseTrajectory: "lift-arc",
+      phraseTrajectoryIntensity: 0.88
+    });
+
+    const context = canvas.getContext("2d");
+    expect(context?.bezierCurveTo).toHaveBeenCalled();
+    expect(context?.fillRect).toHaveBeenCalled();
+  });
+
   it("draws foreground motion rigs for stage personalities with near-camera machinery", () => {
     const canvas = createCanvas();
     let shouldRenderImmediately = true;
@@ -456,6 +484,7 @@ function createMockContext() {
     setTransform: vi.fn(),
     translate: vi.fn(),
     rotate: vi.fn(),
+    bezierCurveTo: vi.fn(),
     quadraticCurveTo: vi.fn(),
     createRadialGradient: vi.fn(() => ({
       addColorStop: vi.fn()

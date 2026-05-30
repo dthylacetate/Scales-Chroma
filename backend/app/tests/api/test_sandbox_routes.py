@@ -238,6 +238,37 @@ def test_sandbox_render_supports_non_persistent_growth_preview() -> None:
     assert unlocked_effect_count == 0
 
 
+def test_sandbox_render_returns_phrase_trajectory_for_order_sensitive_stacks() -> None:
+    session = create_test_session()
+
+    try:
+        client, headers = create_authenticated_client(
+            session,
+            username="trajectory-player",
+            email="trajectory@example.com",
+        )
+        response = client.post(
+            "/sandbox/render",
+            headers=headers,
+            json={
+                "elements": [
+                    {"id": "pentatonic", "type": "scale", "name": "Pentatonic"},
+                    {"id": "mixolydian", "type": "mode", "name": "Mixolydian"},
+                    {"id": "dominant7", "type": "chord", "name": "Dominant7"},
+                ],
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["phrase_trajectory"] == "runway-drive"
+    assert payload["phrase_trajectory_intensity"] > 0.75
+    assert payload["motion_speed"] > 0.8
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

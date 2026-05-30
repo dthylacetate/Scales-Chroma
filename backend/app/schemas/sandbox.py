@@ -14,6 +14,16 @@ GrowthImprintName = Literal[
     "fusion-phase",
 ]
 
+PhraseTrajectoryName = Literal[
+    "neutral",
+    "lift-arc",
+    "velvet-drift",
+    "forge-drop",
+    "prism-climb",
+    "runway-drive",
+    "shadow-sink",
+]
+
 
 class VisualParameters(BaseModel):
     color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
@@ -57,6 +67,8 @@ class VisualParameters(BaseModel):
     ]
     growth_imprint: GrowthImprintName
     growth_imprint_intensity: float = Field(ge=0.0, le=1.0)
+    phrase_trajectory: PhraseTrajectoryName
+    phrase_trajectory_intensity: float = Field(ge=0.0, le=1.0)
     scene_cascade: Literal[
         "neutral",
         "aurora-dais",

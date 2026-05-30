@@ -22,6 +22,7 @@ import type { TheoryElement, VisualParameters } from "../types/theory";
 import { getStageDirectorCue } from "../visual_engine/stageDirectorCues";
 import { getStageClimateProfile } from "../visual_engine/stageClimateProfiles";
 import { getStageMotionRig } from "../visual_engine/stageMotionRigs";
+import { getStagePhraseTrajectory } from "../visual_engine/stagePhraseTrajectories";
 import { getStageProjectionScript } from "../visual_engine/stageProjectionScripts";
 import { getStageSetpiece } from "../visual_engine/stageSetpieces";
 import { getStageSynergyGlyph } from "../visual_engine/stageSynergyGlyphs";
@@ -452,6 +453,9 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
                 <div className="text-[11px] text-[#d8ff9c]">Glyph: {getStageSynergyGlyph(visual)?.label}</div>
               ) : null}
               <div className="text-[11px] text-[#b8d7ff]">Climate: {getStageClimateProfile(visual).label}</div>
+              {getStagePhraseTrajectory(visual) ? (
+                <div className="text-[11px] text-[#ffd7c2]">Trajectory: {getStagePhraseTrajectory(visual)?.label}</div>
+              ) : null}
             </div>
             {visual.activeBonuses.length > 0 ? (
               <div className="pointer-events-none absolute left-4 bottom-4 flex max-w-[min(84%,28rem)] flex-wrap gap-1.5">
@@ -578,6 +582,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Scene" value={sceneFamilyLabel(visual.sceneFamily)} />
           <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
           <StageClimatePanel visual={visual} />
+          <StagePhraseTrajectoryPanel visual={visual} />
           <GrowthImprintPanel visual={visual} />
           <HarmonicTraitsPanel visual={visual} />
           <TheorySynergyPanel visual={visual} />
@@ -1198,6 +1203,40 @@ function StageClimatePanel({ visual }: { visual: VisualParameters }) {
   );
 }
 
+function StagePhraseTrajectoryPanel({ visual }: { visual: VisualParameters }) {
+  const trajectory = buildPhraseTrajectoryReading(visual);
+
+  if (visual.phraseTrajectory === "neutral" || visual.phraseTrajectoryIntensity <= 0.05) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-[#4a362b] bg-[#241b19] p-3">
+      <div className="text-xs uppercase text-stone-400">Phrase Trajectory</div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium text-stone-100">{trajectory.label}</div>
+          <div className="mt-1 text-xs text-stone-400">{trajectory.summary}</div>
+        </div>
+        <div className="text-sm font-semibold text-[#ffd166]">{Math.round(visual.phraseTrajectoryIntensity * 100)}%</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#170f0d]">
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${Math.max(6, Math.round(visual.phraseTrajectoryIntensity * 100))}%`,
+            background: `linear-gradient(90deg, ${trajectory.accent}55 0%, ${trajectory.accent} 100%)`
+          }}
+        />
+      </div>
+      <div className="mt-3 grid gap-2">
+        <ReadingLine label="推进路径" value={trajectory.path} />
+        <ReadingLine label="舞台体感" value={trajectory.impact} />
+      </div>
+    </section>
+  );
+}
+
 function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
   const reading = buildGrowthImprintReading(visual);
 
@@ -1629,18 +1668,98 @@ function buildStageReading(
     visual.growthImprint !== "neutral"
       ? `；Growth 已经把当前舞台往${growthImprintLabel(visual.growthImprint)}推了 ${Math.round(visual.growthImprintIntensity * 100)}%`
       : "；当前 Growth 还没有形成独立印记";
+  const trajectoryText =
+    visual.phraseTrajectory !== "neutral"
+      ? `；当前顺序已经形成 ${phraseTrajectoryLabel(visual.phraseTrajectory)}，强度 ${Math.round(visual.phraseTrajectoryIntensity * 100)}%`
+      : "；当前顺序还没有形成独立推进轨迹";
   const cascadeText =
     visual.sceneCascade !== "neutral"
       ? `；当前还触发了 ${sceneCascadeLabel(visual.sceneCascade)}，强度 ${Math.round(visual.sceneCascadeIntensity * 100)}%`
       : "；当前还没有触发场景级联";
 
   return {
-    summary: `当前舞台由 ${primaryDrivers} 主导，正在形成 ${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)} 读感${visual.sceneCascade !== "neutral" ? `，并开始长出 ${sceneCascadeLabel(visual.sceneCascade)}` : ""}。`,
+    summary: `当前舞台由 ${primaryDrivers} 主导，正在形成 ${sceneFamilyLabel(visual.sceneFamily)} 里的 ${signatureTone(visual)} 读感${visual.phraseTrajectory !== "neutral" ? `，推进路径已经被拉成 ${phraseTrajectoryLabel(visual.phraseTrajectory)}` : ""}${visual.sceneCascade !== "neutral" ? `，并开始长出 ${sceneCascadeLabel(visual.sceneCascade)}` : ""}。`,
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}${trajectoryText}${cascadeText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征表现为 ${theoryTraits}；模块之间的协同则表现为 ${synergyTraits}。`
   };
+}
+
+function buildPhraseTrajectoryReading(visual: VisualParameters): {
+  label: string;
+  accent: string;
+  summary: string;
+  path: string;
+  impact: string;
+} {
+  if (visual.phraseTrajectory === "neutral" || visual.phraseTrajectoryIntensity <= 0.05) {
+    return {
+      label: "Neutral",
+      accent: "#8fdcff",
+      summary: "当前顺序还没有把舞台推进方式单独锁成一条轨迹。",
+      path: "顺序变化还没有强到足以改写主弧线。",
+      impact: "现在更多还是模块本身的色彩、结构和 Growth 在主导。 "
+    };
+  }
+
+  const strength =
+    visual.phraseTrajectoryIntensity >= 0.9
+      ? "已经非常明显地改写了舞台推进方式"
+      : visual.phraseTrajectoryIntensity >= 0.78
+        ? "已经能明显看出是一条独立路线"
+        : "正在把舞台推向更明确的路径";
+
+  switch (visual.phraseTrajectory) {
+    case "lift-arc":
+      return {
+        label: "Lift Arc",
+        accent: "#ffd166",
+        summary: `这一组模块的顺序已经把舞台抬成一条向上收束的礼台弧线，${strength}。`,
+        path: "从前场两翼往上拱，再在舞台上方收成一个高点。",
+        impact: "同样的明亮组合会更像被托举，而不是平推展开。 "
+      };
+    case "velvet-drift":
+      return {
+        label: "Velvet Drift",
+        accent: "#ff9fc9",
+        summary: `这一组模块现在更像在横向滑移和绕身漂移，${strength}。`,
+        path: "路径会从一条直线改成更柔软的 S 形和侧向漂移。",
+        impact: "舞台会更像在贴身绕过去，而不是正面冲过来。 "
+      };
+    case "forge-drop":
+      return {
+        label: "Forge Drop",
+        accent: "#ff7b3d",
+        summary: `这一组模块的顺序已经把张力拉成高举后砸落的锻击曲线，${strength}。`,
+        path: "先往上提压，再对着中心重砸下来。",
+        impact: "会明显增加落点重量和硬质压迫感。 "
+      };
+    case "prism-climb":
+      return {
+        label: "Prism Climb",
+        accent: "#8db8ff",
+        summary: `这一组模块正沿着折线门框不断往上爬，${strength}。`,
+        path: "路径会像棱镜阶梯一样一格格抬升并重画。",
+        impact: "复杂组合会更像系统正在升阶，而不是原地闪烁。 "
+      };
+    case "runway-drive":
+      return {
+        label: "Runway Drive",
+        accent: "#59fff5",
+        summary: `这一组模块的顺序已经把舞台拖成一条前冲跑道，${strength}。`,
+        path: "路径会直接指向地平远端，几乎没有犹豫。",
+        impact: "推进感会更直接，用户会明显感觉舞台在往前压。 "
+      };
+    default:
+      return {
+        label: "Shadow Sink",
+        accent: "#d6c2ff",
+        summary: `这一组模块的顺序已经把重心拖向中心深井，${strength}。`,
+        path: "路径会从前场慢慢往内塌，再坠进更暗的中心。",
+        impact: "暗色组合会更像沉降和坍缩，而不是简单变碎变冷。 "
+      };
+  }
 }
 
 function buildGrowthImprintReading(visual: VisualParameters): {
@@ -1939,6 +2058,25 @@ function growthImprintLabel(imprint: VisualParameters["growthImprint"]): string 
       return "Neo Soul 幕纱";
     case "fusion-phase":
       return "Fusion Phase";
+    default:
+      return "Neutral";
+  }
+}
+
+function phraseTrajectoryLabel(trajectory: VisualParameters["phraseTrajectory"]): string {
+  switch (trajectory) {
+    case "lift-arc":
+      return "Lift Arc";
+    case "velvet-drift":
+      return "Velvet Drift";
+    case "forge-drop":
+      return "Forge Drop";
+    case "prism-climb":
+      return "Prism Climb";
+    case "runway-drive":
+      return "Runway Drive";
+    case "shadow-sink":
+      return "Shadow Sink";
     default:
       return "Neutral";
   }

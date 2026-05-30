@@ -195,6 +195,8 @@ describe("TheorySandbox", () => {
         signature: "Aurora Choir",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.91,
+        phrase_trajectory: "lift-arc",
+        phrase_trajectory_intensity: 0.88,
         scene_cascade: "aurora-dais",
         scene_cascade_intensity: 0.95,
         openness: 0.84,
@@ -233,7 +235,9 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("Stage Takeover")).toBeInTheDocument();
     expect(screen.getByText("Synergy Glyph")).toBeInTheDocument();
     expect(screen.getByText("Stage Climate")).toBeInTheDocument();
+    expect(screen.getByText("Phrase Trajectory")).toBeInTheDocument();
     expect(screen.getAllByText("Cathedral Descent").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Lift Arc").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Aisle Lattice").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Choir Crowns").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Cathedral Iris").length).toBeGreaterThan(0);
@@ -248,7 +252,9 @@ describe("TheorySandbox", () => {
     expect(screen.getByText(/Takeover: Cathedral Iris/)).toBeInTheDocument();
     expect(screen.getByText(/Glyph: Horizon Bloom/)).toBeInTheDocument();
     expect(screen.getByText(/Climate: Bloom Haze/)).toBeInTheDocument();
+    expect(screen.getByText(/Trajectory: Lift Arc/)).toBeInTheDocument();
     expect(screen.getByText(/成组下压，像礼堂灯柱一层层往中心落/)).toBeInTheDocument();
+    expect(screen.getByText(/从前场两翼往上拱，再在舞台上方收成一个高点/)).toBeInTheDocument();
     expect(screen.getByText(/地面会长出合唱席一样的纵深 aisle 与圆形 choir mark/)).toBeInTheDocument();
     expect(screen.getByText(/前景会出现成组的拱冠、吊环和合唱席式悬挂边框/)).toBeInTheDocument();
     expect(screen.getByText(/舞台会像穹顶开闸一样往中心收束再打开/)).toBeInTheDocument();

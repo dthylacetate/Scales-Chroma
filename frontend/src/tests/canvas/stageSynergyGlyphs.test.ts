@@ -36,6 +36,8 @@ const baseVisual: VisualParameters = {
   sceneFamily: "solar-garden",
   growthImprint: "jazz-lattice",
   growthImprintIntensity: 0.88,
+  phraseTrajectory: "lift-arc",
+  phraseTrajectoryIntensity: 0.86,
   sceneCascade: "aurora-dais",
   sceneCascadeIntensity: 0.94,
   activeBonuses: ["Aurora Choir"],

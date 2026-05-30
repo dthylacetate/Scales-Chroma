@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { VisualParameters } from "../../types/theory";
-import { getStageSetpiece } from "../../visual_engine/stageSetpieces";
+import { getStagePhraseTrajectory } from "../../visual_engine/stagePhraseTrajectories";
 
 const baseVisual: VisualParameters = {
   color: "#ffd166",
@@ -53,33 +53,32 @@ const baseVisual: VisualParameters = {
   animationState: "flowing"
 };
 
-describe("stage setpieces", () => {
-  it("returns a growth-split setpiece before falling back to cascade defaults", () => {
-    const setpiece = getStageSetpiece({
-      ...baseVisual,
-      activeBonuses: ["Aurora Choir", "Choir Vault"]
-    });
+describe("stage phrase trajectories", () => {
+  it("returns a named trajectory when the visual carries a non-neutral phrase path", () => {
+    const trajectory = getStagePhraseTrajectory(baseVisual);
 
-    expect(setpiece?.label).toBe("Choir Vault");
-    expect(setpiece?.rig).toContain("窗格");
-    expect(setpiece?.lighting).toContain("光柱");
+    expect(trajectory?.label).toBe("Lift Arc");
+    expect(trajectory?.path).toContain("明亮开放");
   });
 
-  it("falls back to the cascade setpiece when no growth-specific branch is active", () => {
-    const setpiece = getStageSetpiece(baseVisual);
-
-    expect(setpiece?.label).toBe("Aurora Dais");
-    expect(setpiece?.impact).toContain("礼台");
-  });
-
-  it("returns null when neither a cascade nor a split branch is active", () => {
-    const setpiece = getStageSetpiece({
+  it("returns a runway-forward reading for drive trajectories", () => {
+    const trajectory = getStagePhraseTrajectory({
       ...baseVisual,
-      sceneCascade: "neutral",
-      sceneCascadeIntensity: 0,
-      activeBonuses: []
+      phraseTrajectory: "runway-drive",
+      phraseTrajectoryIntensity: 0.8
     });
 
-    expect(setpiece).toBeNull();
+    expect(trajectory?.label).toBe("Runway Drive");
+    expect(trajectory?.impact).toContain("车道");
+  });
+
+  it("returns null when the phrase path is neutral", () => {
+    const trajectory = getStagePhraseTrajectory({
+      ...baseVisual,
+      phraseTrajectory: "neutral",
+      phraseTrajectoryIntensity: 0
+    });
+
+    expect(trajectory).toBeNull();
   });
 });

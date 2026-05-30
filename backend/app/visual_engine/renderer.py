@@ -51,6 +51,8 @@ class AggregateVisualState:
     scene_family: str
     growth_imprint: str
     growth_imprint_intensity: float
+    phrase_trajectory: str
+    phrase_trajectory_intensity: float
     scene_cascade: str
     scene_cascade_intensity: float
     active_bonuses: list[str]
@@ -189,6 +191,9 @@ def render_visual_parameters(
     aggregate_state.scene_cascade = scene_cascade
     aggregate_state.scene_cascade_intensity = scene_cascade_intensity
     _apply_growth_cascade_resonance(aggregate_state)
+    phrase_trajectory, phrase_trajectory_intensity = _resolve_phrase_trajectory(elements, aggregate_state)
+    aggregate_state.phrase_trajectory = phrase_trajectory
+    aggregate_state.phrase_trajectory_intensity = phrase_trajectory_intensity
     particles = configure_particles(
         density_seed=aggregate_state.particle_density,
         energy=aggregate_state.energy,
@@ -232,6 +237,8 @@ def render_visual_parameters(
         scene_family=aggregate_state.scene_family,
         growth_imprint=aggregate_state.growth_imprint,
         growth_imprint_intensity=round(aggregate_state.growth_imprint_intensity, 2),
+        phrase_trajectory=aggregate_state.phrase_trajectory,
+        phrase_trajectory_intensity=round(aggregate_state.phrase_trajectory_intensity, 2),
         scene_cascade=aggregate_state.scene_cascade,
         scene_cascade_intensity=round(aggregate_state.scene_cascade_intensity, 2),
         active_bonuses=aggregate_state.active_bonuses,
@@ -310,6 +317,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             scene_family="neon-grid",
             growth_imprint="neutral",
             growth_imprint_intensity=0.0,
+            phrase_trajectory="neutral",
+            phrase_trajectory_intensity=0.0,
             scene_cascade="neutral",
             scene_cascade_intensity=0.0,
             active_bonuses=[],
@@ -470,6 +479,8 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         ),
         growth_imprint="neutral",
         growth_imprint_intensity=0.0,
+        phrase_trajectory="neutral",
+        phrase_trajectory_intensity=0.0,
         scene_cascade="neutral",
         scene_cascade_intensity=0.0,
         active_bonuses=[],
@@ -1060,6 +1071,86 @@ def _apply_growth_cascade_resonance(state: AggregateVisualState) -> None:
             grit=state.grit,
         )
         return
+
+
+def _resolve_phrase_trajectory(
+    elements: list[TheoryElement],
+    state: AggregateVisualState,
+) -> tuple[str, float]:
+    if len(elements) < 2:
+        return "neutral", 0.0
+
+    element_names = [element.name.casefold() for element in elements]
+    first_name = element_names[0]
+    last_name = element_names[-1]
+    first_type = elements[0].type
+    last_type = elements[-1].type
+
+    bright_openers = {"lydian", "ionian", "major", "maj7"}
+    groove_openers = {"dorian", "min7", "major", "ii-v-i"}
+    dark_openers = {"harmonic minor", "phrygian", "dim7", "minor"}
+    runway_openers = {"pentatonic", "mixolydian", "major", "i-v-vi-iv"}
+    prism_openers = {"melodic minor", "lydian", "maj7", "dominant7"}
+    cadential_endings = {"ii-v-i", "maj7", "major", "dominant7"}
+    soft_endings = {"maj7", "min7", "ii-v-i"}
+    impact_endings = {"dominant7", "dim7", "aug"}
+    dark_endings = {"harmonic minor", "phrygian", "minor", "dim7"}
+
+    if first_name in bright_openers and last_name in cadential_endings and state.cadence_pull > 0.72:
+        intensity = min(1.0, 0.72 + state.cadence_pull * 0.18 + state.luminosity * 0.08)
+        _apply_scaled_bonus(
+            state,
+            {"beam_strength": 0.12, "depth": 0.1, "openness": 0.1, "symmetry": 0.08, "valence": 0.06},
+            0.38 + intensity * 0.24,
+        )
+        return "lift-arc", round(intensity, 2)
+
+    if first_name in groove_openers and last_name in soft_endings and state.blend_cohesion > 0.62:
+        intensity = min(1.0, 0.68 + state.blend_cohesion * 0.16 + state.swing * 0.12)
+        _apply_scaled_bonus(
+            state,
+            {"wave": 0.12, "ripple_strength": 0.14, "depth": 0.08, "blend_cohesion": 0.08, "swing": 0.1},
+            0.34 + intensity * 0.22,
+        )
+        return "velvet-drift", round(intensity, 2)
+
+    if first_name in runway_openers and last_name in {"dominant7", "ii-v-i", "i-v-vi-iv"} and state.motion_speed > 0.66:
+        intensity = min(1.0, 0.72 + state.motion_speed * 0.16 + state.energy * 0.12)
+        _apply_scaled_bonus(
+            state,
+            {"beam_strength": 0.12, "ripple_strength": 0.12, "motion_speed": 0.1, "energy": 0.1, "swing": 0.08},
+            0.36 + intensity * 0.22,
+        )
+        return "runway-drive", round(intensity, 2)
+
+    if first_name in prism_openers and last_name in {"aug", "dominant7", "lydian"} and state.complexity > 0.72:
+        intensity = min(1.0, 0.7 + state.complexity * 0.14 + state.attack * 0.12)
+        _apply_scaled_bonus(
+            state,
+            {"lattice": 0.12, "beam_strength": 0.1, "complexity": 0.08, "motion_speed": 0.08, "openness": 0.06},
+            0.34 + intensity * 0.24,
+        )
+        return "prism-climb", round(intensity, 2)
+
+    if first_name in dark_openers and last_name in impact_endings and state.modal_tension > 0.72:
+        intensity = min(1.0, 0.74 + state.modal_tension * 0.14 + state.gravity * 0.1)
+        _apply_scaled_bonus(
+            state,
+            {"fracture": 0.12, "attack": 0.12, "gravity": 0.1, "contrast": 0.08, "motion_speed": 0.08},
+            0.38 + intensity * 0.24,
+        )
+        return "forge-drop", round(intensity, 2)
+
+    if (first_type == "progression" or first_name in impact_endings) and (last_name in dark_endings or last_type == "scale"):
+        intensity = min(1.0, 0.68 + state.depth * 0.12 + state.modal_tension * 0.12 + state.gravity * 0.1)
+        _apply_scaled_bonus(
+            state,
+            {"fracture": 0.08, "depth": 0.12, "gravity": 0.12, "grit": 0.08, "modal_tension": 0.08},
+            0.34 + intensity * 0.22,
+        )
+        return "shadow-sink", round(intensity, 2)
+
+    return "neutral", 0.0
 
 
 def _apply_scaled_bonus(
