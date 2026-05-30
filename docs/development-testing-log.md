@@ -318,6 +318,45 @@ backend/app/visual_engine/
 - 在现有 Growth 烟测链路中新增 `Harmonic Traits` 可见性确认。
 - 这样可以证明：这四条新轴不是只在测试里出现，而是已经真正出现在用户能看到的界面上。
 
+### 11. 系统性协同层
+
+这一轮继续往“不是死记组合名”的方向推进，把协同拆成了 4 条新轴：
+
+- `Resonance`
+- `Cadence Pull`
+- `Modal Tension`
+- `Blend Cohesion`
+
+设计目的：
+
+- 让 `调式 + 和弦 + 进行` 的关系不只体现在一个签名字符串里。
+- 让系统可以同时表达“这组东西是不是彼此顺手”“有没有明显终止感”“摩擦有多强”“颜色和空间是否真正融合”。
+
+测试设计：
+
+1. 后端单元测试
+
+- 要求 `II-V-I + Maj7 + Lydian` 这类组合不只亮，而且要有更高的 `synergy_resonance` 与 `cadence_pull`。
+- 要求 `Harmonic Minor + Dim7` 这类组合要有更高的 `modal_tension`。
+- 要求 `Melodic Minor + Dominant7` 这类现代混合组合具备更高的 `blend_cohesion`。
+
+2. 前端契约测试
+
+- `sandboxApi` 必须正确映射 4 条新轴和 `active_synergies`。
+- `TheorySandbox` 必须真实渲染 `Theory Synergy` 面板，并出现协同标签，例如 `Cadential Lift`。
+- Canvas renderer 测试要求在高协同状态下继续发生额外绘制，保证协同不是只写在面板上。
+
+3. 浏览器烟测
+
+- 烟测脚本现在会同时确认：
+- `Growth Imprint`
+- `Harmonic Traits`
+- `Theory Synergy`
+
+这一步的意义是：
+
+- 新协同层已经不仅能算出来，而且已经变成用户可见、可讲解、可答辩展示的系统。
+
 ### 9. 乐理积木拖拽编排
 
 提交：
