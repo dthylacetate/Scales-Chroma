@@ -111,6 +111,8 @@ def test_renderer_uses_combo_rules_to_amplify_stage_signature() -> None:
     assert visual.beam_strength > 0.5
     assert visual.symmetry > 0.65
     assert visual.depth > 0.6
+    assert visual.openness > 0.8
+    assert visual.gravity < 0.45
     assert visual.geometry == "soft-orb"
     assert visual.scene_family == "solar-garden"
 
@@ -129,6 +131,8 @@ def test_renderer_supports_expanded_combo_library_for_modern_tension_blends() ->
     assert visual.energy > 0.8
     assert visual.complexity > 0.7
     assert visual.pulse_density > 0.7
+    assert visual.attack > 0.65
+    assert visual.swing > 0.55
     assert visual.scene_family == "prism-array"
 
 
@@ -146,6 +150,7 @@ def test_renderer_applies_metal_style_unlocks_to_visual_parameters() -> None:
     assert visual.secondary_color == "#ff7b3d"
     assert visual.pulse_density > 0.8
     assert visual.symmetry < 0.45
+    assert visual.attack > 0.78
     assert visual.scene_family == "metal-foundry"
 
 
@@ -191,3 +196,18 @@ def test_renderer_keeps_growth_imprint_neutral_without_unlocks() -> None:
 
     assert visual.growth_imprint == "neutral"
     assert visual.growth_imprint_intensity == 0.0
+
+
+def test_renderer_exposes_musical_trait_axes_for_dark_tension_combinations() -> None:
+    visual = render_visual_parameters(
+        elements=[
+            TheoryElement(id="harmonic-minor", type="scale", name="Harmonic Minor"),
+            TheoryElement(id="dim7", type="chord", name="Dim7"),
+        ],
+        unlocked_effects=[],
+    )
+
+    assert visual.attack > 0.8
+    assert visual.gravity > 0.7
+    assert visual.openness < 0.35
+    assert visual.swing < 0.45

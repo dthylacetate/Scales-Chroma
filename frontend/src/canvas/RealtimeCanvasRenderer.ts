@@ -100,6 +100,7 @@ export class RealtimeCanvasRenderer {
     this.drawStageArchitecture(visual, width, height, centerX, centerY, radius, time);
     this.drawSceneFamilyAccent(visual, width, height, centerX, centerY, radius, time);
     this.drawGrowthImprintLayer(visual, width, height, centerX, centerY, radius, time);
+    this.drawTheoryTraitLayer(visual, width, height, centerX, centerY, radius, time);
     this.drawBeamField(visual, centerX, centerY, radius, time);
     this.drawRingField(visual, centerX, centerY, radius, time);
     this.drawGeometry(visual, centerX, centerY, radius, time);
@@ -594,6 +595,36 @@ export class RealtimeCanvasRenderer {
     }
   }
 
+  private drawTheoryTraitLayer(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    this.context.save();
+
+    if (visual.openness > 0.44) {
+      this.drawOpennessFans(visual, centerX, centerY, radius, time);
+    }
+
+    if (visual.attack > 0.38) {
+      this.drawAttackSpikes(visual, centerX, centerY, radius, time);
+    }
+
+    if (visual.swing > 0.42) {
+      this.drawSwingLilt(visual, width, centerX, centerY, radius, time);
+    }
+
+    if (visual.gravity > 0.4) {
+      this.drawGravityTethers(visual, width, height, centerX, centerY, radius, time);
+    }
+
+    this.context.restore();
+  }
+
   private drawSolarGardenAccent(
     visual: VisualParameters,
     centerX: number,
@@ -1033,6 +1064,124 @@ export class RealtimeCanvasRenderer {
       this.context.beginPath();
       this.context.strokeStyle = alphaHex(prism, 0.14 + intensity * 0.12);
       this.context.arc(0, 0, radius * (0.76 + index * 0.2), time * 0.6 + index * 0.7, time * 0.6 + index * 0.7 + Math.PI * 1.2);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawOpennessFans(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const openness = visual.openness;
+    const fanCount = Math.max(2, Math.round(2 + openness * 4));
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + openness * 2.2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.08 + openness * 0.12);
+    for (let index = 0; index < fanCount; index += 1) {
+      const angle = -Math.PI * (0.58 - openness * 0.08) + (index / Math.max(1, fanCount - 1)) * Math.PI * (1.16 + openness * 0.1);
+      const length = radius * (1.02 + openness * 0.54);
+      this.context.beginPath();
+      this.context.moveTo(centerX, centerY + radius * 0.08);
+      this.context.lineTo(
+        centerX + Math.cos(angle + Math.sin(time * 0.7 + index) * 0.03) * length,
+        centerY + Math.sin(angle) * length * 0.82
+      );
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawAttackSpikes(
+    visual: VisualParameters,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const attack = visual.attack;
+    const spikeCount = Math.max(4, Math.round(4 + attack * 8));
+    this.context.save();
+    this.context.translate(centerX, centerY);
+    this.context.lineWidth = Math.max(1, 1 + attack * 2.2);
+    this.context.strokeStyle = alphaHex(visual.color, 0.1 + attack * 0.18);
+    for (let index = 0; index < spikeCount; index += 1) {
+      const angle = time * (0.6 + attack * 0.6) + index * ((Math.PI * 2) / spikeCount);
+      const inner = radius * (0.26 + (index % 3) * 0.06);
+      const outer = radius * (0.92 + attack * 0.42 + ((index + 1) % 4) * 0.04);
+      this.context.beginPath();
+      this.context.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+      this.context.lineTo(Math.cos(angle + 0.03) * outer, Math.sin(angle + 0.03) * outer);
+      this.context.stroke();
+    }
+    this.context.restore();
+  }
+
+  private drawSwingLilt(
+    visual: VisualParameters,
+    width: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const swing = visual.swing;
+    const laneCount = Math.max(2, Math.round(2 + swing * 4));
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + swing * 2);
+    for (let index = 0; index < laneCount; index += 1) {
+      const baseY = centerY + radius * (0.16 + index * 0.14);
+      this.context.beginPath();
+      this.context.strokeStyle = alphaHex(index % 2 === 0 ? visual.secondaryColor : visual.color, 0.08 + swing * 0.12);
+      for (let step = 0; step <= 16; step += 1) {
+        const progress = step / 16;
+        const x = progress * width;
+        const sway = Math.sin(progress * Math.PI * 4 + time * (1 + swing * 0.8) + index * 0.7) * radius * (0.02 + swing * 0.03);
+        const y = baseY + sway + (step % 2 === 0 ? -radius * swing * 0.01 : radius * swing * 0.01);
+        if (step === 0) {
+          this.context.moveTo(x, y);
+        } else {
+          this.context.lineTo(x, y);
+        }
+      }
+      this.context.stroke();
+    }
+    this.context.beginPath();
+    this.context.fillStyle = alphaHex(visual.secondaryColor, 0.12 + swing * 0.14);
+    this.context.arc(centerX + Math.sin(time * 1.2) * radius * 0.4, centerY + radius * 0.12, 2 + swing * 4, 0, Math.PI * 2);
+    this.context.fill();
+    this.context.restore();
+  }
+
+  private drawGravityTethers(
+    visual: VisualParameters,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    time: number
+  ): void {
+    const gravity = visual.gravity;
+    const tetherCount = Math.max(3, Math.round(3 + gravity * 5));
+    const anchorY = centerY + radius * (0.9 + gravity * 0.18);
+    this.context.save();
+    this.context.lineWidth = Math.max(1, 1 + gravity * 2);
+    this.context.strokeStyle = alphaHex(visual.secondaryColor, 0.08 + gravity * 0.12);
+    for (let index = 0; index < tetherCount; index += 1) {
+      const progress = (index + 1) / (tetherCount + 1);
+      const x = progress * width;
+      this.context.beginPath();
+      this.context.moveTo(x, height);
+      this.context.quadraticCurveTo(
+        centerX + Math.sin(time * 0.6 + index) * radius * 0.08,
+        anchorY - radius * (0.2 + gravity * 0.16),
+        centerX + (x - centerX) * (0.12 - gravity * 0.04),
+        centerY + radius * 0.14
+      );
       this.context.stroke();
     }
     this.context.restore();

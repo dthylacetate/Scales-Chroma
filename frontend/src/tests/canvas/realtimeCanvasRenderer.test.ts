@@ -28,6 +28,10 @@ const visual: VisualParameters = {
   sceneFamily: "jazz-cathedral",
   growthImprint: "jazz-lattice",
   growthImprintIntensity: 0.82,
+  openness: 0.82,
+  attack: 0.34,
+  swing: 0.68,
+  gravity: 0.44,
   activeBonuses: ["Cadence Aurora"],
   particles: {
     density: 0.72,

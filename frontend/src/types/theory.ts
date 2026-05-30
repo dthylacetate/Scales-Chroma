@@ -19,6 +19,10 @@ export interface VisualParameters {
   arousal: number;
   luminosity: number;
   grit: number;
+  openness: number;
+  attack: number;
+  swing: number;
+  gravity: number;
   symmetry: number;
   depth: number;
   pulseDensity: number;

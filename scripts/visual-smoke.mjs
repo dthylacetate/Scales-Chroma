@@ -33,10 +33,12 @@ try {
   await page.getByRole("button", { name: "Dorian mode", exact: true }).dragTo(stage);
   await page.getByRole("button", { name: "Maj7 chord", exact: true }).dragTo(stage);
   await page.getByText("Growth Imprint", { exact: true }).waitFor();
+  await page.getByText("Harmonic Traits", { exact: true }).waitFor();
   await page.getByText("Neo Soul 幕纱", { exact: true }).waitFor();
   const growthText = await page.locator("body").innerText();
   const hasGrowthImprint = true;
   const hasNeoSoulImprint = true;
+  const hasHarmonicTraits = true;
   await page.screenshot({ path: "/tmp/scales-stage-growth.png", fullPage: true });
 
   await page.getByRole("button", { name: "Lydian mode", exact: true }).dragTo(stage);
@@ -64,6 +66,7 @@ try {
         appUrl,
         hasGrowthImprint,
         hasNeoSoulImprint,
+        hasHarmonicTraits,
         hasSolar,
         hasShadow,
         hasStageReading: pageText.includes("STAGE READING") || pageText.includes("Stage Reading"),

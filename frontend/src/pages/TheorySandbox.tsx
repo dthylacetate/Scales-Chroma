@@ -515,6 +515,7 @@ export function TheorySandbox({ apiBaseUrl, authToken, currentUsername, onLogout
           <Readout label="Scene" value={sceneFamilyLabel(visual.sceneFamily)} />
           <StageReadingPanel activeBonuses={visual.activeBonuses} elements={activeElements} visual={visual} />
           <GrowthImprintPanel visual={visual} />
+          <HarmonicTraitsPanel visual={visual} />
           <MoodAxesPanel visual={visual} />
           <Readout label="Color" value={visual.color} swatch={visual.color} />
           <Readout label="Accent" value={visual.secondaryColor} swatch={visual.secondaryColor} />
@@ -1100,6 +1101,20 @@ function GrowthImprintPanel({ visual }: { visual: VisualParameters }) {
   );
 }
 
+function HarmonicTraitsPanel({ visual }: { visual: VisualParameters }) {
+  return (
+    <section className="rounded-md border border-[#3f3144] bg-[#201922] p-3">
+      <div className="text-xs uppercase text-stone-400">Harmonic Traits</div>
+      <div className="mt-3 grid gap-2">
+        <MoodAxisRow accent="#9fd7ff" label="Openness" value={visual.openness} note={traitAxisLabel("openness", visual.openness)} />
+        <MoodAxisRow accent="#ff9b7b" label="Attack" value={visual.attack} note={traitAxisLabel("attack", visual.attack)} />
+        <MoodAxisRow accent="#9af0dd" label="Swing" value={visual.swing} note={traitAxisLabel("swing", visual.swing)} />
+        <MoodAxisRow accent="#ffd166" label="Gravity" value={visual.gravity} note={traitAxisLabel("gravity", visual.gravity)} />
+      </div>
+    </section>
+  );
+}
+
 function MoodAxisRow({
   label,
   value,
@@ -1302,6 +1317,7 @@ function buildStageReading(
       : visual.rippleStrength >= 0.7
         ? "波纹和相位更突出，整体更像连续流体在呼吸。"
         : `动作密度中等，重点更多落在 ${geometryLabel(visual.geometry)} 的形体变化上。`;
+  const theoryTraits = `开放度${traitAxisLabel("openness", visual.openness)}，起音${traitAxisLabel("attack", visual.attack)}，摆动${traitAxisLabel("swing", visual.swing)}，牵引${traitAxisLabel("gravity", visual.gravity)}`;
 
   const primaryDrivers = elements.map((element) => element.name).join(" + ");
   const bonusText =
@@ -1316,7 +1332,7 @@ function buildStageReading(
     mood,
     space,
     motion,
-    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}。`
+    drivers: `主导模块是 ${primaryDrivers}${bonusText}${growthText}；当前情绪轴是 ${moodAxisLabel("valence", visual.valence)}、${moodAxisLabel("arousal", visual.arousal)}、${moodAxisLabel("luminosity", visual.luminosity)}、${moodAxisLabel("grit", visual.grit)}；乐理特征则表现为 ${theoryTraits}。`
   };
 }
 
@@ -1402,6 +1418,22 @@ function moodAxisLabel(axis: "valence" | "arousal" | "luminosity" | "grit", valu
   }
 
   return value >= 0.68 ? "高颗粒粗粝度" : value <= 0.24 ? "低颗粒粗粝度" : "中颗粒粗粝度";
+}
+
+function traitAxisLabel(axis: "openness" | "attack" | "swing" | "gravity", value: number): string {
+  if (axis === "openness") {
+    return value >= 0.72 ? "高开放度" : value <= 0.32 ? "低开放度" : "中开放度";
+  }
+
+  if (axis === "attack") {
+    return value >= 0.72 ? "高攻击性" : value <= 0.28 ? "低攻击性" : "中攻击性";
+  }
+
+  if (axis === "swing") {
+    return value >= 0.68 ? "高摆动感" : value <= 0.28 ? "低摆动感" : "中摆动感";
+  }
+
+  return value >= 0.72 ? "高终止牵引力" : value <= 0.32 ? "低终止牵引力" : "中终止牵引力";
 }
 
 function animationLabel(animationState: VisualParameters["animationState"]): string {

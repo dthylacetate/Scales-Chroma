@@ -28,6 +28,13 @@ interface MoodAxes {
   grit: number;
 }
 
+interface HarmonicTraits {
+  openness: number;
+  attack: number;
+  swing: number;
+  gravity: number;
+}
+
 const DEFAULT_VISUALS: VisualParameters = {
   color: "#7bdff2",
   secondaryColor: "#8d99ff",
@@ -41,6 +48,10 @@ const DEFAULT_VISUALS: VisualParameters = {
   arousal: 0.58,
   luminosity: 0.56,
   grit: 0.28,
+  openness: 0.56,
+  attack: 0.32,
+  swing: 0.42,
+  gravity: 0.48,
   symmetry: 0.52,
   depth: 0.56,
   pulseDensity: 0.48,
@@ -182,6 +193,8 @@ const COMBO_BONUSES = [
     luminosity: 0.18,
     arousal: 0.04,
     grit: -0.08,
+    openness: 0.18,
+    gravity: -0.12,
     secondaryColor: "#8fdcff"
   }),
   combo(["lydian", "major"], "Sunwake Atlas", {
@@ -220,6 +233,8 @@ const COMBO_BONUSES = [
     luminosity: 0.06,
     arousal: 0.08,
     grit: 0.02,
+    swing: 0.18,
+    gravity: 0.08,
     secondaryColor: "#7fe0c8"
   }),
   combo(["phrygian", "dominant7"], "Desert Voltage", {
@@ -247,6 +262,10 @@ const COMBO_BONUSES = [
     luminosity: -0.08,
     arousal: 0.12,
     grit: 0.18,
+    attack: 0.12,
+    gravity: 0.14,
+    openness: -0.12,
+    swing: -0.08,
     backgroundColor: "#05060d"
   }),
   combo(["melodic minor", "dominant7"], "Chrome Meridian", {
@@ -261,6 +280,8 @@ const COMBO_BONUSES = [
     luminosity: 0.08,
     arousal: 0.14,
     grit: 0.08,
+    attack: 0.1,
+    swing: 0.14,
     secondaryColor: "#73f0d5"
   }),
   combo(["ii-v-i", "maj7"], "Cadence Aurora", {
@@ -273,6 +294,8 @@ const COMBO_BONUSES = [
     luminosity: 0.14,
     arousal: 0.06,
     grit: -0.04,
+    gravity: 0.18,
+    openness: 0.08,
     secondaryColor: "#c2b8ff"
   }),
   combo(["i-v-vi-iv", "major"], "Anthem Lift", {
@@ -440,6 +463,26 @@ const MOOD_LIBRARY: Record<string, MoodAxes> = {
   "i-v-vi-iv": { valence: 0.76, arousal: 0.64, luminosity: 0.74, grit: 0.18 }
 };
 
+const TRAIT_LIBRARY: Record<string, HarmonicTraits> = {
+  major: { openness: 0.78, attack: 0.24, swing: 0.36, gravity: 0.54 },
+  minor: { openness: 0.42, attack: 0.38, swing: 0.4, gravity: 0.52 },
+  pentatonic: { openness: 0.64, attack: 0.46, swing: 0.58, gravity: 0.36 },
+  "harmonic minor": { openness: 0.18, attack: 0.8, swing: 0.24, gravity: 0.76 },
+  "melodic minor": { openness: 0.52, attack: 0.62, swing: 0.56, gravity: 0.58 },
+  ionian: { openness: 0.8, attack: 0.22, swing: 0.3, gravity: 0.5 },
+  dorian: { openness: 0.58, attack: 0.34, swing: 0.72, gravity: 0.4 },
+  phrygian: { openness: 0.22, attack: 0.68, swing: 0.28, gravity: 0.72 },
+  lydian: { openness: 0.92, attack: 0.26, swing: 0.38, gravity: 0.22 },
+  mixolydian: { openness: 0.54, attack: 0.56, swing: 0.78, gravity: 0.42 },
+  maj7: { openness: 0.88, attack: 0.18, swing: 0.34, gravity: 0.28 },
+  min7: { openness: 0.62, attack: 0.24, swing: 0.56, gravity: 0.36 },
+  dominant7: { openness: 0.34, attack: 0.76, swing: 0.52, gravity: 0.8 },
+  dim7: { openness: 0.12, attack: 0.92, swing: 0.18, gravity: 0.82 },
+  aug: { openness: 0.44, attack: 0.88, swing: 0.48, gravity: 0.62 },
+  "ii-v-i": { openness: 0.56, attack: 0.42, swing: 0.66, gravity: 0.94 },
+  "i-v-vi-iv": { openness: 0.68, attack: 0.28, swing: 0.54, gravity: 0.58 }
+};
+
 export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters {
   if (elements.length === 0) {
     return DEFAULT_VISUALS;
@@ -475,6 +518,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     arousal: weightedAverage(weightedElements, totalWeight, (profileItem) => moodFor(profileItem.name).arousal),
     luminosity: weightedAverage(weightedElements, totalWeight, (profileItem) => moodFor(profileItem.name).luminosity),
     grit: weightedAverage(weightedElements, totalWeight, (profileItem) => moodFor(profileItem.name).grit),
+    openness: weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).openness),
+    attack: weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).attack),
+    swing: weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).swing),
+    gravity: weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).gravity),
     symmetry: 0,
     depth: 0,
     pulseDensity: 0,
@@ -496,6 +543,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
   visual.arousal = clamp01(visual.arousal + stackBonus * 0.16);
   visual.luminosity = clamp01(visual.luminosity + stackBonus * 0.1);
   visual.grit = clamp01(visual.grit + stackBonus * 0.12);
+  visual.openness = clamp01(weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).openness) + stackBonus * 0.06);
+  visual.attack = clamp01(weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).attack) + stackBonus * 0.08);
+  visual.swing = clamp01(weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).swing) + stackBonus * 0.08);
+  visual.gravity = clamp01(weightedAverage(weightedElements, totalWeight, (profileItem) => traitFor(profileItem.name).gravity) + stackBonus * 0.08);
   visual.symmetry = clamp01(visual.symmetry + stackBonus * 0.12);
   visual.depth = clamp01(visual.depth + stackBonus * 0.2);
   visual.pulseDensity = clamp01(visual.pulseDensity + stackBonus * 0.22);
@@ -552,6 +603,10 @@ export function mapTheoryToVisuals(elements: TheoryElement[]): VisualParameters 
     arousal: round(visual.arousal),
     luminosity: round(visual.luminosity),
     grit: round(visual.grit),
+    openness: round(visual.openness),
+    attack: round(visual.attack),
+    swing: round(visual.swing),
+    gravity: round(visual.gravity),
     symmetry: round(visual.symmetry),
     depth: round(visual.depth),
     pulseDensity: round(visual.pulseDensity),
@@ -639,6 +694,15 @@ function moodFor(elementName: string): MoodAxes {
   };
 }
 
+function traitFor(elementName: string): HarmonicTraits {
+  return TRAIT_LIBRARY[elementName.toLowerCase()] ?? {
+    openness: DEFAULT_VISUALS.openness,
+    attack: DEFAULT_VISUALS.attack,
+    swing: DEFAULT_VISUALS.swing,
+    gravity: DEFAULT_VISUALS.gravity
+  };
+}
+
 function elementWeight(element: TheoryElement, index: number, total: number): number {
   const typeWeight: Record<TheoryElement["type"], number> = {
     scale: 0.95,
@@ -672,6 +736,10 @@ function applyComboEffects(
     arousal: number;
     luminosity: number;
     grit: number;
+    openness: number;
+    attack: number;
+    swing: number;
+    gravity: number;
     symmetry: number;
     depth: number;
     pulseDensity: number;

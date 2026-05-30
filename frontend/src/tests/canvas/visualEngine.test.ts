@@ -14,6 +14,7 @@ describe("visual engine theory mapping", () => {
     expect(visual.geometry).toBe("soft-orb");
     expect(visual.animationState).toBe("flowing");
     expect(visual.sceneFamily).toBe("solar-garden");
+    expect(visual.openness).toBeGreaterThan(0.7);
   });
 
   it("maps Dim7 to sharp high-tension fracture visuals", () => {
@@ -26,6 +27,7 @@ describe("visual engine theory mapping", () => {
     expect(visual.geometry).toBe("fracture");
     expect(visual.animationState).toBe("tense");
     expect(visual.sceneFamily).toBe("metal-foundry");
+    expect(visual.attack).toBeGreaterThan(0.7);
   });
 
   it("stacks multiple theory blocks into combo bonuses and richer signatures", () => {
@@ -41,6 +43,7 @@ describe("visual engine theory mapping", () => {
     expect(visual.symmetry).toBeGreaterThan(0.6);
     expect(visual.depth).toBeGreaterThan(0.6);
     expect(visual.sceneFamily).toBe("solar-garden");
+    expect(visual.gravity).toBeLessThan(0.5);
   });
 
   it("pushes high-energy tension combinations toward explosive fracture states", () => {

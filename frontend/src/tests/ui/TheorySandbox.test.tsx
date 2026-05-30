@@ -78,6 +78,10 @@ describe("TheorySandbox", () => {
         signature: "Blue Hour Run",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.84,
+        openness: 0.76,
+        attack: 0.38,
+        swing: 0.7,
+        gravity: 0.42,
         active_bonuses: ["Blue Hour Run"],
         particles: {
           density: 0.78,
@@ -391,6 +395,10 @@ describe("TheorySandbox", () => {
         signature: "Celestial Bloom",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.88,
+        openness: 0.84,
+        attack: 0.28,
+        swing: 0.62,
+        gravity: 0.38,
         active_bonuses: ["Celestial Bloom"],
         particles: {
           density: 0.72,
@@ -439,6 +447,10 @@ describe("TheorySandbox", () => {
           signature: "Velvet Tide",
           growth_imprint: "neo-soul-veil",
           growth_imprint_intensity: 0.94,
+          openness: 0.82,
+          attack: 0.24,
+          swing: 0.64,
+          gravity: 0.36,
           active_bonuses: ["Velvet Tide"],
           particles: {
             density: 0.72,
@@ -460,6 +472,58 @@ describe("TheorySandbox", () => {
     });
     expect(screen.getByText("Neo Soul 幕纱")).toBeInTheDocument();
     expect(screen.getByText(/Growth 已经把当前舞台往丝绒/)).toBeInTheDocument();
+  });
+
+  it("shows harmonic trait readouts for the current theory stack", async () => {
+    vi.stubGlobal(
+      "fetch",
+      createAuthenticatedFetchMock({
+        visualResponse: {
+          color: "#ffe56d",
+          secondary_color: "#8fdcff",
+          background_color: "#0f1117",
+          glow: 0.92,
+          energy: 0.78,
+          complexity: 0.58,
+          temperature: 0.82,
+          symmetry: 0.88,
+          depth: 0.81,
+          pulse_density: 0.64,
+          motion_speed: 0.62,
+          ring_count: 5,
+          ripple_strength: 0.74,
+          beam_strength: 0.62,
+          grain: 0.18,
+          growth_imprint: "jazz-lattice",
+          growth_imprint_intensity: 0.88,
+          openness: 0.86,
+          attack: 0.26,
+          swing: 0.58,
+          gravity: 0.34,
+          signature: "Celestial Bloom",
+          active_bonuses: ["Celestial Bloom"],
+          particles: {
+            density: 0.72,
+            trail: false,
+            size: 2.4,
+            speed: 1.2,
+            spread: 0.58
+          },
+          geometry: "soft-orb",
+          animation_state: "flowing"
+        }
+      })
+    );
+
+    render(<TheorySandbox {...AUTH_PROPS} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Harmonic Traits")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Openness")).toBeInTheDocument();
+    expect(screen.getByText("Attack")).toBeInTheDocument();
+    expect(screen.getByText("Swing")).toBeInTheDocument();
+    expect(screen.getByText("Gravity")).toBeInTheDocument();
   });
 
   it("loads and displays yearly practice heatmap entries", async () => {
@@ -650,6 +714,10 @@ interface TheorySandboxFetchOptions {
     grain?: number;
     growth_imprint?: string;
     growth_imprint_intensity?: number;
+    openness?: number;
+    attack?: number;
+    swing?: number;
+    gravity?: number;
     signature?: string;
     active_bonuses?: string[];
     particles: {
@@ -680,6 +748,10 @@ interface TheorySandboxFetchOptions {
     grain?: number;
     growth_imprint?: string;
     growth_imprint_intensity?: number;
+    openness?: number;
+    attack?: number;
+    swing?: number;
+    gravity?: number;
     signature?: string;
     active_bonuses?: string[];
     particles: {
@@ -735,6 +807,10 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
           grain: 0.14,
           growth_imprint: "neutral",
           growth_imprint_intensity: 0,
+          openness: 0.62,
+          attack: 0.36,
+          swing: 0.42,
+          gravity: 0.44,
           signature: "Maj7",
           active_bonuses: [],
           particles: {
@@ -874,6 +950,10 @@ function createAuthenticatedFetchMock(options: TheorySandboxFetchOptions = {}) {
         grain: 0.14,
         growth_imprint: "neutral",
         growth_imprint_intensity: 0,
+        openness: 0.62,
+        attack: 0.36,
+        swing: 0.42,
+        gravity: 0.44,
         signature: "Maj7",
         active_bonuses: [],
         particles: {

@@ -17,6 +17,10 @@ describe("sandbox API service", () => {
         scene_family: "solar-garden",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.86,
+        openness: 0.81,
+        attack: 0.32,
+        swing: 0.66,
+        gravity: 0.41,
         particles: {
           density: 0.74,
           trail: true
@@ -51,6 +55,10 @@ describe("sandbox API service", () => {
     expect(visual.sceneFamily).toBe("solar-garden");
     expect(visual.growthImprint).toBe("jazz-lattice");
     expect(visual.growthImprintIntensity).toBe(0.86);
+    expect(visual.openness).toBe(0.81);
+    expect(visual.attack).toBe(0.32);
+    expect(visual.swing).toBe(0.66);
+    expect(visual.gravity).toBe(0.41);
   });
 
   it("throws a readable error when sandbox rendering fails", async () => {

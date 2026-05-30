@@ -14,6 +14,10 @@ interface SandboxRenderResponse {
   arousal?: number;
   luminosity?: number;
   grit?: number;
+  openness?: number;
+  attack?: number;
+  swing?: number;
+  gravity?: number;
   symmetry?: number;
   depth?: number;
   pulse_density?: number;
@@ -78,6 +82,10 @@ function normalizeVisualResponse(response: SandboxRenderResponse): VisualParamet
     arousal: response.arousal ?? 0.58,
     luminosity: response.luminosity ?? 0.56,
     grit: response.grit ?? 0.28,
+    openness: response.openness ?? 0.56,
+    attack: response.attack ?? 0.32,
+    swing: response.swing ?? 0.42,
+    gravity: response.gravity ?? 0.48,
     symmetry: response.symmetry ?? 0.52,
     depth: response.depth ?? 0.56,
     pulseDensity: response.pulse_density ?? 0.48,

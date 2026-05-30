@@ -25,6 +25,10 @@ class AggregateVisualState:
     arousal: float
     luminosity: float
     grit: float
+    openness: float
+    attack: float
+    swing: float
+    gravity: float
     symmetry: float
     depth: float
     pulse_density: float
@@ -46,15 +50,44 @@ class AggregateVisualState:
     active_bonuses: list[str]
 
 
+@dataclass(frozen=True)
+class TheoryTraitProfile:
+    openness: float
+    attack: float
+    swing: float
+    gravity: float
+
+
+TRAIT_LIBRARY: dict[str, TheoryTraitProfile] = {
+    "major": TheoryTraitProfile(openness=0.78, attack=0.24, swing=0.36, gravity=0.54),
+    "minor": TheoryTraitProfile(openness=0.42, attack=0.38, swing=0.4, gravity=0.52),
+    "pentatonic": TheoryTraitProfile(openness=0.64, attack=0.46, swing=0.58, gravity=0.36),
+    "harmonic minor": TheoryTraitProfile(openness=0.18, attack=0.8, swing=0.24, gravity=0.76),
+    "melodic minor": TheoryTraitProfile(openness=0.52, attack=0.62, swing=0.56, gravity=0.58),
+    "ionian": TheoryTraitProfile(openness=0.8, attack=0.22, swing=0.3, gravity=0.5),
+    "dorian": TheoryTraitProfile(openness=0.58, attack=0.34, swing=0.72, gravity=0.4),
+    "phrygian": TheoryTraitProfile(openness=0.22, attack=0.68, swing=0.28, gravity=0.72),
+    "lydian": TheoryTraitProfile(openness=0.92, attack=0.26, swing=0.38, gravity=0.22),
+    "mixolydian": TheoryTraitProfile(openness=0.54, attack=0.56, swing=0.78, gravity=0.42),
+    "maj7": TheoryTraitProfile(openness=0.88, attack=0.18, swing=0.34, gravity=0.28),
+    "min7": TheoryTraitProfile(openness=0.62, attack=0.24, swing=0.56, gravity=0.36),
+    "dominant7": TheoryTraitProfile(openness=0.34, attack=0.76, swing=0.52, gravity=0.8),
+    "dim7": TheoryTraitProfile(openness=0.12, attack=0.92, swing=0.18, gravity=0.82),
+    "aug": TheoryTraitProfile(openness=0.44, attack=0.88, swing=0.48, gravity=0.62),
+    "ii-v-i": TheoryTraitProfile(openness=0.56, attack=0.42, swing=0.66, gravity=0.94),
+    "i-v-vi-iv": TheoryTraitProfile(openness=0.68, attack=0.28, swing=0.54, gravity=0.58),
+}
+
+
 COMBO_RULES: tuple[tuple[set[str], str, dict[str, float | str]], ...] = (
-    ({"lydian", "maj7"}, "Celestial Bloom", {"glow": 0.12, "orb": 0.18, "beam_strength": 0.16, "ripple_strength": 0.12, "depth": 0.16, "symmetry": 0.12, "valence": 0.12, "luminosity": 0.18, "arousal": 0.04, "grit": -0.08, "signature": "Celestial Bloom", "secondary_color": "#8fdcff"}),
+    ({"lydian", "maj7"}, "Celestial Bloom", {"glow": 0.12, "orb": 0.18, "beam_strength": 0.16, "ripple_strength": 0.12, "depth": 0.16, "symmetry": 0.12, "valence": 0.12, "luminosity": 0.18, "arousal": 0.04, "grit": -0.08, "openness": 0.18, "gravity": -0.12, "signature": "Celestial Bloom", "secondary_color": "#8fdcff"}),
     ({"lydian", "major"}, "Sunwake Atlas", {"glow": 0.1, "orb": 0.14, "beam_strength": 0.14, "energy": 0.08, "temperature": 0.12, "symmetry": 0.1, "valence": 0.1, "luminosity": 0.16, "arousal": 0.04, "grit": -0.06, "signature": "Sunwake Atlas", "secondary_color": "#bfe6ff"}),
     ({"dorian", "min7"}, "Midnight Current", {"wave": 0.22, "ripple_strength": 0.2, "complexity": 0.12, "depth": 0.1, "pulse_density": 0.08, "valence": 0.04, "luminosity": 0.02, "arousal": 0.06, "grit": 0.04, "signature": "Midnight Current", "secondary_color": "#9af0dd"}),
-    ({"dorian", "ii-v-i"}, "Blue Hour Run", {"wave": 0.18, "lattice": 0.14, "ripple_strength": 0.18, "beam_strength": 0.1, "depth": 0.1, "pulse_density": 0.12, "valence": 0.04, "luminosity": 0.06, "arousal": 0.08, "grit": 0.02, "signature": "Blue Hour Run", "secondary_color": "#7fe0c8"}),
+    ({"dorian", "ii-v-i"}, "Blue Hour Run", {"wave": 0.18, "lattice": 0.14, "ripple_strength": 0.18, "beam_strength": 0.1, "depth": 0.1, "pulse_density": 0.12, "valence": 0.04, "luminosity": 0.06, "arousal": 0.08, "grit": 0.02, "swing": 0.18, "gravity": 0.08, "signature": "Blue Hour Run", "secondary_color": "#7fe0c8"}),
     ({"phrygian", "dominant7"}, "Desert Voltage", {"fracture": 0.22, "contrast": 0.14, "beam_strength": 0.18, "energy": 0.1, "pulse_density": 0.14, "temperature": 0.12, "valence": -0.04, "luminosity": 0.02, "arousal": 0.14, "grit": 0.12, "signature": "Desert Voltage", "secondary_color": "#ff9b35"}),
-    ({"harmonic minor", "dim7"}, "Occult Fracture", {"fracture": 0.24, "grain": 0.18, "complexity": 0.14, "glow": 0.1, "depth": 0.18, "pulse_density": 0.12, "symmetry": -0.12, "valence": -0.1, "luminosity": -0.08, "arousal": 0.12, "grit": 0.18, "signature": "Occult Fracture", "background_color": "#05060d"}),
-    ({"melodic minor", "dominant7"}, "Chrome Meridian", {"wave": 0.16, "fracture": 0.12, "complexity": 0.16, "energy": 0.12, "depth": 0.14, "pulse_density": 0.1, "symmetry": 0.08, "valence": 0.04, "luminosity": 0.08, "arousal": 0.14, "grit": 0.08, "signature": "Chrome Meridian", "secondary_color": "#73f0d5"}),
-    ({"ii-v-i", "maj7"}, "Cadence Aurora", {"lattice": 0.2, "ripple_strength": 0.16, "beam_strength": 0.18, "depth": 0.12, "symmetry": 0.14, "valence": 0.1, "luminosity": 0.14, "arousal": 0.06, "grit": -0.04, "signature": "Cadence Aurora", "secondary_color": "#c2b8ff"}),
+    ({"harmonic minor", "dim7"}, "Occult Fracture", {"fracture": 0.24, "grain": 0.18, "complexity": 0.14, "glow": 0.1, "depth": 0.18, "pulse_density": 0.12, "symmetry": -0.12, "valence": -0.1, "luminosity": -0.08, "arousal": 0.12, "grit": 0.18, "attack": 0.12, "gravity": 0.14, "openness": -0.12, "swing": -0.08, "signature": "Occult Fracture", "background_color": "#05060d"}),
+    ({"melodic minor", "dominant7"}, "Chrome Meridian", {"wave": 0.16, "fracture": 0.12, "complexity": 0.16, "energy": 0.12, "depth": 0.14, "pulse_density": 0.1, "symmetry": 0.08, "valence": 0.04, "luminosity": 0.08, "arousal": 0.14, "grit": 0.08, "attack": 0.1, "swing": 0.14, "signature": "Chrome Meridian", "secondary_color": "#73f0d5"}),
+    ({"ii-v-i", "maj7"}, "Cadence Aurora", {"lattice": 0.2, "ripple_strength": 0.16, "beam_strength": 0.18, "depth": 0.12, "symmetry": 0.14, "valence": 0.1, "luminosity": 0.14, "arousal": 0.06, "grit": -0.04, "gravity": 0.18, "openness": 0.08, "signature": "Cadence Aurora", "secondary_color": "#c2b8ff"}),
     ({"i-v-vi-iv", "major"}, "Anthem Lift", {"orb": 0.22, "glow": 0.1, "energy": 0.12, "beam_strength": 0.12, "temperature": 0.1, "pulse_density": 0.12, "valence": 0.12, "luminosity": 0.14, "arousal": 0.1, "grit": -0.04, "signature": "Anthem Lift"}),
     ({"ionian", "i-v-vi-iv"}, "Daybreak Parade", {"orb": 0.18, "glow": 0.12, "beam_strength": 0.14, "ripple_strength": 0.08, "temperature": 0.14, "symmetry": 0.12, "valence": 0.16, "luminosity": 0.18, "arousal": 0.06, "grit": -0.08, "signature": "Daybreak Parade", "secondary_color": "#ffe5a8"}),
     ({"pentatonic", "mixolydian"}, "Roadhouse Neon", {"lattice": 0.18, "beam_strength": 0.2, "contrast": 0.12, "energy": 0.12, "pulse_density": 0.14, "temperature": 0.08, "valence": 0.06, "luminosity": 0.08, "arousal": 0.14, "grit": 0.06, "signature": "Roadhouse Neon"}),
@@ -140,6 +173,10 @@ def render_visual_parameters(
         arousal=round(aggregate_state.arousal, 2),
         luminosity=round(aggregate_state.luminosity, 2),
         grit=round(aggregate_state.grit, 2),
+        openness=round(aggregate_state.openness, 2),
+        attack=round(aggregate_state.attack, 2),
+        swing=round(aggregate_state.swing, 2),
+        gravity=round(aggregate_state.gravity, 2),
         symmetry=round(aggregate_state.symmetry, 2),
         depth=round(aggregate_state.depth, 2),
         pulse_density=round(aggregate_state.pulse_density, 2),
@@ -181,6 +218,10 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
             arousal=DEFAULT_MOOD.arousal,
             luminosity=DEFAULT_MOOD.luminosity,
             grit=DEFAULT_MOOD.grit,
+            openness=0.56,
+            attack=0.32,
+            swing=0.42,
+            gravity=0.48,
             symmetry=_resolve_symmetry(
                 orb=base_profile.geometry.orb,
                 wave=base_profile.geometry.wave,
@@ -289,6 +330,22 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
     grit = sum(
         MOOD_LIBRARY.get(element.name.lower(), DEFAULT_MOOD).grit * weight for weight, element in weighted_profiles
     ) / total_weight
+    openness = sum(
+        TRAIT_LIBRARY.get(element.name.lower(), TheoryTraitProfile(0.56, 0.32, 0.42, 0.48)).openness * weight
+        for weight, element in weighted_profiles
+    ) / total_weight
+    attack = sum(
+        TRAIT_LIBRARY.get(element.name.lower(), TheoryTraitProfile(0.56, 0.32, 0.42, 0.48)).attack * weight
+        for weight, element in weighted_profiles
+    ) / total_weight
+    swing = sum(
+        TRAIT_LIBRARY.get(element.name.lower(), TheoryTraitProfile(0.56, 0.32, 0.42, 0.48)).swing * weight
+        for weight, element in weighted_profiles
+    ) / total_weight
+    gravity = sum(
+        TRAIT_LIBRARY.get(element.name.lower(), TheoryTraitProfile(0.56, 0.32, 0.42, 0.48)).gravity * weight
+        for weight, element in weighted_profiles
+    ) / total_weight
     tension_intensity = sum(profile.intensity * weight for profile, (weight, _) in zip(tension_snapshots, weighted_profiles)) / total_weight
     tension_level = max(snapshot.level for snapshot in tension_snapshots)
 
@@ -325,6 +382,10 @@ def _aggregate_visual_state(elements: list[TheoryElement]) -> AggregateVisualSta
         arousal=min(1.0, arousal + stack_bonus * 0.16),
         luminosity=min(1.0, luminosity + stack_bonus * 0.1),
         grit=min(1.0, grit + stack_bonus * 0.12),
+        openness=max(0.0, min(1.0, openness + stack_bonus * 0.06)),
+        attack=max(0.0, min(1.0, attack + stack_bonus * 0.08)),
+        swing=max(0.0, min(1.0, swing + stack_bonus * 0.08)),
+        gravity=max(0.0, min(1.0, gravity + stack_bonus * 0.08)),
         symmetry=min(1.0, symmetry + stack_bonus * 0.12),
         depth=min(1.0, depth + stack_bonus * 0.2),
         pulse_density=min(1.0, pulse_density + stack_bonus * 0.22),
@@ -392,6 +453,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.particle_density = min(0.99, state.particle_density + 0.14)
         state.complexity = min(1.0, state.complexity + 0.08)
         state.arousal = min(1.0, state.arousal + 0.08)
+        state.swing = min(1.0, state.swing + 0.08)
 
     if "neon_glow" in unlocked_effects:
         state.glow = min(1.0, state.glow + 0.18)
@@ -406,6 +468,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.pulse_density = min(1.0, state.pulse_density + 0.16)
         state.depth = min(1.0, state.depth + 0.08)
         state.arousal = min(1.0, state.arousal + 0.12)
+        state.swing = min(1.0, state.swing + 0.12)
 
     if "harmonic_lattice" in unlocked_effects:
         state.lattice = max(0.92, min(1.0, state.lattice + 0.34))
@@ -416,6 +479,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.symmetry = min(1.0, state.symmetry + 0.18)
         state.depth = min(1.0, state.depth + 0.1)
         state.luminosity = min(1.0, state.luminosity + 0.12)
+        state.openness = min(1.0, state.openness + 0.08)
         state.signature = "Harmonic Lattice"
 
     if "cadence_bloom" in unlocked_effects:
@@ -425,6 +489,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.depth = min(1.0, state.depth + 0.12)
         state.symmetry = min(1.0, state.symmetry + 0.08)
         state.valence = min(1.0, state.valence + 0.08)
+        state.gravity = min(1.0, state.gravity + 0.12)
 
     if "fracture_burst" in unlocked_effects:
         state.fracture = max(0.94, min(1.0, state.fracture + 0.34))
@@ -439,6 +504,8 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.symmetry = max(0.0, state.symmetry - 0.18)
         state.grit = min(1.0, state.grit + 0.18)
         state.arousal = min(1.0, state.arousal + 0.16)
+        state.attack = min(1.0, state.attack + 0.46)
+        state.gravity = min(1.0, state.gravity + 0.08)
         state.signature = "Fracture Burst"
 
     if "ember_strobe" in unlocked_effects:
@@ -446,6 +513,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.grain = min(1.0, state.grain + 0.18)
         state.beam_strength = min(1.0, state.beam_strength + 0.16)
         state.luminosity = min(1.0, state.luminosity + 0.04)
+        state.attack = min(1.0, state.attack + 0.18)
 
     if "velvet_glow" in unlocked_effects:
         state.glow = min(1.0, state.glow + 0.2)
@@ -456,6 +524,8 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.symmetry = min(1.0, state.symmetry + 0.14)
         state.valence = min(1.0, state.valence + 0.12)
         state.grit = max(0.0, state.grit - 0.08)
+        state.openness = min(1.0, state.openness + 0.1)
+        state.attack = max(0.0, state.attack - 0.08)
         state.signature = "Velvet Glow"
 
     if "silk_motion" in unlocked_effects:
@@ -465,6 +535,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.wave = max(0.74, state.wave)
         state.pulse_density = max(0.0, state.pulse_density - 0.04)
         state.arousal = max(0.0, state.arousal - 0.04)
+        state.swing = min(1.0, state.swing + 0.12)
 
     if "prismatic_motion" in unlocked_effects:
         state.secondary_color = "#8db8ff"
@@ -476,6 +547,8 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.symmetry = min(1.0, state.symmetry + 0.1)
         state.luminosity = min(1.0, state.luminosity + 0.12)
         state.arousal = min(1.0, state.arousal + 0.1)
+        state.openness = min(1.0, state.openness + 0.08)
+        state.swing = min(1.0, state.swing + 0.08)
         state.signature = "Prismatic Motion"
 
     if "phase_rings" in unlocked_effects:
@@ -484,6 +557,7 @@ def _apply_unlock_effects(state: AggregateVisualState, unlocked_effects: set[str
         state.glow = min(1.0, state.glow + 0.08)
         state.pulse_density = min(1.0, state.pulse_density + 0.16)
         state.grit = max(0.0, state.grit - 0.02)
+        state.gravity = min(1.0, state.gravity + 0.06)
 
     _apply_style_auras(state, unlocked_effects)
 
