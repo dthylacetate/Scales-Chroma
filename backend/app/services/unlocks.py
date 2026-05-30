@@ -5,18 +5,19 @@ from sqlalchemy.orm import Session
 
 from app.models.practice_record import PracticeRecord
 from app.models.unlocked_effect import UnlockedEffect
+from app.services.topic_matching import topic_matches
 
 
 PENTATONIC_THRESHOLD_MINUTES = 600
-PENTATONIC_KEYWORDS = ("pentatonic", "五声音阶")
+PENTATONIC_KEYWORDS = ("pentatonic", "五声音阶", "五声")
 JAZZ_II_V_I_THRESHOLD_MINUTES = 300
-JAZZ_II_V_I_KEYWORDS = ("ii-v-i", "251", "jazz voice leading")
+JAZZ_II_V_I_KEYWORDS = ("ii-v-i", "251", "jazz voice leading", "爵士")
 METAL_SWEEP_THRESHOLD_MINUTES = 300
-METAL_SWEEP_KEYWORDS = ("sweep", "sweep picking", "metal burst")
+METAL_SWEEP_KEYWORDS = ("sweep", "sweep picking", "metal burst", "metal", "金属", "下拨")
 NEO_SOUL_MAJ7_THRESHOLD_MINUTES = 240
-NEO_SOUL_MAJ7_KEYWORDS = ("maj7", "neo soul")
+NEO_SOUL_MAJ7_KEYWORDS = ("maj7", "neo soul", "新灵魂")
 FUSION_THRESHOLD_MINUTES = 240
-FUSION_KEYWORDS = ("fusion", "legato", "hybrid")
+FUSION_KEYWORDS = ("fusion", "legato", "hybrid", "融合")
 
 
 @dataclass(frozen=True)
@@ -89,8 +90,7 @@ def _total_minutes_for_keywords(session: Session, user_id: int, keywords: tuple[
 
 
 def _topic_matches(topic: str, keywords: tuple[str, ...]) -> bool:
-    normalized_topic = topic.casefold()
-    return any(keyword.casefold() in normalized_topic for keyword in keywords)
+    return topic_matches(topic, keywords)
 
 
 def _unlock_missing_effects(

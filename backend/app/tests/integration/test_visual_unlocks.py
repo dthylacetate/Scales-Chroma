@@ -183,6 +183,40 @@ def test_fusion_practice_unlocks_prismatic_motion_and_phase_rings() -> None:
     assert {"prismatic_motion", "phase_rings"} <= effect_names
 
 
+def test_chinese_fuzzy_topics_unlock_metal_and_fusion_rewards() -> None:
+    session = create_test_session()
+    user = User(username="cn-fuzzy-player", email="cn-fuzzy@example.com")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 7),
+            duration_minutes=305,
+            bpm=168,
+            topic="下拨速度练习",
+        ),
+    )
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 8),
+            duration_minutes=245,
+            bpm=138,
+            topic="融合连奏句子",
+        ),
+    )
+
+    effects = session.scalars(select(UnlockedEffect).where(UnlockedEffect.user_id == user.id)).all()
+    effect_names = {effect.effect_name for effect in effects}
+
+    assert {"fracture_burst", "ember_strobe", "prismatic_motion", "phase_rings"} <= effect_names
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

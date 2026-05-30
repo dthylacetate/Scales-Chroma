@@ -65,10 +65,24 @@ describe("TheorySandbox", () => {
     expect(screen.getByText(/很相容/)).toBeInTheDocument();
     expect(screen.getByText(/有明显“回家”的感觉/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "加入自定义进行" }));
+    fireEvent.click(screen.getByRole("button", { name: "加入 / 拖拽自定义进行" }));
 
     const lane = screen.getByLabelText("乐理编排轨道");
     expect(lane.textContent).toContain("Custom ii-V-I");
+  });
+
+  it("recognizes numeric classic progression fragments and pair-level movement", () => {
+    render(<TheorySandbox />);
+
+    fireEvent.change(screen.getByLabelText("自定义进行"), { target: { value: "1251" } });
+
+    expect(screen.getAllByText(/II-V-I/).length).toBeGreaterThan(1);
+    expect(screen.getByText(/I 到 ii 是从稳定处往外走/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("自定义进行"), { target: { value: "4536" } });
+
+    expect(screen.getByText(/IV-V-iii-vi/)).toBeInTheDocument();
+    expect(screen.getByText(/华语\/日系流行/)).toBeInTheDocument();
   });
 
   it("updates visual readout when a theory element is selected", () => {

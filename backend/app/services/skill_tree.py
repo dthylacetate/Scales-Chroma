@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.practice_record import PracticeRecord
+from app.services.topic_matching import topic_matches
 
 
 @dataclass(frozen=True)
@@ -28,20 +29,20 @@ class SkillTreeResult:
 
 SKILL_TREE_DEFINITION: dict[str, list[tuple[str, str, tuple[str, ...]]]] = {
     "Metal": [
-        ("palm-mute", "Palm Mute", ("metal", "palm mute", "riff")),
-        ("sweep-picking", "Sweep Picking", ("sweep", "sweep picking")),
+        ("palm-mute", "Palm Mute", ("metal", "palm mute", "riff", "下拨", "金属")),
+        ("sweep-picking", "Sweep Picking", ("sweep", "sweep picking", "速弹", "金属")),
     ],
     "Jazz": [
-        ("ii-v-i", "II-V-I", ("ii-v-i", "251", "jazz")),
+        ("ii-v-i", "II-V-I", ("ii-v-i", "251", "jazz", "爵士", "二五一")),
         ("altered-dominants", "Altered Dominants", ("altered", "dominant")),
     ],
     "Fusion": [
-        ("legato", "Legato", ("legato", "fusion")),
-        ("hybrid-picking", "Hybrid Picking", ("hybrid", "outside")),
+        ("legato", "Legato", ("legato", "fusion", "融合", "连奏")),
+        ("hybrid-picking", "Hybrid Picking", ("hybrid", "outside", "混合拨弦", "融合")),
     ],
     "Neo Soul": [
-        ("maj7-voicings", "Maj7 Voicings", ("maj7", "neo soul")),
-        ("double-stops", "Double Stops", ("double stop", "double stops")),
+        ("maj7-voicings", "Maj7 Voicings", ("maj7", "neo soul", "新灵魂")),
+        ("double-stops", "Double Stops", ("double stop", "double stops", "双音")),
     ],
 }
 
@@ -68,7 +69,7 @@ def _node_from_records(
     matched_minutes = sum(
         record.duration_minutes
         for record in records
-        if any(keyword in record.topic.casefold() for keyword in keywords)
+        if topic_matches(record.topic, keywords)
     )
     level = _level_from_minutes(matched_minutes)
     return SkillNodeResult(id=node_id, label=label, level=level, unlocked=level > 0)

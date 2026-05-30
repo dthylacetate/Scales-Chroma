@@ -88,6 +88,41 @@ def test_skill_tree_levels_scale_with_accumulated_practice_minutes() -> None:
     assert ii_v_i_node.level == 4
 
 
+def test_skill_tree_fuzzy_matches_chinese_practice_topics() -> None:
+    session = create_test_session()
+    user = User(username="cn-skill-player", email="cn-skill@example.com")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 9),
+            duration_minutes=75,
+            bpm=150,
+            topic="下拨金属 riff",
+        ),
+    )
+    create_practice_record(
+        session=session,
+        user_id=user.id,
+        payload=PracticeRecordCreate(
+            practice_date=date(2026, 6, 10),
+            duration_minutes=65,
+            bpm=132,
+            topic="融合连奏",
+        ),
+    )
+
+    tree = get_skill_tree(session=session, user_id=user.id)
+    branches = {branch.direction: branch for branch in tree.branches}
+
+    assert branches["Metal"].nodes[0].unlocked
+    assert branches["Fusion"].nodes[0].unlocked
+
+
 def create_test_session() -> Session:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

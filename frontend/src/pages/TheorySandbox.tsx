@@ -1139,41 +1139,84 @@ type ParsedProgression =
   | { valid: true; element: TheoryElement; tokens: string[] }
   | { valid: false; message: string; tokens: string[] };
 
+interface ProgressionAnalysis {
+  label: string;
+  message: string;
+  patterns: string[];
+  pairNotes: string[];
+}
+
+const NUMERIC_DEGREE_MAP: Record<string, string> = {
+  "1": "I",
+  "2": "ii",
+  "3": "iii",
+  "4": "IV",
+  "5": "V",
+  "6": "vi",
+  "7": "vii°"
+};
+
+const ROMAN_CANONICAL_MAP: Record<string, string> = {
+  i: "I",
+  ii: "ii",
+  iii: "iii",
+  iv: "IV",
+  v: "V",
+  vi: "vi",
+  vii: "vii°",
+  "vii°": "vii°",
+  viio: "vii°",
+  "viiø": "viiø"
+};
+
+const PROGRESSION_PATTERN_LIBRARY: Array<{ pattern: string[]; label: string; note: string }> = [
+  { pattern: ["ii", "V", "I"], label: "II-V-I", note: "爵士、流行转调和很多结尾都会用，准备、推动、回家非常清楚。" },
+  { pattern: ["I", "ii", "V", "I"], label: "I-II-V-I", note: "先从主和弦走出去，再用 II-V-I 回家；1251 属于这个类型。" },
+  { pattern: ["I", "V", "vi", "IV"], label: "I-V-vi-IV", note: "非常常见的流行副歌循环，稳定、明亮、容易记住。" },
+  { pattern: ["I", "vi", "IV", "V"], label: "I-vi-IV-V", note: "50 年代流行感很强，适合做顺耳、复古的循环。" },
+  { pattern: ["IV", "V", "iii", "vi"], label: "IV-V-iii-vi", note: "华语/日系流行里很常见，整体比拆开看更自然。" },
+  { pattern: ["vi", "IV", "V", "I"], label: "vi-IV-V-I", note: "从小调色彩慢慢推回大调主和弦，情绪有抬升感。" },
+  { pattern: ["I", "IV", "V"], label: "I-IV-V", note: "布鲁斯、摇滚和民谣的基础骨架，直接、稳定、好听。" },
+  { pattern: ["vi", "ii", "V", "I"], label: "vi-II-V-I", note: "从柔和小调入口接到经典终止，适合更长的和声叙事。" }
+];
+
 function parseCustomProgression(rawValue: string): ParsedProgression {
   const normalized = rawValue
     .trim()
     .replace(/[—–]/g, "-")
     .replace(/\s+/g, "")
-    .replace(/→|>/g, "-");
+    .replace(/→|>|，|,|、|\//g, "-");
 
   if (!normalized) {
     return { valid: false, message: "先输入一个进行，例如 I-vi-IV-V。", tokens: [] };
   }
 
-  const tokens = normalized.split("-").filter(Boolean);
-  const allowed = new Set(["i", "ii", "iii", "iv", "v", "vi", "vii", "vii°", "viio", "viiø"]);
-  const invalidToken = tokens.find((token) => !allowed.has(token.toLowerCase()));
+  const rawTokens = normalized.includes("-") ? normalized.split("-").filter(Boolean) : normalized.split("");
+  const tokens = rawTokens.map(canonicalizeProgressionToken);
+  const invalidTokenIndex = tokens.findIndex((token) => token === null);
 
   if (tokens.length < 2) {
-    return { valid: false, message: "至少需要两个级数，例如 I-V。", tokens };
+    return { valid: false, message: "至少需要两个级数，例如 I-V，或者直接输入 251。", tokens: rawTokens };
   }
 
   if (tokens.length > 8) {
-    return { valid: false, message: "先控制在 8 个和弦以内，舞台会更容易读懂。", tokens };
+    return { valid: false, message: "先控制在 8 个和弦以内，舞台会更容易读懂。", tokens: rawTokens };
   }
 
-  if (invalidToken) {
+  if (invalidTokenIndex >= 0) {
+    const invalidToken = rawTokens[invalidTokenIndex];
     return {
       valid: false,
-      message: `暂时只支持罗马数字级数，${invalidToken} 还不能识别。可以试试 I、ii、IV、V、vi。`,
-      tokens
+      message: `暂时只支持罗马数字或数字级数，${invalidToken} 还不能识别。可以试试 251、4536、I-vi-IV-V。`,
+      tokens: rawTokens
     };
   }
 
-  const displayName = tokens.join("-");
+  const canonicalTokens = tokens.filter((token): token is string => token !== null);
+  const displayName = canonicalTokens.join("-");
   return {
     valid: true,
-    tokens,
+    tokens: canonicalTokens,
     element: {
       id: `custom-progression:${displayName}`,
       type: "progression",
@@ -1182,9 +1225,19 @@ function parseCustomProgression(rawValue: string): ParsedProgression {
   };
 }
 
-function judgeProgressionCompatibility(tokens: string[], elements: TheoryElement[]): { label: string; message: string } {
-  const lowerTokens = tokens.map((token) => token.toLowerCase());
-  const progressionText = lowerTokens.join("-");
+function canonicalizeProgressionToken(rawToken: string): string | null {
+  const token = rawToken.trim();
+  const numeric = NUMERIC_DEGREE_MAP[token];
+
+  if (numeric) {
+    return numeric;
+  }
+
+  return ROMAN_CANONICAL_MAP[token.toLowerCase()] ?? null;
+}
+
+function judgeProgressionCompatibility(tokens: string[], elements: TheoryElement[]): ProgressionAnalysis {
+  const progressionText = tokens.join("-");
   const elementNames = new Set(elements.map((element) => element.name.toLowerCase()));
   const hasBrightMode = ["lydian", "ionian", "major"].some((name) => elementNames.has(name));
   const hasDarkMode = ["phrygian", "harmonic minor", "minor"].some((name) => elementNames.has(name));
@@ -1192,31 +1245,71 @@ function judgeProgressionCompatibility(tokens: string[], elements: TheoryElement
   const hasDim = elementNames.has("dim7");
   const hasMaj7 = elementNames.has("maj7");
   const hasMin7 = elementNames.has("min7");
-  const hasCadence = progressionText.includes("ii-v-i") || lowerTokens.some((token, index) => token === "v" && lowerTokens[index + 1] === "i");
-  const hasPopLoop = progressionText === "i-v-vi-iv" || progressionText === "i-vi-iv-v";
-  const hasManyDarkTurns = lowerTokens.filter((token) => ["ii", "iv", "vi", "vii", "vii°", "viio", "viiø"].includes(token)).length >= 3;
+  const matchedPatterns = findProgressionPatterns(tokens);
+  const patterns = matchedPatterns.map((pattern) => `${pattern.label}：${pattern.note}`);
+  const pairNotes = describeProgressionPairs(tokens);
+  const hasCadence =
+    matchedPatterns.some((pattern) => pattern.label.includes("II-V-I")) ||
+    tokens.some((token, index) => token === "V" && tokens[index + 1] === "I");
+  const hasPopLoop = progressionText === "I-V-vi-IV" || progressionText === "I-vi-IV-V";
+  const hasManyDarkTurns = tokens.filter((token) => ["ii", "IV", "vi", "vii°", "viiø"].includes(token)).length >= 3;
 
   if (hasCadence && (hasMaj7 || hasBrightMode)) {
-    return { label: "很相容", message: "这个进行有明显“回家”的感觉，和明亮调式或 Maj7 放在一起会更稳定、更有完成感。" };
+    return { label: "很相容", message: "这个进行有明显“回家”的感觉，和明亮调式或 Maj7 放在一起会更稳定、更有完成感。", patterns, pairNotes };
   }
 
   if (hasCadence && (hasDominant || hasMin7)) {
-    return { label: "相容", message: "这个进行有清楚的推进和落点，Dominant7 或 Min7 会让它更像爵士/布鲁斯里的转身。" };
+    return { label: "相容", message: "这个进行有清楚的推进和落点，Dominant7 或 Min7 会让它更像爵士/布鲁斯里的转身。", patterns, pairNotes };
   }
 
   if (hasPopLoop && hasBrightMode) {
-    return { label: "很相容", message: "这个循环很容易听懂，配明亮调式会更像流行歌曲副歌，舞台会更外放。" };
+    return { label: "很相容", message: "这个循环很容易听懂，配明亮调式会更像流行歌曲副歌，舞台会更外放。", patterns, pairNotes };
   }
 
   if (hasDarkMode && (hasDim || hasManyDarkTurns)) {
-    return { label: "偏紧张", message: "暗色调式加上很多小级数或减和弦，会更神秘、更压迫，不是不对，是情绪更重。" };
+    return { label: "偏紧张", message: "暗色调式加上很多小级数或减和弦，会更神秘、更压迫，不是不对，是情绪更重。", patterns, pairNotes };
   }
 
-  if (hasDominant && !lowerTokens.includes("v")) {
-    return { label: "可实验", message: "你选了 Dominant7，但进行里没有 V 级，听感可能会更悬。可以保留，也可以试试加入 V-I。" };
+  if (hasDominant && !tokens.includes("V")) {
+    return { label: "可实验", message: "你选了 Dominant7，但进行里没有 V 级，听感可能会更悬。可以保留，也可以试试加入 V-I。", patterns, pairNotes };
   }
 
-  return { label: "可用", message: "这个进行可以加入舞台。系统会按它的长度、落点和当前调式/和弦一起判断视觉走向。" };
+  if (matchedPatterns.length > 0) {
+    return { label: "相容", message: "这个进行命中了常见片段，整体听感会比单看相邻两个和弦更自然。", patterns, pairNotes };
+  }
+
+  return { label: "可用", message: "这个进行可以加入舞台。系统会按它的长度、落点和当前调式/和弦一起判断视觉走向。", patterns, pairNotes };
+}
+
+function findProgressionPatterns(tokens: string[]): Array<{ pattern: string[]; label: string; note: string }> {
+  return PROGRESSION_PATTERN_LIBRARY.filter(({ pattern }) => containsSubsequence(tokens, pattern));
+}
+
+function containsSubsequence(tokens: string[], pattern: string[]): boolean {
+  return tokens.some((_, startIndex) => pattern.every((token, offset) => tokens[startIndex + offset] === token));
+}
+
+function describeProgressionPairs(tokens: string[]): string[] {
+  return tokens.slice(0, -1).map((token, index) => describeProgressionPair(token, tokens[index + 1]));
+}
+
+function describeProgressionPair(left: string, right: string): string {
+  const pair = `${left}-${right}`;
+  const pairNotes: Record<string, string> = {
+    "ii-V": "ii 到 V 很顺，是典型的准备到推动。",
+    "V-I": "V 到 I 是最稳定的落点，听起来像回家。",
+    "I-ii": "I 到 ii 是从稳定处往外走，单看会有一点突然，但接上 V-I 就很合理。",
+    "I-V": "I 到 V 会制造明显期待感，像一句话说到一半。",
+    "V-vi": "V 到 vi 是常见的假终止，本来想回家却转向更柔的情绪。",
+    "vi-IV": "vi 到 IV 会把小调色彩慢慢打开，适合抒情和流行。",
+    "IV-V": "IV 到 V 是很自然的抬升，会把听感推向下一拍。",
+    "V-iii": "V 到 iii 不算最传统的回家，但在 4536 里常用来制造细腻转弯。",
+    "iii-vi": "iii 到 vi 有顺阶下沉感，适合接回更柔和的段落。",
+    "IV-I": "IV 到 I 是温和落地，没有 V-I 那么强，但很舒服。",
+    "vi-ii": "vi 到 ii 会把小调入口接到准备和弦，适合继续走向 V-I。"
+  };
+
+  return pairNotes[pair] ?? `${pair} 不是最典型的强功能连接，但可以作为色彩性过渡使用。`;
 }
 
 interface ReadoutProps {
@@ -1289,18 +1382,31 @@ function CustomProgressionBox({
           <>
             <span className="font-medium text-stone-100">{compatibility.label}：</span>
             <span className="ml-1">{compatibility.message}</span>
+            {compatibility.patterns.length > 0 ? (
+              <div className="mt-1 text-stone-400">{compatibility.patterns.slice(0, 2).join("；")}</div>
+            ) : null}
+            {compatibility.pairNotes.length > 0 ? (
+              <div className="mt-1 text-stone-400">{compatibility.pairNotes.slice(0, 3).join("；")}</div>
+            ) : null}
           </>
         ) : (
           <span className="text-[#ffb8c5]">{parseError}</span>
         )}
       </div>
       <button
+        draggable={parsed.valid}
         className="mt-2 h-9 w-full rounded-md border border-[#5bd0c7]/40 bg-[#182528] px-3 text-sm font-semibold text-[#b9fff7] transition hover:border-[#5bd0c7] disabled:cursor-not-allowed disabled:opacity-50"
         disabled={!parsed.valid}
         type="button"
         onClick={onAdd}
+        onDragStart={(event) => {
+          if (parsed.valid) {
+            event.dataTransfer.setData("text/plain", `custom-progression:${customProgression}`);
+            event.dataTransfer.effectAllowed = "move";
+          }
+        }}
       >
-        加入自定义进行
+        加入 / 拖拽自定义进行
       </button>
     </div>
   );
