@@ -1178,6 +1178,7 @@ function SceneCascadePanel({ visual }: { visual: VisualParameters }) {
       <div className="mt-3 grid gap-2">
         <ReadingLine label="级联来源" value={reading.trigger} />
         <ReadingLine label="舞台变化" value={reading.impact} />
+        <ReadingLine label="成长染色" value={reading.tint} />
       </div>
     </section>
   );
@@ -1483,6 +1484,7 @@ function buildSceneCascadeReading(visual: VisualParameters): {
   summary: string;
   trigger: string;
   impact: string;
+  tint: string;
 } {
   if (visual.sceneCascade === "neutral" || visual.sceneCascadeIntensity <= 0.05) {
     return {
@@ -1490,7 +1492,8 @@ function buildSceneCascadeReading(visual: VisualParameters): {
       accent: "#8fdcff",
       summary: "当前还没有触发大型场景级联，舞台主要靠基础场景、Growth 和局部参数在变化。",
       trigger: "通常要出现更完整的三元组合，或者很强的协同与成长叠加。",
-      impact: "目前看到的是主舞台本身，而不是额外搭起来的第二层大型结构。 "
+      impact: "目前看到的是主舞台本身，而不是额外搭起来的第二层大型结构。 ",
+      tint: "当前还没有出现成长对场景级联的二次改写。 "
     };
   }
 
@@ -1508,7 +1511,8 @@ function buildSceneCascadeReading(visual: VisualParameters): {
         accent: "#d7d0ff",
         summary: `高抬升的穹顶、台阶和拱形光幕已经被召出来了，${strength}。`,
         trigger: "更常见于明亮的 Lydian / Maj7 / II-V-I 这类三元组合。",
-        impact: "舞台会更像一个被和声托举起来的礼台，而不是单纯一块发光区域。"
+        impact: "舞台会更像一个被和声托举起来的礼台，而不是单纯一块发光区域。",
+        tint: cascadeGrowthTint(visual)
       };
     case "velvet-arcade":
       return {
@@ -1516,7 +1520,8 @@ function buildSceneCascadeReading(visual: VisualParameters): {
         accent: "#9cefe2",
         summary: `柔性拱廊和纵深走道已经开始接管空间，${strength}。`,
         trigger: "更常见于 Dorian / Min7 / II-V-I 或带 Neo Soul 印记的组合。",
-        impact: "舞台会变得更像一条可穿行的演出廊道，层次会明显厚起来。"
+        impact: "舞台会变得更像一条可穿行的演出廊道，层次会明显厚起来。",
+        tint: cascadeGrowthTint(visual)
       };
     case "forge-ritual":
       return {
@@ -1524,7 +1529,8 @@ function buildSceneCascadeReading(visual: VisualParameters): {
         accent: "#ff7b3d",
         summary: `锻造架与下压的硬质结构已经落下来，${strength}。`,
         trigger: "常见于 Metal 印记与强摩擦组合一起出现的时候。",
-        impact: "舞台会出现更明显的压顶感、坠落感和热区，不再只是碎一点。"
+        impact: "舞台会出现更明显的压顶感、坠落感和热区，不再只是碎一点。",
+        tint: cascadeGrowthTint(visual)
       };
     case "prism-vortex":
       return {
@@ -1532,7 +1538,8 @@ function buildSceneCascadeReading(visual: VisualParameters): {
         accent: "#80dfff",
         summary: `旋转棱镜和相位通道已经成形，${strength}。`,
         trigger: "更常见于 Melodic Minor / Dominant7 / Aug 或 Fusion 风格组合。",
-        impact: "画面会开始像一个在自我折射的系统，而不是单层的几何展示。"
+        impact: "画面会开始像一个在自我折射的系统，而不是单层的几何展示。",
+        tint: cascadeGrowthTint(visual)
       };
     case "tide-runway":
       return {
@@ -1540,7 +1547,8 @@ function buildSceneCascadeReading(visual: VisualParameters): {
         accent: "#ffd06b",
         summary: `长距离地平跑道和推进条带已经拉开，${strength}。`,
         trigger: "更常见于 Pentatonic / Mixolydian / Dominant7 这类带推进感的组合。",
-        impact: "舞台会更像一条正在向前冲的赛道，速度感会比原来明显很多。"
+        impact: "舞台会更像一条正在向前冲的赛道，速度感会比原来明显很多。",
+        tint: cascadeGrowthTint(visual)
       };
     default:
       return {
@@ -1548,8 +1556,26 @@ function buildSceneCascadeReading(visual: VisualParameters): {
         accent: "#c7a6ff",
         summary: `环形祭坛和阴影辐条已经立起来了，${strength}。`,
         trigger: "常见于 Harmonic Minor / Dim7 / Dominant7 或很强的暗色张力结构。",
-        impact: "舞台会从‘黑暗一点’升级成真正的仪式空间，空间性会更强。"
+        impact: "舞台会从‘黑暗一点’升级成真正的仪式空间，空间性会更强。",
+        tint: cascadeGrowthTint(visual)
       };
+  }
+}
+
+function cascadeGrowthTint(visual: VisualParameters): string {
+  switch (visual.growthImprint) {
+    case "jazz-lattice":
+      return "当前级联又被 Jazz Lattice 染得更有和声窗格和纵深秩序。";
+    case "neo-soul-veil":
+      return "当前级联又被 Neo Soul 幕纱软化，边缘会更像帘幕和柔性包裹。";
+    case "metal-forge":
+      return "当前级联又被 Metal Forge 压硬，线条和重心会更像锻造结构。";
+    case "fusion-phase":
+      return "当前级联又被 Fusion Phase 扭出更多相位环和折射回路。";
+    case "pentatonic-drive":
+      return "当前级联又被 Pentatonic Drive 拉向更长的推进线和巡航速度感。";
+    default:
+      return "当前级联主要由组合结构本身驱动，成长印记还没有继续改写它。";
   }
 }
 

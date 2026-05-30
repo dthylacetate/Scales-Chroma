@@ -158,6 +158,16 @@ SCENE_CASCADE_RULES: tuple[tuple[set[str], str, float, dict[str, float]], ...] =
     ({"pentatonic", "mixolydian", "dominant7"}, "tide-runway", 0.9, {"wave": 0.12, "lattice": 0.14, "energy": 0.14, "ripple_strength": 0.16, "pulse_density": 0.14, "motion_speed": 0.12, "swing": 0.12}),
 )
 
+GROWTH_CASCADE_RULES: tuple[tuple[str, str, str, float, dict[str, float]], ...] = (
+    ("aurora-dais", "jazz-lattice", "Choir Vault", 0.08, {"lattice": 0.12, "symmetry": 0.12, "beam_strength": 0.14, "depth": 0.12, "blend_cohesion": 0.1}),
+    ("aurora-dais", "neo-soul-veil", "Silken Halo", 0.06, {"orb": 0.12, "wave": 0.1, "glow": 0.12, "depth": 0.1, "valence": 0.08, "grit": -0.06}),
+    ("velvet-arcade", "neo-soul-veil", "Rose Arcade", 0.08, {"wave": 0.12, "glow": 0.12, "depth": 0.12, "blend_cohesion": 0.1, "symmetry": 0.08}),
+    ("velvet-arcade", "jazz-lattice", "Blue Cloister", 0.06, {"lattice": 0.1, "beam_strength": 0.08, "depth": 0.1, "symmetry": 0.1}),
+    ("eclipse-altar", "metal-forge", "Forge Throne", 0.08, {"fracture": 0.12, "grain": 0.12, "contrast": 0.12, "attack": 0.12, "gravity": 0.1}),
+    ("prism-vortex", "fusion-phase", "Phase Cloister", 0.08, {"lattice": 0.12, "wave": 0.1, "complexity": 0.12, "motion_speed": 0.12, "beam_strength": 0.1}),
+    ("tide-runway", "pentatonic-drive", "Neon Causeway", 0.08, {"beam_strength": 0.12, "energy": 0.12, "pulse_density": 0.12, "motion_speed": 0.12, "swing": 0.1}),
+)
+
 
 def render_visual_parameters(
     elements: list[TheoryElement],
@@ -174,6 +184,7 @@ def render_visual_parameters(
     scene_cascade, scene_cascade_intensity = _resolve_scene_cascade(elements, aggregate_state)
     aggregate_state.scene_cascade = scene_cascade
     aggregate_state.scene_cascade_intensity = scene_cascade_intensity
+    _apply_growth_cascade_resonance(aggregate_state)
     particles = configure_particles(
         density_seed=aggregate_state.particle_density,
         energy=aggregate_state.energy,
@@ -933,6 +944,31 @@ def _resolve_scene_cascade(
         _apply_scaled_bonus(state, selected_bonus, scale)
 
     return selected_cascade, round(max(0.0, min(1.0, selected_intensity)), 2)
+
+
+def _apply_growth_cascade_resonance(state: AggregateVisualState) -> None:
+    if state.scene_cascade == "neutral" or state.growth_imprint == "neutral":
+        return
+
+    for cascade, imprint, label, intensity_boost, bonus in GROWTH_CASCADE_RULES:
+        if state.scene_cascade != cascade or state.growth_imprint != imprint:
+            continue
+
+        resonance_scale = 0.28 + state.growth_imprint_intensity * 0.42
+        state.scene_cascade_intensity = min(1.0, state.scene_cascade_intensity + intensity_boost)
+        state.active_bonuses.append(label)
+        _apply_scaled_bonus(state, bonus, resonance_scale)
+        state.scene_family = _resolve_scene_family(
+            signature=state.signature,
+            active_bonuses=state.active_bonuses,
+            geometry_shape=_resolve_geometry_shape(state),
+            temperature=state.temperature,
+            contrast=state.contrast,
+            valence=state.valence,
+            luminosity=state.luminosity,
+            grit=state.grit,
+        )
+        return
 
 
 def _apply_scaled_bonus(

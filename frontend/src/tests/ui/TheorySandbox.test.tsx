@@ -403,6 +403,8 @@ describe("TheorySandbox", () => {
         signature: "Celestial Bloom",
         growth_imprint: "jazz-lattice",
         growth_imprint_intensity: 0.88,
+        scene_cascade: "aurora-dais",
+        scene_cascade_intensity: 0.93,
         openness: 0.84,
         attack: 0.28,
         swing: 0.62,
@@ -435,6 +437,8 @@ describe("TheorySandbox", () => {
     expect(screen.getByText("偏暖，情绪保持暧昧，柔亮扩散。")).toBeInTheDocument();
     expect(screen.getByText(/层次很深/)).toBeInTheDocument();
     expect(screen.getByText("日光穹庭")).toBeInTheDocument();
+    expect(screen.getByText("成长染色：")).toBeInTheDocument();
+    expect(screen.getByText(/当前级联又被 Jazz Lattice 染得更有和声窗格/)).toBeInTheDocument();
   });
 
   it("shows a dedicated growth imprint reading when unlock styles are active", async () => {
